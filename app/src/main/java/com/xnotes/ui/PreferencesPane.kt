@@ -2,6 +2,7 @@ package com.xnotes.ui
 
 import android.os.Build
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -67,6 +68,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
@@ -74,6 +76,7 @@ import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -144,6 +147,7 @@ private enum class PrefCategory(val title: String) {
     TOOLBAR("Toolbar"),
     CLOUD_SYNC("Cloud sync"),
     MAINTENANCE("Maintenance"),
+    ABOUT("About"),
 }
 
 /** Categories deliberately kept in the order used by the Saya settings landing page. */
@@ -154,6 +158,7 @@ private val visiblePrefCategories = listOf(
     PrefCategory.PERFORMANCE,
     PrefCategory.TOOLBAR,
     PrefCategory.CLOUD_SYNC,
+    PrefCategory.ABOUT,
 )
 
 /**
@@ -947,6 +952,34 @@ fun PreferencesPane(
             if (shown(PrefCategory.MAINTENANCE)) {
                 if (all) HorizontalDivider(color = palette.border.toComposeColor())
                 Box(Modifier.searchAnchor(stringResource(R.string.search_keywords_port))) { PortSection(editor) }
+            }
+            if (shown(PrefCategory.ABOUT)) {
+                if (all) HorizontalDivider(color = palette.border.toComposeColor())
+                SectionTitle("About Saya")
+                Row(
+                    Modifier.fillMaxWidth()
+                        .liquidGlassSurface(
+                            RoundedCornerShape(18.dp),
+                            palette.surface.toComposeColor(),
+                            edge = palette.border.toComposeColor(),
+                            elevation = 5.dp,
+                        )
+                        .padding(horizontal = 18.dp, vertical = 20.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(18.dp),
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.saya_logo_original),
+                        contentDescription = "Saya logo",
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.size(76.dp),
+                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Text("Saya", color = palette.text.toComposeColor(), fontSize = 21.sp, fontWeight = FontWeight.SemiBold)
+                        Text("© 2026 Saya", color = palette.textDim.toComposeColor(), fontSize = 12.sp)
+                        Text("MIT License", color = palette.text.toComposeColor(), fontSize = 13.sp, fontWeight = FontWeight.Medium)
+                    }
+                }
             }
             Spacer(Modifier.size(8.dp))
         }
