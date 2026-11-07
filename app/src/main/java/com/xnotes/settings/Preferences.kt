@@ -15,11 +15,11 @@ val HOME_SWIPES = listOf("sidebar_open", "sidebar_close", "folder_up", "folder_d
  * field falls back to its default if missing or malformed.
  */
 data class Preferences(
-    val uiAppearance: String = "system", // "system" (follows OS dark/light) | "dark" | "light" | "oled"
+    val uiAppearance: String = "oled", // "system" (follows OS dark/light) | "dark" | "light" | "oled"
     val materialMode: MaterialColourMode = MaterialColourMode.DUAL,
     val materialSingleSeed: Rgba = DEFAULT_MATERIAL_SINGLE,
     val materialDualSeed: Rgba = DEFAULT_MATERIAL_DUAL,
-    val materialStyle: MaterialStyle = MaterialStyle.TONAL_SPOT,
+    val materialStyle: MaterialStyle = MaterialStyle.MONOCHROME,
     /** Material contrast level, -1 (reduced) .. 0 (standard) .. 1 (high). */
     val materialContrast: Double = 0.0,
     val materialSurfaceSeed: Rgba = DEFAULT_MATERIAL_SURFACE,
@@ -69,7 +69,7 @@ data class Preferences(
     /** Whether the volume keys turn pages in a note (up for the previous page, down for the next). */
     val volumeKeysTurnPages: Boolean = false,
     /** Keep the screen from sleeping while the app is open. */
-    val keepScreenOn: Boolean = false,
+    val keepScreenOn: Boolean = true,
     /** Preferences open on a list of categories; off shows every setting in one long list. */
     val prefsCategories: Boolean = true,
     /** Horizontal margin (px) on each side of the page column; 0 ⇒ fit-width fills the screen. */
@@ -91,7 +91,7 @@ data class Preferences(
     /** Whether wet ink keeps off the front buffer, so every stroke takes the ordinary canvas path. */
     val disableFrontBuffering: Boolean = false,
     /** Open in fullscreen; null ⇒ auto (on unless the display has a camera cutout). */
-    val startFullscreen: Boolean? = null,
+    val startFullscreen: Boolean? = true,
     /** An imported Helix code theme's file path, or null for the built-in colours. */
     val codeThemePath: String? = null,
     /** The imported code theme's original file name, shown in preferences. */
