@@ -1787,7 +1787,7 @@ private fun ExplorerSection(
         if (shelves) {
             Column(Modifier.fillMaxSize()) {
                 Row(
-                    Modifier.fillMaxWidth().height(72.dp).padding(horizontal = 28.dp),
+                    Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 28.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.End,
                 ) {
