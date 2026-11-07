@@ -386,8 +386,8 @@ internal fun CheckRing(selected: Boolean, modifier: Modifier = Modifier) {
         modifier
             .size(24.dp)
             .clip(CircleShape)
-            .background(if (selected) palette.accent.toComposeColor() else Color.Black.copy(alpha = 0.3f))
-            .border(2.dp, if (selected) palette.accent.toComposeColor() else Color.White.copy(alpha = 0.85f), CircleShape),
+            .background(if (selected) palette.accent.toComposeColor() else palette.bg.toComposeColor().copy(alpha = 0.78f))
+            .border(2.dp, if (selected) palette.accent.toComposeColor() else palette.border.toComposeColor(), CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         if (selected) Icon(XnotesIcons.check, null, tint = palette.onAccent.toComposeColor(), modifier = Modifier.size(14.dp))
