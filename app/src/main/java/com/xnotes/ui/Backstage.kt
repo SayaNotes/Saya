@@ -55,7 +55,6 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.shape.RectangleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -1102,10 +1101,6 @@ private fun CreateButton(
             expanded = menuOpen,
             onDismissRequest = { menuOpen = false },
             modifier = Modifier,
-            shape = RectangleShape,
-            containerColor = Color.Transparent,
-            tonalElevation = 0.dp,
-            shadowElevation = 0.dp,
         ) {
             NewItemMenuItems({ menuOpen = false }, onCreateMode, onImportPdf)
         }
