@@ -22,7 +22,7 @@ class SettingsTest {
         assertEquals(1.0, s.renderScale, 1e-9)
         assertFalse(s.sidebarVisible)
         assertEquals(PageSize.A4, s.prefs.defaultPageSize)
-        assertEquals("system", s.prefs.uiAppearance)
+        assertEquals("oled", s.prefs.uiAppearance)
         assertEquals(com.xnotes.canvas.ViewSettings(), s.viewDefaults)
     }
 
@@ -186,9 +186,9 @@ class SettingsTest {
         assertEquals(PageSize.CUSTOM_MIN_MM, back.customPageHeightMm, 1e-9)
     }
 
-    @Test fun malformedAppearanceFallsBackToSystem() {
+    @Test fun malformedAppearanceFallsBackToOled() {
         val o = JSONObject().put("prefs", JSONObject().put("ui_appearance", "rainbow"))
-        assertEquals("system", Settings.fromJson(o).prefs.uiAppearance)
+        assertEquals("oled", Settings.fromJson(o).prefs.uiAppearance)
     }
 
     @Test fun toolbarColorsPaddedToFifteen() {
@@ -342,9 +342,9 @@ class SettingsTest {
         assertEquals("none", Preferences.fromJson(o).twoFingerTap)
     }
 
-    @Test fun startFullscreenNullByDefaultAndUnwritten() {
-        assertNull(Preferences.fromJson(JSONObject()).startFullscreen)
-        assertFalse(Preferences().toJson().has("start_fullscreen"))
+    @Test fun startFullscreenDefaultsOnAndIsPersisted() {
+        assertEquals(true, Preferences.fromJson(JSONObject()).startFullscreen)
+        assertTrue(Preferences().toJson().optBoolean("start_fullscreen"))
     }
 
     @Test fun classicPaletteKeysAreDroppedOnLoad() {
@@ -355,9 +355,9 @@ class SettingsTest {
         }
     }
 
-    @Test fun materialDefaultsUseSystemWithFirstPresetsReady() {
+    @Test fun materialDefaultsUseDualToneWithFirstPresetsReady() {
         val defaults = Preferences.fromJson(JSONObject())
-        assertEquals(MaterialColourMode.SYSTEM, defaults.materialMode)
+        assertEquals(MaterialColourMode.DUAL, defaults.materialMode)
         assertEquals(Rgba(244, 67, 54), defaults.materialSingleSeed)
         assertEquals(Rgba(154, 124, 66), defaults.materialDualSeed)
         assertEquals(Rgba(61, 117, 230), defaults.materialSurfaceSeed)
@@ -403,7 +403,7 @@ class SettingsTest {
             assertFalse(p.toJson().has("material_contrast"))
         }
         val defaults = Preferences.fromJson(JSONObject())
-        assertEquals(MaterialStyle.TONAL_SPOT, defaults.materialStyle)
+        assertEquals(MaterialStyle.MONOCHROME, defaults.materialStyle)
         assertFalse(defaults.toJson().has("material_style"))
         assertFalse(defaults.toJson().has("material_contrast"))
     }
@@ -414,7 +414,7 @@ class SettingsTest {
                 .put("material_mode", value).put("material_dual_tone", value)
                 .put("material_seed", value).put("material_single_seed", value)
                 .put("material_dual_seed", value).put("material_surface_seed", value))
-            assertEquals(MaterialColourMode.SYSTEM, loaded.materialMode)
+            assertEquals(MaterialColourMode.DUAL, loaded.materialMode)
             assertEquals(Preferences.DEFAULT_MATERIAL_SINGLE, loaded.materialSingleSeed)
             assertEquals(Preferences.DEFAULT_MATERIAL_DUAL, loaded.materialDualSeed)
             assertEquals(Preferences.DEFAULT_MATERIAL_SURFACE, loaded.materialSurfaceSeed)
