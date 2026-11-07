@@ -1653,7 +1653,7 @@ internal fun OptionDropdown(options: List<Pair<String, String>>, selectedId: Str
             options.forEach { (id, lbl) ->
                 DropdownMenuItem(
                     modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp)
-                        .liquidGlassSurface(RoundedCornerShape(8.dp), palette.surface.toComposeColor(), edge = Color.White.copy(alpha = 0.16f), elevation = 2.dp),
+                        .liquidGlassSurface(RoundedCornerShape(8.dp), palette.surface.toComposeColor(), edge = (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.16f), elevation = 2.dp),
                     text = { Text(lbl) },
                     trailingIcon = if (id in checked) {
                         { Icon(XnotesIcons.check, null, tint = palette.textDim.toComposeColor(), modifier = Modifier.size(14.dp)) }
