@@ -277,7 +277,7 @@ data class Preferences(
 
         fun fromJson(o: JSONObject?): Preferences {
             if (o == null) return Preferences()
-            val appearance = o.optString("ui_appearance", "system")
+            val appearance = o.optString("ui_appearance", "oled")
                 .let { if (it == "dark" || it == "light" || it == "oled") it else "system" }
             val template = o.optString("default_template", "color").let { if (it == "pdf") "pdf" else "color" }
             val zoomLockPan = o.optString("zoom_lock_pan", "single").let { if (it == "double" || it == "none") it else "single" }
@@ -288,7 +288,7 @@ data class Preferences(
             val materialMode = MaterialColourMode.fromId(o.optString("material_mode")) ?: when {
                 legacyDual -> MaterialColourMode.DUAL
                 legacySeed != null -> MaterialColourMode.SINGLE
-                else -> MaterialColourMode.SYSTEM
+                else -> MaterialColourMode.DUAL
             }
             val legacyDualAccent = legacySeed ?: Rgba.fromHex(o.optString("accent_color")) ?: DEFAULT_ACCENT
             return Preferences(
@@ -298,7 +298,7 @@ data class Preferences(
                     ?: legacySeed?.takeIf { !legacyDual } ?: DEFAULT_MATERIAL_SINGLE,
                 materialDualSeed = Rgba.fromHex(o.optString("material_dual_seed"))
                     ?: if (legacyDual) legacyDualAccent else DEFAULT_MATERIAL_DUAL,
-                materialStyle = MaterialStyle.fromId(o.optString("material_style")),
+                materialStyle = if (o.has("material_style")) MaterialStyle.fromId(o.optString("material_style")) else MaterialStyle.MONOCHROME,
                 materialContrast = o.optDouble("material_contrast", 0.0).takeIf { it in -1.0..1.0 } ?: 0.0,
                 materialSurfaceSeed = Rgba.fromHex(o.optString("material_surface_seed"))
                     ?: if (legacyDual && !o.has("material_mode")) Rgba(33, 150, 243, 255) else DEFAULT_MATERIAL_SURFACE,
@@ -336,7 +336,7 @@ data class Preferences(
                 stylusButton1Tap = tapAction("stylus_button_1_tap"),
                 stylusButton2Tap = tapAction("stylus_button_2_tap"),
                 volumeKeysTurnPages = o.optBoolean("volume_keys_turn_pages", false),
-                keepScreenOn = o.optBoolean("keep_screen_on", false),
+                keepScreenOn = o.optBoolean("keep_screen_on", true),
                 prefsCategories = o.optBoolean("prefs_categories", true),
                 sideMargin = o.optDouble("side_margin", 16.0).coerceIn(0.0, 80.0),
                 hidePageBorders = o.optBoolean("hide_page_borders", false),
@@ -348,7 +348,7 @@ data class Preferences(
                 canvasMaxZoomPercent = o.optInt("canvas_max_zoom_percent", 6400).coerceIn(200, 100000),
                 maxCacheResolution = o.optInt("max_cache_resolution", 2048).coerceIn(1024, 4096),
                 disableFrontBuffering = o.optBoolean("disable_front_buffering", false),
-                startFullscreen = if (o.has("start_fullscreen")) o.getBoolean("start_fullscreen") else null,
+                startFullscreen = if (o.has("start_fullscreen")) o.getBoolean("start_fullscreen") else true,
                 codeThemePath = o.optString("code_theme_path").ifEmpty { null },
                 codeThemeName = o.optString("code_theme_name").ifEmpty { null },
                 defaultCodeLanguage = o.optString("default_code_language", "cpp")
