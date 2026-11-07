@@ -606,7 +606,7 @@ private fun BackstageSidebar(modifier: Modifier, editor: Editor, nav: SidebarNav
 private fun BackstageRail(modifier: Modifier, editor: Editor, nav: SidebarNav) {
     Column(modifier.fillMaxHeight().padding(vertical = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Image(
-            painter = painterResource(R.drawable.saya_logo_transparent),
+            painter = painterResource(R.drawable.saya_logo_original),
             contentDescription = "Saya logo",
             contentScale = ContentScale.Fit,
             modifier = Modifier.size(42.dp).padding(bottom = 10.dp),
@@ -1098,6 +1098,19 @@ private fun ExplorerSection(
             Typeface.BOLD,
         )
     }
+    var greetingClock by remember { mutableStateOf(System.currentTimeMillis()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(60_000)
+            greetingClock = System.currentTimeMillis()
+        }
+    }
+    val greeting = when (java.time.Instant.ofEpochMilli(greetingClock).atZone(ZoneId.systemDefault()).hour) {
+        in 5..11 -> "Good morning"
+        in 12..16 -> "Good afternoon"
+        in 17..20 -> "Good evening"
+        else -> "Good night"
+    }
     val root = editor.browseRoot
     val nav = link.nav
     if (root == null) {
@@ -1126,7 +1139,7 @@ private fun ExplorerSection(
                     contentAlignment = Alignment.Center,
                 ) {
                     Image(
-                        painterResource(R.drawable.saya_logo_transparent),
+                        painterResource(R.drawable.saya_logo_original),
                         contentDescription = "Saya",
                         contentScale = ContentScale.Fit,
                         modifier = Modifier.size(76.dp),
@@ -2025,6 +2038,22 @@ private fun ExplorerSection(
                     }
                     Spacer(Modifier.width(8.dp))
                     if (!showRecent) {
+                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 8.dp)) {
+                            Image(
+                                painter = painterResource(R.drawable.saya_logo_original),
+                                contentDescription = "Saya",
+                                contentScale = ContentScale.Fit,
+                                modifier = Modifier.size(24.dp),
+                            )
+                            Spacer(Modifier.width(7.dp))
+                            Text(
+                                greeting,
+                                color = palette.text.toComposeColor(),
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Medium,
+                                maxLines = 1,
+                            )
+                        }
                         ExplorerSearchField(query, { query = it }, expandedWidth = if (wide) 320.dp else (headerWidth - 144.dp).coerceAtLeast(160.dp), lift = liftNow)
                         if (wide && switcherLayouts.size > 1) {
                             Spacer(Modifier.width(8.dp))
@@ -2153,7 +2182,7 @@ private fun ExplorerSection(
             },
             modifier = Modifier
                 .align(if (showRecent) Alignment.TopEnd else Alignment.BottomEnd)
-                .padding(if (showRecent) PaddingValues(top = 72.dp, end = 20.dp) else PaddingValues(20.dp)),
+                .padding(if (showRecent) PaddingValues(top = 16.dp, end = 20.dp) else PaddingValues(20.dp)),
         )
         }
     }
