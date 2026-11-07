@@ -262,10 +262,8 @@ fun Backstage(
     )
     // The backstage is the root of the stack — ordinary base content, not a dialog. The activity
     // window already runs edge-to-edge with the system bars hidden (MainActivity.applyFullscreen).
-    // Keep the luxury identity scoped to the backstage/home experience. The note editor and its
-    // drawing tools continue using the user's existing theme unchanged.
-    // Home must follow the user's saved appearance settings just like the editor.
-    // Keep the established dark luxury layout, but derive its actual tones from Preferences.
+    // Keep the backstage identity scoped to the library experience while following the same
+    // saved appearance, colour mode, contrast and corner settings as the editor.
     val homePrefs = editor.preferences
     val themeContext = LocalContext.current
     val systemDark = isSystemInDarkTheme()
@@ -310,8 +308,8 @@ fun Backstage(
         }
         Palette.material(homeAppearance, colours)
     }
-    // The OLED library palette belongs to the whole backstage shell, not only the Home route.
-    // Switching to Settings must not recolour the sidebar or the surrounding library surface.
+    // The preference-driven library palette belongs to the whole backstage shell, so Home,
+    // Settings, Trash, the sidebar and the surrounding surfaces change theme together.
     CompositionLocalProvider(LocalPalette provides homePalette) {
         MaterialTheme(colorScheme = homePalette.composeColorScheme(), shapes = inheritedShapes) {
             BackstageContent(editor, compact, view, onSelectView, calls, onExitApp, onImportCodeTheme, onImportFont, onBackup)
