@@ -287,7 +287,6 @@ fun Backstage(
         systemDark,
     ) {
         val dark = homeAppearance != "light"
-        val neutralSeed = com.xnotes.core.model.Rgba(232, 232, 232, 255)
         val colours = when (homePrefs.materialMode) {
             com.xnotes.settings.MaterialColourMode.SYSTEM ->
                 dynamicMaterialColors(themeContext, dark)
