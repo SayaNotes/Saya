@@ -1,8 +1,11 @@
 name: Build Debug APK
 
-# Manual dispatch only; prevents unrelated pushes from starting builds.
+# Build the current feature branch on updates; manual dispatch remains available.
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - feature/sameer-notes-shape-branding
 
 permissions:
   contents: read
