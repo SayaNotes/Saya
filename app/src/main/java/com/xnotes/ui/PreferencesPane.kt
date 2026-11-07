@@ -285,25 +285,25 @@ fun PreferencesPane(
         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically) {
             val open = if (categorized) category else null
             if (open != null) {
-                IconButton(modifier = Modifier.liquidGlassSurface(CircleShape, palette.surface.toComposeColor(), edge = Color.White.copy(alpha = 0.20f), elevation = 3.dp), onClick = { category = null }) {
+                IconButton(modifier = Modifier.liquidGlassSurface(CircleShape, palette.surface.toComposeColor(), edge = (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.20f), elevation = 3.dp), onClick = { category = null }) {
                     Icon(XnotesIcons.prev, stringResource(R.string.preferences), tint = palette.text.toComposeColor(), modifier = Modifier.size(24.dp))
                 }
             } else if (compact) {
                 Tooltip(stringResource(R.string.back_to_home)) {
-                    IconButton(modifier = Modifier.liquidGlassSurface(CircleShape, palette.surface.toComposeColor(), edge = Color.White.copy(alpha = 0.20f), elevation = 3.dp), onClick = onBackToHome) {
+                    IconButton(modifier = Modifier.liquidGlassSurface(CircleShape, palette.surface.toComposeColor(), edge = (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.20f), elevation = 3.dp), onClick = onBackToHome) {
                         Icon(XnotesIcons.prev, stringResource(R.string.back_to_home), tint = palette.text.toComposeColor(), modifier = Modifier.size(24.dp))
                     }
                 }
             }
             if (!compact && !sidebarOpen) {
                 Tooltip(stringResource(R.string.show_sidebar)) {
-                    IconButton(modifier = Modifier.liquidGlassSurface(CircleShape, palette.surface.toComposeColor(), edge = Color.White.copy(alpha = 0.20f), elevation = 3.dp), onClick = onShowSidebar) {
+                    IconButton(modifier = Modifier.liquidGlassSurface(CircleShape, palette.surface.toComposeColor(), edge = (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.20f), elevation = 3.dp), onClick = onShowSidebar) {
                         Icon(XnotesIcons.menu, stringResource(R.string.show_sidebar), tint = palette.text.toComposeColor(), modifier = Modifier.size(24.dp))
                     }
                 }
             }
             if (!categorized) {
-                IconButton(modifier = Modifier.liquidGlassSurface(CircleShape, palette.surface.toComposeColor(), edge = Color.White.copy(alpha = 0.20f), elevation = 3.dp), onClick = { sectionsOpen = !sectionsOpen }) {
+                IconButton(modifier = Modifier.liquidGlassSurface(CircleShape, palette.surface.toComposeColor(), edge = (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.20f), elevation = 3.dp), onClick = { sectionsOpen = !sectionsOpen }) {
                     Icon(XnotesIcons.sidebar, stringResource(R.string.side_panel), tint = (if (sectionsOpen) palette.accent else palette.text).toComposeColor(), modifier = Modifier.size(22.dp))
                 }
             }
@@ -327,7 +327,7 @@ fun PreferencesPane(
                 overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.weight(1f))
-            IconButton(modifier = Modifier.liquidGlassSurface(CircleShape, palette.surface.toComposeColor(), edge = Color.White.copy(alpha = 0.20f), elevation = 3.dp), onClick = { search.open = !search.open; if (!search.open) search.query = "" }) {
+            IconButton(modifier = Modifier.liquidGlassSurface(CircleShape, palette.surface.toComposeColor(), edge = (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.20f), elevation = 3.dp), onClick = { search.open = !search.open; if (!search.open) search.query = "" }) {
                 Icon(XnotesIcons.search, stringResource(R.string.search_settings), tint = palette.text.toComposeColor(), modifier = Modifier.size(22.dp))
             }
         }
@@ -387,15 +387,15 @@ fun PreferencesPane(
                     val cardShape = RoundedCornerShape(15.dp)
                     Row(
                         Modifier.fillMaxWidth()
-                            .liquidGlassSurface(cardShape, palette.surface.toComposeColor(), edge = Color.White.copy(alpha = 0.20f), elevation = 6.dp)
+                            .liquidGlassSurface(cardShape, palette.surface.toComposeColor(), edge = (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.20f), elevation = 6.dp)
                             .clickable { category = c }
                             .padding(horizontal = 15.dp, vertical = 16.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Box(
                             Modifier.size(32.dp).clip(RoundedCornerShape(10.dp))
-                                .background(Color.White.copy(alpha = 0.045f))
-                                .border(1.dp, Color.White.copy(alpha = 0.11f), RoundedCornerShape(10.dp)),
+                                .background(palette.text.toComposeColor().copy(alpha = 0.045f))
+                                .border(1.dp, palette.text.toComposeColor().copy(alpha = 0.11f), RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center,
                         ) {
                             Text("%02d".format(visiblePrefCategories.indexOf(c) + 1), color = palette.textDim.toComposeColor(), fontSize = 10.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.4.sp)
@@ -1174,7 +1174,7 @@ private fun SectionTitle(text: String) {
             letterSpacing = 1.15.sp,
             modifier = Modifier.weight(1f).searchAnchor(text),
         )
-        Box(Modifier.width(34.dp).height(1.dp).background(Color.White.copy(alpha = 0.18f)))
+        Box(Modifier.width(34.dp).height(1.dp).background((if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.18f)))
     }
 }
 
@@ -1326,7 +1326,7 @@ internal fun CheckChip(label: String, on: Boolean, onClick: () -> Unit) {
     val fg = (if (on) palette.selectionForeground else palette.text).toComposeColor()
     Row(
         Modifier
-            .liquidGlassSurface(MaterialTheme.shapes.small, if (on) palette.selectionBackground.toComposeColor() else palette.surface.toComposeColor(), edge = if (on) palette.accent.toComposeColor() else Color.White.copy(alpha = 0.18f), elevation = 4.dp)
+            .liquidGlassSurface(MaterialTheme.shapes.small, if (on) palette.selectionBackground.toComposeColor() else palette.surface.toComposeColor(), edge = if (on) palette.accent.toComposeColor() else (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.18f), elevation = 4.dp)
             .semantics { this.selected = on }
             .clickable(onClick = onClick)
             .padding(start = 8.dp, end = 12.dp, top = 6.dp, bottom = 6.dp),
@@ -1348,7 +1348,7 @@ private fun Chip(label: String, selected: Boolean, onClick: () -> Unit) {
     val shape = RoundedCornerShape(11.dp)
     Box(
         Modifier
-            .liquidGlassSurface(shape, if (selected) palette.selectionBackground.toComposeColor() else palette.surface.toComposeColor(), edge = if (selected) palette.accent.toComposeColor() else Color.White.copy(alpha = 0.18f), elevation = 4.dp)
+            .liquidGlassSurface(shape, if (selected) palette.selectionBackground.toComposeColor() else palette.surface.toComposeColor(), edge = if (selected) palette.accent.toComposeColor() else (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.18f), elevation = 4.dp)
             .semantics { this.selected = selected }
             .clickable(onClick = onClick)
             .padding(horizontal = 13.dp, vertical = 8.dp),
@@ -1379,7 +1379,7 @@ private fun GlassTextButton(
         modifier = modifier.liquidGlassSurface(
             shape,
             palette.surface.toComposeColor(),
-            edge = Color.White.copy(alpha = 0.20f),
+            edge = (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.20f),
             elevation = 4.dp,
         ),
         enabled = enabled,
@@ -1400,7 +1400,7 @@ internal fun ColorDot(color: Color, selected: Boolean, enabled: Boolean = true, 
                 this.selected = selected
                 contentDescription = label
             }
-            .liquidGlassSurface(CircleShape, palette.surface.toComposeColor(), edge = Color.White.copy(alpha = 0.22f), elevation = 3.dp)
+            .liquidGlassSurface(CircleShape, palette.surface.toComposeColor(), edge = (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.22f), elevation = 3.dp)
             .then(if (selected) Modifier.border(2.dp, palette.accent.toComposeColor(), CircleShape) else Modifier)
             .padding(4.dp)
             .clip(CircleShape)
@@ -1441,7 +1441,7 @@ internal fun ColorPickerDot(
                 .size(30.dp)
                 .alpha(if (enabled) 1f else 0.4f)
                 .semantics { contentDescription = label }
-                .liquidGlassSurface(CircleShape, palette.surface.toComposeColor(), edge = Color.White.copy(alpha = 0.22f), elevation = 3.dp)
+                .liquidGlassSurface(CircleShape, palette.surface.toComposeColor(), edge = (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.22f), elevation = 3.dp)
                 .then(if (custom) Modifier.border(2.dp, palette.accent.toComposeColor(), CircleShape) else Modifier)
                 .padding(4.dp)
                 .clip(CircleShape)
@@ -1598,7 +1598,7 @@ private fun CheckRow(label: String, checked: Boolean, onChange: (Boolean) -> Uni
         Checkbox(
             checked = checked,
             onCheckedChange = onChange,
-            modifier = Modifier.liquidGlassSurface(RoundedCornerShape(5.dp), palette.surface.toComposeColor(), edge = Color.White.copy(alpha = 0.18f), elevation = 2.dp),
+            modifier = Modifier.liquidGlassSurface(RoundedCornerShape(5.dp), palette.surface.toComposeColor(), edge = (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.18f), elevation = 2.dp),
         )
         Spacer(Modifier.width(2.dp))
         Text(label, color = palette.text.toComposeColor(), fontSize = 14.sp, modifier = Modifier.searchAnchor(label))
@@ -1636,7 +1636,7 @@ internal fun OptionDropdown(options: List<Pair<String, String>>, selectedId: Str
     Box {
         Row(
             Modifier
-                .liquidGlassSurface(MaterialTheme.shapes.small, palette.surface.toComposeColor(), edge = Color.White.copy(alpha = 0.20f), elevation = 4.dp)
+                .liquidGlassSurface(MaterialTheme.shapes.small, palette.surface.toComposeColor(), edge = (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.20f), elevation = 4.dp)
                 .clickable { expanded = true }
                 .padding(start = 12.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -1648,7 +1648,7 @@ internal fun OptionDropdown(options: List<Pair<String, String>>, selectedId: Str
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false },
-            modifier = Modifier.liquidGlassSurface(RoundedCornerShape(14.dp), palette.surface.toComposeColor(), edge = Color.White.copy(alpha = 0.22f), elevation = 12.dp),
+            modifier = Modifier.liquidGlassSurface(RoundedCornerShape(14.dp), palette.surface.toComposeColor(), edge = (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.22f), elevation = 12.dp),
         ) {
             options.forEach { (id, lbl) ->
                 DropdownMenuItem(
