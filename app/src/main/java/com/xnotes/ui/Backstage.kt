@@ -648,14 +648,19 @@ private fun BackstageRail(modifier: Modifier, editor: Editor, nav: SidebarNav) {
 private fun FolderRailItems(editor: Editor, nav: SidebarNav) {
     val root = editor.browseRoot ?: return
     val rootId = remember(root) { editor.browseRootDocId(root) }
-    val pinnedUris = remember(nav.pins) { nav.pins.map { it.uri }.toSet() }
-    val children by produceState(editor.cachedChildren(root, rootId), root, rootId, editor.treeVersion, editor.noteOpen) {
-        value = withContext(Dispatchers.IO) { editor.browseChildren(root, rootId) }
+    // Keep filesystem enumeration, filtering and sorting off the main thread. The rail only
+    // receives the final folder rows, and refreshes when the tree or pinned set changes.
+    val folders by produceState<List<BrowseEntry>>(emptyList(), root, rootId, editor.treeVersion, editor.noteOpen, nav.pins) {
+        val pinnedUris = nav.pins.mapTo(HashSet()) { it.uri }
+        value = withContext(Dispatchers.IO) {
+            editor.browseChildren(root, rootId).orEmpty()
+                .asSequence()
+                .filter { it.isDir && it.documentUri !in pinnedUris }
+                .sortedBy { it.name.lowercase() }
+                .toList()
+        }
     }
-    children.orEmpty().asSequence()
-        .filter { it.isDir && it.documentUri !in pinnedUris }
-        .sortedBy { it.name.lowercase() }
-        .forEach { folder ->
+    folders.forEach { folder ->
             key(folder.documentUri) {
                 RailItem(XnotesIcons.folder, folder.name, labelled = true) { nav.onOpenFolder(folder) }
             }
