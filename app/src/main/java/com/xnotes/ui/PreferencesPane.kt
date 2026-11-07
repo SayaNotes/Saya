@@ -1355,7 +1355,7 @@ private fun Chip(label: String, selected: Boolean, onClick: () -> Unit) {
     ) {
         Text(
             label,
-            color = if (selected) Color.White else palette.text.toComposeColor(),
+            color = if (selected) palette.selectionForeground.toComposeColor() else palette.text.toComposeColor(),
             fontSize = 12.sp,
             fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Medium,
             maxLines = 1,
