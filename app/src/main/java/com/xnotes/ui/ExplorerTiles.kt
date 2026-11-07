@@ -921,14 +921,15 @@ internal fun HomeShelves(
     onImportPdf: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Monochrome library styling is intentionally scoped to this home shelf.
-    // The editor and its toolbars keep their existing appearance and behaviour.
-    val ink = Color(0xFF000000)
-    val card = Color(0xFF080808)
-    val previewWell = Color(0xFF101010)
-    val white = Color(0xFFF7F7F7)
-    val secondary = Color(0xFF929292)
-    val hairline = Color.White.copy(alpha = 0.13f)
+    // Keep the Home shelf in step with the active appearance. The OLED palette still
+    // supplies the deep-black surfaces; Light Mode receives its own readable surfaces.
+    val palette = LocalPalette.current
+    val ink = palette.bg.toComposeColor()
+    val card = palette.surface.toComposeColor()
+    val previewWell = palette.surfaceHi.toComposeColor()
+    val primaryText = palette.text.toComposeColor()
+    val secondary = palette.textDim.toComposeColor()
+    val hairline = palette.border.toComposeColor()
     val notes = remember(recents, pinnedNotes, b.groups, b.pinned) {
         (recents.map { it.entry } + pinnedNotes + b.pinned + b.groups.flatMap { it.items })
             .filterNot { it.isDir }
@@ -945,7 +946,7 @@ internal fun HomeShelves(
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     "My Notes",
-                    color = white,
+                    color = primaryText,
                     fontSize = 29.sp,
                     fontWeight = FontWeight.SemiBold,
                     letterSpacing = (-0.7).sp,
@@ -1012,7 +1013,7 @@ internal fun HomeShelves(
                                 ) {
                                     Text(
                                         b.label(entry),
-                                        color = white,
+                                        color = primaryText,
                                         fontSize = 13.5.sp,
                                         fontWeight = FontWeight.Medium,
                                         maxLines = 1,
@@ -1051,12 +1052,12 @@ internal fun HomeShelves(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text("Your notes will appear here.", color = white, fontSize = 13.sp)
+                    Text("Your notes will appear here.", color = primaryText, fontSize = 13.sp)
                     Text("Create a note to start your library.", color = secondary, fontSize = 11.5.sp)
                 }
                 Text(
                     "New note",
-                    color = white,
+                    color = primaryText,
                     fontSize = 12.5.sp,
                     fontWeight = FontWeight.Medium,
                     modifier = Modifier.clip(RoundedCornerShape(20.dp))
@@ -1070,7 +1071,7 @@ internal fun HomeShelves(
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
                 "Recent Folders",
-                color = white,
+                color = primaryText,
                 fontSize = 21.sp,
                 fontWeight = FontWeight.SemiBold,
                 letterSpacing = (-0.3).sp,
@@ -1095,11 +1096,11 @@ internal fun HomeShelves(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(13.dp),
                     ) {
-                        Icon(XnotesIcons.folder, null, tint = white, modifier = Modifier.size(27.dp))
+                        Icon(XnotesIcons.folder, null, tint = primaryText, modifier = Modifier.size(27.dp))
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                             Text(
                                 b.label(folder),
-                                color = white,
+                                color = primaryText,
                                 fontSize = 13.5.sp,
                                 fontWeight = FontWeight.Medium,
                                 maxLines = 1,
@@ -1129,8 +1130,8 @@ internal fun HomeShelves(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(13.dp),
                     ) {
-                        Icon(XnotesIcons.folder, null, tint = white, modifier = Modifier.size(27.dp))
-                        Text(pin.name, color = white, fontSize = 13.5.sp, fontWeight = FontWeight.Medium, maxLines = 1)
+                        Icon(XnotesIcons.folder, null, tint = primaryText, modifier = Modifier.size(27.dp))
+                        Text(pin.name, color = primaryText, fontSize = 13.5.sp, fontWeight = FontWeight.Medium, maxLines = 1)
                     }
                 }
             }
