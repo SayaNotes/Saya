@@ -372,7 +372,9 @@ fun PreferencesPane(
                 }
             }
         }
-        val panelBeside = !categorized && sectionsOpen && !compact
+        // On tablets, keep the category navigator beside an opened Settings category.
+        // Phones use the category landing cards and a back affordance to preserve width.
+        val panelBeside = !compact && ((categorized && category != null) || (!categorized && sectionsOpen))
         val panelOver = sectionsOpen && compact && !categorized
         Row(Modifier.fillMaxSize()) {
         if (panelBeside) {
