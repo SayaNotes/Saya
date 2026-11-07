@@ -1119,7 +1119,9 @@ private fun ExplorerSection(
     var greetingClock by remember { mutableStateOf(System.currentTimeMillis()) }
     LaunchedEffect(Unit) {
         while (true) {
-            delay(60_000)
+            val now = java.time.ZonedDateTime.now()
+            val nextHour = now.plusHours(1).withMinute(0).withSecond(0).withNano(0)
+            delay(java.time.Duration.between(now, nextHour).toMillis().coerceAtLeast(1L))
             greetingClock = System.currentTimeMillis()
         }
     }
