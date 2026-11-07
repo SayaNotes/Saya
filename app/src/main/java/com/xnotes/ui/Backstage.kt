@@ -275,6 +275,7 @@ fun Backstage(
         "dark" -> "dark"
         else -> if (systemDark) "dark" else "light"
     }
+    val inheritedShapes = MaterialTheme.shapes
     val homePalette = remember(
         themeContext,
         homePrefs.uiAppearance,
@@ -312,7 +313,7 @@ fun Backstage(
     // The OLED library palette belongs to the whole backstage shell, not only the Home route.
     // Switching to Settings must not recolour the sidebar or the surrounding library surface.
     CompositionLocalProvider(LocalPalette provides homePalette) {
-        MaterialTheme(colorScheme = homePalette.composeColorScheme()) {
+        MaterialTheme(colorScheme = homePalette.composeColorScheme(), shapes = inheritedShapes) {
             BackstageContent(editor, compact, view, onSelectView, calls, onExitApp, onImportCodeTheme, onImportFont, onBackup)
         }
     }
