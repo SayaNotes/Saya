@@ -718,10 +718,14 @@ private fun Command(
             .height(46.dp)
             .shadow(if (selected) 5.dp else 0.dp, MaterialTheme.shapes.medium)
             .clip(MaterialTheme.shapes.medium)
-            .then(if (selected) Modifier.background(Color.White.copy(alpha = 0.075f)) else Modifier)
+            .then(
+                if (selected) Modifier.background(palette.selectionBackground.toComposeColor())
+                else Modifier,
+            )
             .border(
                 1.dp,
-                if (selected) Color.White.copy(alpha = 0.17f) else Color.White.copy(alpha = 0.035f),
+                if (selected) palette.accent.toComposeColor().copy(alpha = 0.55f)
+                else palette.border.toComposeColor().copy(alpha = 0.65f),
                 MaterialTheme.shapes.medium,
             )
             .combinedClickable(onClick = onClick, onLongClick = onLongClick)
@@ -763,20 +767,25 @@ private fun RailItem(icon: ImageVector, label: String, selected: Boolean = false
                     .shadow(if (selected) 10.dp else 6.dp, pill)
                     .clip(pill)
                     .background(Brush.verticalGradient(listOf(
-                        Color.White.copy(alpha = if (selected) 0.24f else 0.17f),
-                        Color(0xFF858B94).copy(alpha = if (selected) 0.16f else 0.09f),
-                        Color(0xFF24272C).copy(alpha = 0.18f),
+                        if (selected) palette.selectionBackground.toComposeColor() else palette.surfaceHi.toComposeColor(),
+                        palette.surface.toComposeColor(),
+                        palette.bg.toComposeColor(),
                     )))
-                    .border(1.dp, if (selected) palette.accent.toComposeColor().copy(alpha = 0.72f) else Color.White.copy(alpha = 0.22f), pill),
+                    .border(
+                        1.dp,
+                        if (selected) palette.accent.toComposeColor().copy(alpha = 0.72f)
+                        else palette.border.toComposeColor().copy(alpha = 0.75f),
+                        pill,
+                    ),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(icon, label, tint = if (selected) Color.White else palette.text.toComposeColor().copy(alpha = 0.92f), modifier = Modifier.size(20.dp))
+                Icon(icon, label, tint = if (selected) palette.selectionForeground.toComposeColor() else palette.text.toComposeColor().copy(alpha = 0.92f), modifier = Modifier.size(20.dp))
             }
             if (labelled) {
                 Spacer(Modifier.height(4.dp))
                 Text(
                     label,
-                    color = if (selected) Color.White else palette.textDim.toComposeColor(),
+                    color = if (selected) palette.selectionForeground.toComposeColor() else palette.textDim.toComposeColor(),
                     fontSize = 10.sp,
                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                     maxLines = 1,
@@ -1069,7 +1078,7 @@ private fun CreateButton(
                 modifier = Modifier.liquidGlassSurface(
                     CircleShape,
                     palette.surface.toComposeColor(),
-                    edge = Color.White.copy(alpha = 0.24f),
+                    edge = (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.20f),
                     elevation = 11.dp,
                 ),
                 text = { Text(exportLabel) },
