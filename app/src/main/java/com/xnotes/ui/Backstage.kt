@@ -1129,21 +1129,6 @@ private fun ExplorerSection(
             Typeface.BOLD,
         )
     }
-    var greetingClock by remember { mutableStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(Unit) {
-        while (true) {
-            val now = java.time.ZonedDateTime.now()
-            val nextHour = now.plusHours(1).withMinute(0).withSecond(0).withNano(0)
-            delay(java.time.Duration.between(now, nextHour).toMillis().coerceAtLeast(1L))
-            greetingClock = System.currentTimeMillis()
-        }
-    }
-    val greeting = when (java.time.Instant.ofEpochMilli(greetingClock).atZone(ZoneId.systemDefault()).hour) {
-        in 5..11 -> "Good morning"
-        in 12..16 -> "Good afternoon"
-        in 17..20 -> "Good evening"
-        else -> "Good night"
-    }
     val root = editor.browseRoot
     val nav = link.nav
     if (root == null) {
@@ -2070,24 +2055,6 @@ private fun ExplorerSection(
                         }
                     }
                     Spacer(Modifier.width(8.dp))
-                    // Keep the Saya brand mark and time-aware greeting visible in the Home
-                    // heading on both the normal notes view and the Recent view.
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 8.dp)) {
-                        Image(
-                            painter = painterResource(R.drawable.saya_logo_original),
-                            contentDescription = "Saya",
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier.size(24.dp),
-                        )
-                        Spacer(Modifier.width(7.dp))
-                        Text(
-                            greeting,
-                            color = palette.text.toComposeColor(),
-                            fontSize = 13.sp,
-                            fontWeight = FontWeight.Medium,
-                            maxLines = 1,
-                        )
-                    }
                     if (!showRecent) {
                         ExplorerSearchField(query, { query = it }, expandedWidth = if (wide) 320.dp else (headerWidth - 144.dp).coerceAtLeast(160.dp), lift = liftNow)
                         if (wide && switcherLayouts.size > 1) {
