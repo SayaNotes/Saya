@@ -175,6 +175,7 @@ import com.xnotes.ui.icons.XnotesIcons
 import com.xnotes.ui.theme.ColorMath
 import com.xnotes.ui.theme.LocalPalette
 import com.xnotes.ui.theme.MaterialColors
+import com.xnotes.ui.theme.dynamicMaterialColors
 import com.xnotes.ui.theme.Palette
 import com.xnotes.ui.theme.composeColorScheme
 import com.xnotes.ui.theme.toComposeColor
@@ -266,6 +267,7 @@ fun Backstage(
     // Home must follow the user's saved appearance settings just like the editor.
     // Keep the established dark luxury layout, but derive its actual tones from Preferences.
     val homePrefs = editor.preferences
+    val themeContext = LocalContext.current
     val systemDark = isSystemInDarkTheme()
     val homeAppearance = when (homePrefs.uiAppearance) {
         "light" -> "light"
@@ -274,6 +276,7 @@ fun Backstage(
         else -> if (systemDark) "dark" else "light"
     }
     val homePalette = remember(
+        themeContext,
         homePrefs.uiAppearance,
         homePrefs.materialMode,
         homePrefs.materialSingleSeed,
@@ -283,26 +286,29 @@ fun Backstage(
         homePrefs.materialContrast,
         systemDark,
     ) {
-        val neutralSeed = com.xnotes.core.model.Rgba(232, 232, 232, 255)
-        val seed = when (homePrefs.materialMode) {
-            com.xnotes.settings.MaterialColourMode.SYSTEM -> neutralSeed
-            com.xnotes.settings.MaterialColourMode.SINGLE -> homePrefs.materialSingleSeed
-            com.xnotes.settings.MaterialColourMode.DUAL -> homePrefs.materialDualSeed
-        }
-        val surfaceSeed = if (homePrefs.materialMode == com.xnotes.settings.MaterialColourMode.DUAL) {
-            homePrefs.materialSurfaceSeed
-        } else null
         val dark = homeAppearance != "light"
-        Palette.material(
-            homeAppearance,
-            MaterialColors.seeded(
-                seed = seed,
-                dark = dark,
-                style = homePrefs.materialStyle,
-                surfaceSeed = surfaceSeed,
-                contrast = homePrefs.materialContrast,
-            ),
-        )
+        val neutralSeed = com.xnotes.core.model.Rgba(232, 232, 232, 255)
+        val colours = when (homePrefs.materialMode) {
+            com.xnotes.settings.MaterialColourMode.SYSTEM ->
+                dynamicMaterialColors(themeContext, dark)
+                    ?: MaterialColors.seeded(com.xnotes.settings.Preferences.DEFAULT_ACCENT, dark = dark)
+            com.xnotes.settings.MaterialColourMode.SINGLE ->
+                MaterialColors.seeded(
+                    seed = homePrefs.materialSingleSeed,
+                    dark = dark,
+                    style = homePrefs.materialStyle,
+                    contrast = homePrefs.materialContrast,
+                )
+            com.xnotes.settings.MaterialColourMode.DUAL ->
+                MaterialColors.seeded(
+                    seed = homePrefs.materialDualSeed,
+                    dark = dark,
+                    style = homePrefs.materialStyle,
+                    surfaceSeed = homePrefs.materialSurfaceSeed,
+                    contrast = homePrefs.materialContrast,
+                )
+        }
+        Palette.material(homeAppearance, colours)
     }
     // The OLED library palette belongs to the whole backstage shell, not only the Home route.
     // Switching to Settings must not recolour the sidebar or the surrounding library surface.
