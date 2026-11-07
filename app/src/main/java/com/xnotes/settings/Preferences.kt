@@ -202,18 +202,22 @@ data class Preferences(
         .put("max_cache_resolution", maxCacheResolution)
         .put("disable_front_buffering", disableFrontBuffering)
         .apply {
-            if (materialMode != MaterialColourMode.SYSTEM) put("material_mode", materialMode.id)
+            // DUAL + MONOCHROME are the current defaults; persist only deviations so
+            // fresh installs and restored settings agree without writing redundant defaults.
+            if (materialMode != MaterialColourMode.DUAL) put("material_mode", materialMode.id)
             if (materialSingleSeed != DEFAULT_MATERIAL_SINGLE) put("material_single_seed", Rgba.toHex(materialSingleSeed))
             if (materialDualSeed != DEFAULT_MATERIAL_DUAL) put("material_dual_seed", Rgba.toHex(materialDualSeed))
-            // Keep the active colours readable by versions with a shared accent seed.
+            // Keep non-default active colours readable by older versions with a shared accent seed.
             when (materialMode) {
                 MaterialColourMode.SYSTEM -> Unit
                 MaterialColourMode.SINGLE -> put("material_seed", Rgba.toHex(materialSingleSeed))
-                MaterialColourMode.DUAL -> put("material_seed", Rgba.toHex(materialDualSeed)).put("material_dual_tone", true)
+                MaterialColourMode.DUAL -> if (materialDualSeed != DEFAULT_MATERIAL_DUAL) {
+                    put("material_seed", Rgba.toHex(materialDualSeed)).put("material_dual_tone", true)
+                }
             }
-            if (materialStyle != MaterialStyle.TONAL_SPOT) put("material_style", materialStyle.id)
+            if (materialStyle != MaterialStyle.MONOCHROME) put("material_style", materialStyle.id)
             if (materialContrast != 0.0) put("material_contrast", materialContrast)
-            if (materialMode == MaterialColourMode.DUAL || materialSurfaceSeed != DEFAULT_MATERIAL_SURFACE) {
+            if (materialSurfaceSeed != DEFAULT_MATERIAL_SURFACE) {
                 put("material_surface_seed", Rgba.toHex(materialSurfaceSeed))
             }
             if (cornerStyle != CornerStyle.ROUNDED) put("corner_style", cornerStyle.id)
