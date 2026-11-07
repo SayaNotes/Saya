@@ -308,20 +308,24 @@ fun PreferencesPane(
                 }
             }
             Spacer(Modifier.width(4.dp))
-            if (open == null) {
-                Box(
-                    Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
-                        .background(Color(0xFF050505))
-                        .border(1.dp, Color.White.copy(alpha = 0.16f), RoundedCornerShape(12.dp)),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(XnotesIcons.settings, "Settings", tint = palette.text.toComposeColor(), modifier = Modifier.size(19.dp))
-                }
+            Box(
+                Modifier.size(38.dp).clip(RoundedCornerShape(12.dp))
+                    .background(palette.surface.toComposeColor().copy(alpha = 0.55f))
+                    .border(1.dp, palette.border.toComposeColor(), RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(XnotesIcons.settings, open?.title ?: stringResource(R.string.preferences), tint = palette.text.toComposeColor(), modifier = Modifier.size(19.dp))
             }
-            Column(verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                Text("WORKSPACE  /  CONTROL", color = palette.textDim.toComposeColor(), fontSize = 9.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 1.35.sp)
-                Text(open?.title ?: stringResource(R.string.preferences), color = Color.White, fontWeight = FontWeight.SemiBold, fontSize = 22.sp, letterSpacing = (-0.45).sp)
-            }
+            Spacer(Modifier.width(9.dp))
+            Text(
+                open?.title ?: stringResource(R.string.preferences),
+                color = palette.text.toComposeColor(),
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 22.sp,
+                letterSpacing = (-0.45).sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
             Spacer(Modifier.weight(1f))
             IconButton(modifier = Modifier.liquidGlassSurface(CircleShape, palette.surface.toComposeColor(), edge = Color.White.copy(alpha = 0.20f), elevation = 3.dp), onClick = { search.open = !search.open; if (!search.open) search.query = "" }) {
                 Icon(XnotesIcons.search, stringResource(R.string.search_settings), tint = palette.text.toComposeColor(), modifier = Modifier.size(22.dp))
@@ -379,14 +383,6 @@ fun PreferencesPane(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             if (categorized && category == null && !searching) {
-                Text(
-                    "CONTROL DECK",
-                    color = palette.textDim.toComposeColor(),
-                    fontSize = 10.sp,
-                    fontWeight = FontWeight.SemiBold,
-                    letterSpacing = 1.5.sp,
-                    modifier = Modifier.padding(start = 4.dp, top = 4.dp, bottom = 2.dp),
-                )
                 for (c in visiblePrefCategories) {
                     val cardShape = RoundedCornerShape(15.dp)
                     Row(
@@ -406,7 +402,7 @@ fun PreferencesPane(
                         }
                         Spacer(Modifier.width(13.dp))
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-                            Text(c.title, color = Color.White, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                            Text(c.title, color = palette.text.toComposeColor(), fontSize = 15.sp, fontWeight = FontWeight.Medium)
                             Text("Configure this part of Saya", color = palette.textDim.toComposeColor(), fontSize = 11.sp)
                         }
                         Text("↗", color = palette.textDim.toComposeColor(), fontSize = 17.sp, fontWeight = FontWeight.Light)
