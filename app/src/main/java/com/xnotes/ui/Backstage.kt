@@ -265,18 +265,40 @@ fun Backstage(
     // Home must follow the user's saved appearance settings just like the editor.
     // Keep the established dark luxury layout, but derive its actual tones from Preferences.
     val homePrefs = editor.preferences
-    val homePalette = remember(homePrefs.materialContrast) {
-        // Saya's library is deliberately monochrome and OLED-black regardless of the
-        // editor's chosen theme. The note editor remains fully preference-driven.
+    val systemDark = isSystemInDarkTheme()
+    val homeAppearance = when (homePrefs.uiAppearance) {
+        "light" -> "light"
+        "oled" -> "oled"
+        "dark" -> "dark"
+        else -> if (systemDark) "dark" else "light"
+    }
+    val homePalette = remember(
+        homePrefs.uiAppearance,
+        homePrefs.materialMode,
+        homePrefs.materialSingleSeed,
+        homePrefs.materialDualSeed,
+        homePrefs.materialSurfaceSeed,
+        homePrefs.materialStyle,
+        homePrefs.materialContrast,
+        systemDark,
+    ) {
         val neutralSeed = com.xnotes.core.model.Rgba(232, 232, 232, 255)
-        val neutralSurface = com.xnotes.core.model.Rgba(112, 112, 112, 255)
+        val seed = when (homePrefs.materialMode) {
+            com.xnotes.settings.MaterialColourMode.SYSTEM -> neutralSeed
+            com.xnotes.settings.MaterialColourMode.SINGLE -> homePrefs.materialSingleSeed
+            com.xnotes.settings.MaterialColourMode.DUAL -> homePrefs.materialDualSeed
+        }
+        val surfaceSeed = if (homePrefs.materialMode == com.xnotes.settings.MaterialColourMode.DUAL) {
+            homePrefs.materialSurfaceSeed
+        } else null
+        val dark = homeAppearance != "light"
         Palette.material(
-            "oled",
+            homeAppearance,
             MaterialColors.seeded(
-                seed = neutralSeed,
-                dark = true,
-                style = MaterialStyle.MONOCHROME,
-                surfaceSeed = neutralSurface,
+                seed = seed,
+                dark = dark,
+                style = homePrefs.materialStyle,
+                surfaceSeed = surfaceSeed,
                 contrast = homePrefs.materialContrast,
             ),
         )
@@ -349,7 +371,7 @@ private fun BackstageContent(
 ) {
     val palette = LocalPalette.current
     // Keep the library shell consistently OLED-black while moving between Home and Settings.
-    val homeBackdrop = Color.Black
+    val homeBackdrop = palette.bg.toComposeColor()
     var createMode by remember { mutableStateOf(CreateMode.NONE) }
     var drawerOpen by remember { mutableStateOf(false) }
     val railed = editor.backstageRail
@@ -514,7 +536,7 @@ private fun BackstageSidebar(modifier: Modifier, editor: Editor, nav: SidebarNav
         ) {
             // Use the supplied transparent brand asset and the app's standard typography.
             Image(
-                painter = painterResource(R.drawable.saya_logo_transparent),
+                painter = painterResource(R.drawable.saya_logo_original),
                 contentDescription = "Saya logo",
                 contentScale = ContentScale.Fit,
                 modifier = Modifier.size(30.dp),
@@ -1043,7 +1065,11 @@ private fun CreateButton(
         DropdownMenu(
             expanded = menuOpen,
             onDismissRequest = { menuOpen = false },
-            modifier = Modifier.liquidGlassSurface(RoundedCornerShape(18.dp), palette.surface.toComposeColor(), edge = Color.White.copy(alpha = 0.24f), elevation = 14.dp),
+            modifier = Modifier,
+            shape = RectangleShape,
+            containerColor = Color.Transparent,
+            tonalElevation = 0.dp,
+            shadowElevation = 0.dp,
         ) {
             NewItemMenuItems({ menuOpen = false }, onCreateMode, onImportPdf)
         }
