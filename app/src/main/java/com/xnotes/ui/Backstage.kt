@@ -2747,7 +2747,8 @@ private fun PrimaryButton(icon: ImageVector, label: String, modifier: Modifier =
         animationSpec = tween(durationMillis = 120),
         label = "primaryButtonPress",
     )
-    val glassTop = Color.White.copy(alpha = if (pressed) 0.17f else 0.10f)
+    val glassReflection = if (palette.isDark) Color.White else Color.Black
+    val glassTop = glassReflection.copy(alpha = if (pressed) 0.17f else 0.045f)
     val glassBottom = palette.surface.toComposeColor().copy(alpha = if (palette.isDark) 0.30f else 0.16f)
     Column(
         modifier
@@ -2767,7 +2768,7 @@ private fun PrimaryButton(icon: ImageVector, label: String, modifier: Modifier =
             .drawBehind {
                 // A restrained top-edge reflection gives the action tile a glass lens finish.
                 drawLine(
-                    color = Color.White.copy(alpha = if (pressed) 0.20f else 0.13f),
+                    color = glassReflection.copy(alpha = if (pressed) 0.20f else 0.10f),
                     start = Offset(size.width * 0.16f, 1.dp.toPx()),
                     end = Offset(size.width * 0.84f, 1.dp.toPx()),
                     strokeWidth = 1.dp.toPx(),
@@ -2775,7 +2776,7 @@ private fun PrimaryButton(icon: ImageVector, label: String, modifier: Modifier =
             }
             .border(
                 width = 1.dp,
-                color = if (pressed) accent else Color.White.copy(alpha = if (palette.isDark) 0.18f else 0.38f),
+                color = if (pressed) accent else glassReflection.copy(alpha = if (palette.isDark) 0.18f else 0.14f),
                 shape = shape,
             )
             .clickable(interactionSource = interaction, indication = null, onClick = onClick)
