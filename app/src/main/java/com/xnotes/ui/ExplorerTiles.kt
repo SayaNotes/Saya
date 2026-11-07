@@ -939,8 +939,8 @@ internal fun HomeShelves(
     val folders = b.folders
     Column(
         modifier.fillMaxSize().background(ink).verticalScroll(rememberScrollState())
-            .padding(horizontal = 28.dp).padding(top = 8.dp, bottom = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(30.dp),
+            .padding(horizontal = 28.dp).padding(top = 0.dp, bottom = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp),
     ) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
