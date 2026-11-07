@@ -278,7 +278,7 @@ data class Preferences(
         fun fromJson(o: JSONObject?): Preferences {
             if (o == null) return Preferences()
             val appearance = o.optString("ui_appearance", "oled")
-                .let { if (it == "dark" || it == "light" || it == "oled") it else "system" }
+                .let { if (it == "system" || it == "dark" || it == "light" || it == "oled") it else "oled" }
             val template = o.optString("default_template", "color").let { if (it == "pdf") "pdf" else "color" }
             val zoomLockPan = o.optString("zoom_lock_pan", "single").let { if (it == "double" || it == "none") it else "single" }
             val tapActions = setOf("none", "undo", "redo", "toggle_pan", "toggle_eraser", "toggle_previous")
