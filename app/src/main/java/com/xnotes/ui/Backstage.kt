@@ -926,24 +926,41 @@ private fun NewItemMenuItems(
 ) {
     val palette = LocalPalette.current
     val tint = palette.text.toComposeColor()
-    // Taller than a default menu row (the explorer's primary create affordance), but only as wide
-    // as the longest label plus a margin. The end padding is the larger of the two on purpose: the
-    // icons carry ~1dp of their own inset, so an equal split reads as tight on the text side.
-    val row = Modifier.height(52.dp).padding(horizontal = 5.dp, vertical = 2.dp)
-        .liquidGlassSurface(RoundedCornerShape(10.dp), palette.surface.toComposeColor(), edge = Color.White.copy(alpha = 0.18f), elevation = 3.dp)
-    val pad = PaddingValues(start = 14.dp, end = 18.dp)
+    // Each action is its own floating glass control. The popup itself stays transparent,
+    // so no rectangular menu plate appears behind this stack.
     @Composable
-    fun item(icon: ImageVector, label: String, onPick: () -> Unit) = DropdownMenuItem(
-        text = { Text(label, fontSize = 16.sp) },
-        leadingIcon = { Icon(icon, null, tint = tint, modifier = Modifier.size(21.dp)) },
-        onClick = { onClose(); onPick() },
-        modifier = row,
-        contentPadding = pad,
-    )
-    item(XnotesIcons.edit, stringResource(R.string.new_note_menu)) { onCreateMode(CreateMode.FILE) }
-    item(XnotesIcons.canvas, stringResource(R.string.new_canvas_menu)) { onCreateMode(CreateMode.CANVAS) }
-    item(XnotesIcons.importDoc, stringResource(R.string.import_file)) { onImportPdf() }
-    item(XnotesIcons.newFolder, stringResource(R.string.new_folder_menu)) { onCreateMode(CreateMode.FOLDER) }
+    fun item(icon: ImageVector, label: String, onPick: () -> Unit) {
+        Row(
+            modifier = Modifier
+                .width(224.dp)
+                .height(52.dp)
+                .liquidGlassSurface(
+                    RoundedCornerShape(16.dp),
+                    palette.surface.toComposeColor(),
+                    edge = (if (palette.isDark) Color.White else Color.Black).copy(alpha = 0.16f),
+                    elevation = 7.dp,
+                )
+                .clickable {
+                    onClose()
+                    onPick()
+                }
+                .padding(horizontal = 15.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(icon, contentDescription = null, tint = tint, modifier = Modifier.size(21.dp))
+            Spacer(Modifier.width(12.dp))
+            Text(label, color = tint, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+        }
+    }
+    Column(
+        modifier = Modifier.padding(8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        item(XnotesIcons.edit, stringResource(R.string.new_note_menu)) { onCreateMode(CreateMode.FILE) }
+        item(XnotesIcons.canvas, stringResource(R.string.new_canvas_menu)) { onCreateMode(CreateMode.CANVAS) }
+        item(XnotesIcons.importDoc, stringResource(R.string.import_file)) { onImportPdf() }
+        item(XnotesIcons.newFolder, stringResource(R.string.new_folder_menu)) { onCreateMode(CreateMode.FOLDER) }
+    }
 }
 
 /** What the explorer hands back to the activity: opening, sharing and exporting files it can't do itself. */
