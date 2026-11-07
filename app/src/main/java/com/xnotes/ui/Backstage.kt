@@ -2070,23 +2070,25 @@ private fun ExplorerSection(
                         }
                     }
                     Spacer(Modifier.width(8.dp))
+                    // Keep the Saya brand mark and time-aware greeting visible in the Home
+                    // heading on both the normal notes view and the Recent view.
+                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 8.dp)) {
+                        Image(
+                            painter = painterResource(R.drawable.saya_logo_original),
+                            contentDescription = "Saya",
+                            contentScale = ContentScale.Fit,
+                            modifier = Modifier.size(24.dp),
+                        )
+                        Spacer(Modifier.width(7.dp))
+                        Text(
+                            greeting,
+                            color = palette.text.toComposeColor(),
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Medium,
+                            maxLines = 1,
+                        )
+                    }
                     if (!showRecent) {
-                        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(end = 8.dp)) {
-                            Image(
-                                painter = painterResource(R.drawable.saya_logo_original),
-                                contentDescription = "Saya",
-                                contentScale = ContentScale.Fit,
-                                modifier = Modifier.size(24.dp),
-                            )
-                            Spacer(Modifier.width(7.dp))
-                            Text(
-                                greeting,
-                                color = palette.text.toComposeColor(),
-                                fontSize = 13.sp,
-                                fontWeight = FontWeight.Medium,
-                                maxLines = 1,
-                            )
-                        }
                         ExplorerSearchField(query, { query = it }, expandedWidth = if (wide) 320.dp else (headerWidth - 144.dp).coerceAtLeast(160.dp), lift = liftNow)
                         if (wide && switcherLayouts.size > 1) {
                             Spacer(Modifier.width(8.dp))
