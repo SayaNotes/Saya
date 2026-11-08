@@ -30,7 +30,7 @@ Saya is designed to make capturing ideas feel calm and effortless. It brings han
 
 | Channel | |
 |---|---|
-| [Saya releases](https://github.com/SayaNotes/Saya/releases/tag/v1.0.0)) | Signed APK |
+| [Saya releases](https://github.com/SayaNotes/Saya/releases/tag/v1.0.0) | Signed APK |
 
 ## Open-source notices
 
