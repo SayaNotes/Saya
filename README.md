@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/Sameer8055/n-notes/releases/latest"><img src="https://img.shields.io/github/v/release/Sameer8055/n-notes?style=flat-square&label=release&color=blue" alt="Release" /></a>
+  <a href="(https://github.com/SayaNotes/Saya/releases/tag/v1.0.0)"><img src="https://img.shields.io/github/v/release/SayaNotes/Saya?style=flat-square&label=release&color=blue" alt="Release" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-orange?style=flat-square" alt="License" /></a>
   <img src="https://img.shields.io/badge/Android-8.0%2B-3ddc84?style=flat-square&logo=android&logoColor=white" alt="Android 8.0+" />
 </p>
@@ -30,7 +30,7 @@ Saya is designed to make capturing ideas feel calm and effortless. It brings han
 
 | Channel | |
 |---|---|
-| [Saya releases](https://github.com/Sameer8055/n-notes/releases/latest) | Signed APK |
+| [Saya releases](https://github.com/SayaNotes/Saya/releases/tag/v1.0.0)) | Signed APK |
 
 ## Open-source notices
 
