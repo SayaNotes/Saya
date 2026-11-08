@@ -26,6 +26,18 @@ Saya is designed to make capturing ideas feel calm and effortless. It brings han
 - Search, organisation, previews and flexible layouts.
 - Customisable tools, themes and workspace preferences.
 
+## 📱 Saya Screenshots
+
+<p align="center">
+  <img src="Screenshot_20261108-085550.png" width="45%" alt="Saya Screenshot 1" />
+  <img src="Screenshot_20261108-085743.png" width="45%" alt="Saya Screenshot 2" />
+</p>
+
+<p align="center">
+  <img src="Screenshot_20261108-090729.png" width="45%" alt="Saya Screenshot 3" />
+  <img src="Screenshot_20261108-091043.png" width="45%" alt="Saya Screenshot 4" />
+</p>
+
 ## Install
 
 | Channel | |
