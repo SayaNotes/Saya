@@ -26,6 +26,7 @@ private val CANVAS_TOOL_OF: Map<ToolbarItem, Tool> = mapOf(
     ToolbarItem.CALLIGRAPHY to Tool.CALLIGRAPHY,
     ToolbarItem.SPEED to Tool.SPEED,
     ToolbarItem.TAPER to Tool.TAPER,
+    ToolbarItem.LASER to Tool.LASER,
     ToolbarItem.HIGHLIGHTER to Tool.HIGHLIGHTER,
     ToolbarItem.ERASER to Tool.ERASER,
     ToolbarItem.PAN to Tool.PAN,
@@ -61,6 +62,7 @@ fun InfiniteToolbar(
         Tool.CALLIGRAPHY to ImageVector.vectorResource(R.drawable.ic_stroke_calligraphy),
         Tool.SPEED to ImageVector.vectorResource(R.drawable.ic_stroke_speed),
         Tool.TAPER to ImageVector.vectorResource(R.drawable.ic_stroke_taper),
+        Tool.LASER to ImageVector.vectorResource(R.drawable.ic_laser_pen),
         Tool.HIGHLIGHTER to ImageVector.vectorResource(R.drawable.ic_stroke_highlighter),
         Tool.PAN to XnotesIcons.pan,
         Tool.ERASER to XnotesIcons.eraser,
@@ -128,7 +130,10 @@ fun InfiniteToolbar(
                                     ) { selectOpen = null }
                                 }
                                 if (tool == Tool.TAPE && tapeOpen) TapeConfigPopup(editor) { tapeOpen = false }
-                                if (penOpen == tool) ToolConfigPopup(editor, tool, onSelectTool = { editor.armTool(it) }) { penOpen = null }
+                                if (penOpen == tool) {
+                                    if (tool == Tool.LASER) LaserConfigPopup(editor) { penOpen = null }
+                                    else ToolConfigPopup(editor, tool, onSelectTool = { editor.armTool(it) }) { penOpen = null }
+                                }
                             }
                         }
                     }
