@@ -179,7 +179,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
          */
         val CANVAS_ITEMS: Set<ToolbarItem> = setOf(
             ToolbarItem.HOME, ToolbarItem.TITLE,
-            ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY, ToolbarItem.SPEED,
+            ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY,
             ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.STAMP, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER,
             ToolbarItem.PAN, ToolbarItem.SELECT, ToolbarItem.WAND,
             ToolbarItem.TAPE, ToolbarItem.SHAPE,
@@ -211,7 +211,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
                         // persisted order so older/custom layouts migrate consistently.
                         ToolbarItem.WAND, ToolbarItem.TAPE, ToolbarItem.PAN, ToolbarItem.SELECT,
                         // Remaining tools stay available in the customizer, but start hidden.
-                        ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY, ToolbarItem.SPEED,
+                        ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY,
                         ToolbarItem.READER, ToolbarItem.INSERT_SPACE, ToolbarItem.SCREENSHOT,
                         ToolbarItem.RULER, ToolbarItem.TEXT, ToolbarItem.TEXT_BOX, ToolbarItem.MARKUP,
                         ToolbarItem.IMAGE, ToolbarItem.TABLE,
