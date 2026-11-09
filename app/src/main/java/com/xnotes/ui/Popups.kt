@@ -214,7 +214,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
         frameless = true,
     ) {
         Column(
-            Modifier.fillMaxWidth().widthIn(max = 560.dp)
+            Modifier.widthIn(max = 560.dp).fillMaxWidth()
                 .liquidGlassSurface(
                     RoundedCornerShape(26.dp),
                     LocalPalette.current.panel.toComposeColor(),
