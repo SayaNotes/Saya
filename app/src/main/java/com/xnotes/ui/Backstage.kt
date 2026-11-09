@@ -1366,6 +1366,13 @@ private fun ExplorerSection(
     val recents by produceState<List<RecentEntry>?>(null, root, showRecent || shelves, editor.recentDocs, refreshKey, editor.noteOpen, editor.treeVersion) {
         if (showRecent || shelves) value = withContext(Dispatchers.IO) { editor.recentEntries(root) }
     }
+    // Home's My Notes shelf spans the whole library, not only the current folder or recent history.
+    // Enumerate on IO so a large folder tree never blocks the first frame of Home.
+    val libraryNotes by produceState<List<BrowseEntry>>(emptyList(), root, shelves, refreshKey, editor.noteOpen, editor.treeVersion) {
+        value = if (shelves) withContext(Dispatchers.IO) {
+            editor.filesUnder(root, currentDocId, true).files.filterNot { it.isDir }
+        } else emptyList()
+    }
     val recentByUri = remember(recents) { recents.orEmpty().associateBy { it.entry.documentUri } }
     // Pinned notes head the top folder in the layouts that read top to bottom, nowhere else.
     val showPinned = stack.isEmpty() && !flat &&
@@ -1805,7 +1812,7 @@ private fun ExplorerSection(
                     )
                 }
                 HomeShelves(
-                    body, recents.orEmpty(), pinned,
+                    body, recents.orEmpty(), pinned, libraryNotes,
                     layout == ExplorerLayout.GALLERY || (layout == ExplorerLayout.GRID && view.thumb == ThumbShape.PAGE),
                     editor.sidebarPins, rootName ?: stringResource(R.string.folder),
                     counts = countsLabel(words, arranged.orEmpty().count { it.isDir }, arranged.orEmpty().count { !it.isDir }),
