@@ -1103,6 +1103,7 @@ private fun CreateButton(
             expanded = menuOpen,
             onDismissRequest = { menuOpen = false },
             modifier = Modifier,
+            frameless = true,
         ) {
             NewItemMenuItems({ menuOpen = false }, onCreateMode, onImportPdf)
         }
