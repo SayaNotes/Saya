@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.xnotes.R
 import com.xnotes.core.model.Rgba
+import com.xnotes.settings.SwatchRole
 import com.xnotes.core.shapes.ConnectorPage
 import com.xnotes.core.shapes.ConnectorPreset
 import com.xnotes.core.shapes.ConnectorPresets
