@@ -157,6 +157,8 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
     var speed by remember(tool) { mutableStateOf(ToolConversions.strengthToSpeed(base.speedStrength).toFloat()) }
     var taperTip by remember(tool) { mutableStateOf((base.taperMinFactor * 100).toFloat()) }
     var width by remember(tool) { mutableStateOf(base.baseWidth.toFloat()) }
+    var stampGlyph by remember(tool) { mutableStateOf(base.stampGlyph) }
+    var stampSpacing by remember(tool) { mutableStateOf(base.stampSpacing.toFloat()) }
     var glow by remember(tool) { mutableStateOf(base.neon) }
     var glowIntensity by remember(tool) { mutableStateOf(ToolConversions.neonStrengthToIntensity(base.neonStrength).toFloat()) }
     var dashLen by remember(tool) { mutableStateOf(base.dashLength.toFloat()) }
@@ -193,7 +195,9 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 scale = scale,
                 highlighterAlpha = ha,
                 highlighterInverse = inverse,
-                colorOverride = colorOverride,
+                colorOverride = if (tool == Tool.LASER) Rgba(255, 0, 0, 255) else colorOverride,
+                stampGlyph = if (tool == Tool.STAMP) normalizeStampGlyph(stampGlyph) else base.stampGlyph,
+                stampSpacing = if (tool == Tool.STAMP) stampSpacing.toDouble() else base.stampSpacing,
             ),
         )
     }
@@ -395,6 +399,17 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 if (hasPressure) {
                     ToggleRow(stringResource(R.string.caption_pressure), pressure) { pressure = it; emit() }
                     SliderRow(stringResource(R.string.caption_sensitivity), sensitivity, 0f..100f, enabled = pressure) { sensitivity = it; emit() }
+                }
+                if (tool == Tool.STAMP) {
+                    StyleCaption(stringResource(R.string.stamp_choose))
+                    FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        listOf("⭐", "✨", "❤️", "✓", "✔", "★", "🌸", "🔥", "⚡", "•", "♥", "✦").forEach { glyph ->
+                            ModeChip(glyph, stampGlyph == glyph) { stampGlyph = glyph; emit() }
+                        }
+                    }
+                    OutlinedTextField(value = stampGlyph, onValueChange = { stampGlyph = normalizeStampGlyph(it); emit() },
+                        label = { Text(stringResource(R.string.stamp_custom)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    SliderRow(stringResource(R.string.stamp_spacing), stampSpacing, 8f..160f) { stampSpacing = it; emit() }
                 }
                 if (tool == Tool.CALLIGRAPHY) SliderRow(stringResource(R.string.caption_multiplier), multiplier, 1f..5f) { multiplier = it; emit() }
                 if (tool == Tool.SPEED) SliderRow(stringResource(R.string.caption_speed), speed, 0f..100f) { speed = it; emit() }
