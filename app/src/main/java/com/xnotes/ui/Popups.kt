@@ -150,7 +150,7 @@ fun ToolConfigPopup(
     )
 }
 
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTool: (Tool) -> Unit, onDismiss: () -> Unit) {
     val base = remember(tool) { editor.toolConfig(tool) }
@@ -685,6 +685,7 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ColumnOrRowPenTray(maxWidth: Dp, buttons: @Composable () -> Unit) {
     val trayModifier = Modifier.fillMaxWidth()
