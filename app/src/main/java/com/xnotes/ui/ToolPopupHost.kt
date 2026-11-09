@@ -67,6 +67,12 @@ interface ToolPopupHost : SwatchHost {
     /** The shape popup's pages and chips, by key, in the order Preferences keeps. */
     val hostShapeOrder: List<String> get() = emptyList()
 
+    /** Whether this surface has a paginated page that can be cleared from the eraser panel. */
+    val hostCanClearCurrentPage: Boolean get() = false
+
+    /** Clear the current page's ink and objects as one undoable action. */
+    fun clearCurrentPage() {}
+
     /** Whether the open note has a PDF, whose text markups the eraser can take. */
     val hostHasPdf: Boolean get() = false
 
