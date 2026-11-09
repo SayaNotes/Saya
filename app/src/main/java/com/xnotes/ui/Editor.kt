@@ -7157,6 +7157,12 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
     override val hostToolbarColors: List<Rgba> get() = toolbarColors
     override val hostActiveColorIndex: Int get() = activeColorIndex
     override val hostRecentColors: List<Rgba> get() = recentColors
+    override val hostCanClearCurrentPage: Boolean get() = noteOpen && !canvasOpen && pageCount > 0
+
+    override fun clearCurrentPage() {
+        if (hostCanClearCurrentPage) erasePages(listOf(pageIndex))
+    }
+
     override val hostHasPdf: Boolean get() = hasPdf
 
     override val hostHiddenShapes: Set<String> get() = settings.prefs.hiddenShapes
