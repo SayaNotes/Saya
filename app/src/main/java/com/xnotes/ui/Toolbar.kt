@@ -396,9 +396,12 @@ private fun ToolButton(
     val selectionModeActive = tool == Tool.SELECT && editor.tool == Tool.LASSO
     val armed = editor.tool == tool || selectionModeActive
     val configurable = tool.isStroke || tool == Tool.SHAPE || tool == Tool.ERASER || tool == Tool.SELECT || tool == Tool.LASSO || tool == Tool.TEXT || tool == Tool.TABLE || tool == Tool.MARKUP || tool == Tool.TAPE
+    // The toolbar's pen slot follows the active stroke tool instead of retaining the icon
+    // of whichever pen happened to be selected when the slot was configured.
+    val displayIcon = if (tool.isStroke && editor.tool.isStroke) toolIcons[editor.tool] ?: icon else icon
     Box {
         ToolbarIcon(
-            icon,
+            displayIcon,
             stringResource(tool.labelRes),
             active = armed,
             glideKey = tool,
