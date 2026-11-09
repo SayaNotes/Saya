@@ -6963,7 +6963,7 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
         action == "undo" -> undo()
         action == "redo" -> redo()
         action == "toggle_pan" -> toggleTool(Tool.PAN)
-        action == "toggle_eraser" -> toggleTool(Tool.ERASER)
+        action == "toggle_eraser" -> selectTool(Tool.ERASER)
         action == "toggle_previous" -> toggleToPreviousTool()
         else -> Unit
     }
