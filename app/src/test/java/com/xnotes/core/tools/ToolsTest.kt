@@ -36,6 +36,14 @@ class ToolsTest {
         assertEquals(1.0, ToolConversions.intensityToHighlighterAlpha(100.0), 1e-9)
         assertEquals(24.0, ToolDefaults.configFor(Tool.ERASER).baseWidth, 1e-9)
         assertEquals(2.0, ToolDefaults.configFor(Tool.LASSO).baseWidth, 1e-9)
+        val laser = ToolDefaults.configFor(Tool.LASER)
+        assertEquals(7.0, laser.baseWidth, 1e-9)
+        assertEquals(Rgba(255, 0, 0, 255), laser.rgba)
+        assertEquals(Rgba(255, 0, 0, 255), laser.colorOverride)
+        assertTrue(laser.neon)
+        assertEquals(1.0, laser.neonStrength, 1e-9)
+        assertTrue(laser.taperEnabled)
+        assertEquals(0.50, laser.taperMinFactor, 1e-9)
         // A tool without an entry uses ToolConfig() = (3.0, on, 0.35, 0.0).
         assertEquals(ToolConfig().copy(rgba = ToolDefaults.configFor(Tool.PAN).rgba), ToolDefaults.configFor(Tool.PAN))
     }
@@ -61,6 +69,7 @@ class ToolsTest {
     @Test fun widthRanges() {
         assertEquals(4.0..120.0, ToolConversions.widthRange(Tool.HIGHLIGHTER))
         assertEquals(1.0..20.0, ToolConversions.widthRange(Tool.PEN))
+        assertEquals(1.0..20.0, ToolConversions.widthRange(Tool.LASER))
     }
 
     @Test fun eraserModesRoundTripIncludingLasso() {
@@ -73,6 +82,7 @@ class ToolsTest {
     @Test fun strokeToolsAndAlpha() {
         assertTrue(Tool.CALLIGRAPHY.isStroke)
         assertTrue(Tool.DASHED.isStroke)
+        assertTrue(Tool.LASER.isStroke)
         assertFalse(Tool.SELECT.isStroke)
         assertEquals(0.35, Tool.HIGHLIGHTER.alphaScale, 1e-9)
         assertEquals(1.0, Tool.PEN.alphaScale, 1e-9)
@@ -100,6 +110,6 @@ class ToolsTest {
 
     @Test fun toolIdRoundTrip() {
         for (t in Tool.entries) assertEquals(t, Tool.fromId(t.id))
-        assertEquals(16, Tool.wheelOrder.size)
+        assertEquals(17, Tool.wheelOrder.size)
     }
 }
