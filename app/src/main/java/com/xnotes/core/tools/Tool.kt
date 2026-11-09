@@ -7,6 +7,7 @@ enum class Tool(val id: String) {
     CALLIGRAPHY("calligraphy"),
     SPEED("speed"),
     TAPER("taper"),
+    LASER("laser"),
     HIGHLIGHTER("highlighter"),
     ERASER("eraser"),
     PAN("pan"),
@@ -30,7 +31,7 @@ enum class Tool(val id: String) {
 
     /** Tools that produce ink via the stroke engine. */
     val isStroke: Boolean get() = this == PEN || this == DASHED || this == CALLIGRAPHY ||
-        this == SPEED || this == TAPER || this == HIGHLIGHTER
+        this == SPEED || this == TAPER || this == LASER || this == HIGHLIGHTER
 
     /**
      * Tools the "draw with finger" gate covers: when finger-draw is off, a finger pans
@@ -52,6 +53,6 @@ enum class Tool(val id: String) {
         val DEFAULT = PAN
 
         /** Quick-tool-wheel order (spec 06 §11 / 10 §7). */
-        val wheelOrder = listOf(PEN, DASHED, CALLIGRAPHY, SPEED, TAPER, HIGHLIGHTER, ERASER, SELECT, LASSO, INSERT_SPACE, SCREENSHOT, TAPE, SHAPE, TEXT, MARKUP, PAN)
+        val wheelOrder = listOf(PEN, DASHED, CALLIGRAPHY, SPEED, TAPER, LASER, HIGHLIGHTER, ERASER, SELECT, LASSO, INSERT_SPACE, SCREENSHOT, TAPE, SHAPE, TEXT, MARKUP, PAN)
     }
 }
