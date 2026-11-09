@@ -294,7 +294,7 @@ private fun ToolbarItemView(
             }
 
         ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY, ToolbarItem.SPEED,
-        ToolbarItem.TAPER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER, ToolbarItem.PAN,
+        ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER, ToolbarItem.PAN,
         ToolbarItem.SELECT, ToolbarItem.SCREENSHOT, ToolbarItem.SHAPE,
         ToolbarItem.TEXT, ToolbarItem.TEXT_BOX, ToolbarItem.TABLE, ToolbarItem.TAPE, ToolbarItem.INSERT_SPACE -> {
             val tool = Tool.fromId(item.id)
