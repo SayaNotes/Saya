@@ -1152,6 +1152,7 @@ fun EraserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
     var scale by remember { mutableStateOf(base.scale) }
     var markups by remember { mutableStateOf(base.eraseMarkups) }
     var scribble by remember { mutableStateOf(base.scribbleErase) }
+    var clearProgress by remember { mutableStateOf(0f) }
 
     fun emit() = editor.updateToolConfig(
         Tool.ERASER,
@@ -1213,6 +1214,25 @@ fun EraserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                     if (editor.hostHasPdf) ToggleRow(stringResource(R.string.caption_erase_markups), markups) { markups = it; emit() }
                     // A pen scribbled over ink erases it without picking up the eraser.
                     ToggleRow(stringResource(R.string.caption_scribble_erase), scribble) { scribble = it; emit() }
+                }
+            }
+            if (editor.hostCanClearCurrentPage) {
+                HorizontalDivider(color = LocalPalette.current.border.toComposeColor().copy(alpha = 0.55f))
+                Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                    Text(
+                        stringResource(R.string.slide_to_clear_page),
+                        color = LocalPalette.current.text.toComposeColor(),
+                        fontSize = 12.sp,
+                    )
+                    Slider(
+                        value = clearProgress,
+                        onValueChange = { clearProgress = it },
+                        onValueChangeFinished = {
+                            if (clearProgress >= 0.96f) editor.clearCurrentPage()
+                            clearProgress = 0f
+                        },
+                        valueRange = 0f..1f,
+                    )
                 }
             }
         }
