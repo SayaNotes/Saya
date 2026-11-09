@@ -162,7 +162,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
     var intensity by remember(tool) { mutableStateOf(ToolConversions.highlighterAlphaToIntensity(base.highlighterAlpha).toFloat()) }
     var inverse by remember(tool) { mutableStateOf(base.highlighterInverse) }
     var colorOverride by remember(tool) { mutableStateOf(base.colorOverride) }
-    var editingPaletteColor by remember(tool) { mutableStateOf<Rgba?>(null) }
+    var editingPaletteColor by remember(tool) { mutableStateOf<Int?>(null) }
     var snapShapes by remember(tool) { mutableStateOf(editor.snapHeldToShapes) }
     var advancedExpanded by remember(tool) { mutableStateOf(false) }
 
@@ -195,12 +195,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
     }
 
     // Twelve high-contrast presets arranged as the compact 3-column palette in the reference.
-    val paletteColors = listOf(
-        Rgba(245, 20, 24), Rgba(255, 145, 20), Rgba(255, 215, 20),
-        Rgba(45, 205, 65), Rgba(35, 65, 235), Rgba(20, 145, 235),
-        Rgba(20, 185, 195), Rgba(225, 25, 185), Rgba(35, 115, 45),
-        Rgba(25, 25, 28), Rgba(135, 135, 140), Rgba(255, 255, 255),
-    )
+    val paletteColors = editor.swatches(SwatchRole.PEN)
     val penTools = listOf(Tool.PEN, Tool.CALLIGRAPHY, Tool.SPEED, Tool.TAPER, Tool.HIGHLIGHTER)
 
     DropdownMenu(
@@ -288,7 +283,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
                         verticalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
-                        paletteColors.forEach { swatch ->
+                        paletteColors.forEachIndexed { paletteIndex, swatch ->
                             val swatchColor = swatch.toComposeColor()
                             val selected = editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex) == swatch
                             Box(
@@ -304,18 +299,22 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                                     )
                                     .combinedClickable(
                                         onClick = { editor.setSwatchColor(editor.hostActiveColorIndex, swatch) },
-                                        onLongClick = { editingPaletteColor = swatch },
+                                        onLongClick = { editingPaletteColor = paletteIndex },
                                     ),
                             ) {}
                         }
                     }
-                    editingPaletteColor?.let { seed ->
-                        ColorPickerPopup(
+                    editingPaletteColor?.let { paletteIndex ->
+                        val seed = paletteColors.getOrNull(paletteIndex)
+                        if (seed != null) ColorPickerPopup(
                             initial = seed,
                             recents = editor.hostRecentColors,
                             onDismiss = { editingPaletteColor = null },
                             onPick = { picked ->
-                                editor.setSwatchColor(editor.hostActiveColorIndex, picked)
+                                editor.setSwatch(SwatchRole.PEN, paletteIndex, picked)
+                                if (editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex) == seed) {
+                                    editor.setSwatchColor(editor.hostActiveColorIndex, picked)
+                                }
                                 editingPaletteColor = null
                             },
                         )
