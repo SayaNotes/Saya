@@ -34,7 +34,7 @@ val SwatchHost.shownSwatches: List<Rgba> get() = hostToolbarColors.take(hostTool
  * members the popups actually read through an interface is what makes "identical" a property of the
  * code rather than a thing to keep checking.
  */
-interface ToolPopupHost : SwatchHost {
+interface ToolPopupHost : SwatchHost, SwatchStore {
     /** The stored style for [tool], without any live ink colour folded into it. */
     fun toolConfig(tool: Tool): ToolConfig
 
