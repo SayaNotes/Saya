@@ -1370,7 +1370,7 @@ private fun ExplorerSection(
     // Enumerate on IO so a large folder tree never blocks the first frame of Home.
     val libraryNotes by produceState<List<BrowseEntry>>(emptyList(), root, shelves, refreshKey, editor.noteOpen, editor.treeVersion) {
         value = if (shelves) withContext(Dispatchers.IO) {
-            editor.filesUnder(root, currentDocId, true).files.filterNot { it.isDir }
+            editor.filesUnder(root, currentDocId, true).files.filter { !it.isDir && DocumentKind.isDocument(it.name) }
         } else emptyList()
     }
     val recentByUri = remember(recents) { recents.orEmpty().associateBy { it.entry.documentUri } }
