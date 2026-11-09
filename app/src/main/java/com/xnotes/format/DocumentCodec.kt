@@ -429,6 +429,11 @@ class DocumentCodec(
             j.name("highlighter_alpha").value(s.config.highlighterAlpha)
             if (s.config.highlighterInverse) j.name("highlighter_inverse").value(true)
         }
+        if (s.tool == Tool.STAMP) {
+            j.name("stamp_glyph").value(s.config.stampGlyph)
+            j.name("stamp_size").value(s.config.stampSize)
+            j.name("stamp_spacing").value(s.config.stampSpacing)
+        }
         j.endObject()
         // Samples are ~97% of a dense manifest's bytes, so they go out through [JsonWrite.samplePoint], which rounds them: 0.01
         // content px (2dp) and 0.001 pressure (3dp) are far below anything visible, and a
@@ -1422,6 +1427,9 @@ class DocumentCodec(
             // Absent on legacy highlighter strokes -> the historical 0.35, so they reload unchanged.
             highlighterAlpha = c?.highlighterAlpha ?: def.highlighterAlpha,
             highlighterInverse = c?.highlighterInverse ?: def.highlighterInverse,
+            stampGlyph = c?.stampGlyph ?: def.stampGlyph,
+            stampSize = c?.stampSize ?: def.stampSize,
+            stampSpacing = c?.stampSpacing ?: def.stampSpacing,
         )
         val stroke = Stroke(tool, config, emptyList(), s.speedScale, s.straight, s.smoothScale)
         s.samples?.let { stroke.setSamples(it.xs, it.ys, it.ps, it.ts, it.n) }
@@ -1639,6 +1647,9 @@ class DocumentCodec(
                 "dash_gap" -> c.dashGap = doubleOrNull(p)
                 "highlighter_alpha" -> c.highlighterAlpha = doubleOrNull(p)
                 "highlighter_inverse" -> c.highlighterInverse = boolOrNull(p)
+                "stamp_glyph" -> c.stampGlyph = stringOrNull(p)
+                "stamp_size" -> c.stampSize = doubleOrNull(p)
+                "stamp_spacing" -> c.stampSpacing = doubleOrNull(p)
                 else -> p.skipValue()
             }
         }
