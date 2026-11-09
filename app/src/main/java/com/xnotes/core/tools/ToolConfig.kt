@@ -198,6 +198,7 @@ object ToolConversions {
      *  (its radius, default 24), tape's own range, else 1..20. */
     fun widthRange(tool: Tool): ClosedFloatingPointRange<Double> = when (tool) {
         Tool.HIGHLIGHTER -> 4.0..120.0
+        Tool.STAMP -> 8.0..96.0
         Tool.ERASER -> 1.0..80.0
         Tool.TAPE -> TapeItem.MIN_WIDTH..TapeItem.MAX_WIDTH
         else -> 1.0..20.0
