@@ -103,6 +103,7 @@ import com.xnotes.core.tools.ShapeConfig
 import com.xnotes.core.shapes.ShapeKind
 import com.xnotes.core.tools.Tool
 import com.xnotes.core.tools.ToolConfig
+import com.xnotes.core.tools.normalizeStampGlyph
 import com.xnotes.core.tools.ToolConversions
 import com.xnotes.platform.FontCatalog
 import com.xnotes.platform.TemplateLibrary
@@ -525,7 +526,7 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
     val presets = listOf("⭐", "✨", "❤️", "✓", "✔", "★", "🌸", "🔥", "⚡", "•", "♥", "✦")
 
     fun emit() {
-        val clean = glyph.trim().take(8).ifBlank { "⭐" }
+        val clean = normalizeStampGlyph(glyph)
         editor.updateToolConfig(
             Tool.STAMP,
             base.copy(
@@ -589,7 +590,7 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
             }
             OutlinedTextField(
                 value = glyph,
-                onValueChange = { glyph = it.take(8); emit() },
+                onValueChange = { glyph = normalizeStampGlyph(it); emit() },
                 label = { Text(stringResource(R.string.stamp_custom)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
