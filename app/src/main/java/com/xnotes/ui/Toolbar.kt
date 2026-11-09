@@ -62,6 +62,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInteropFilter
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
@@ -73,6 +75,7 @@ import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -294,7 +297,7 @@ private fun ToolbarItemView(
                 }
             }
 
-        ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY, ToolbarItem.SPEED,
+        ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY,
         ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.STAMP, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER, ToolbarItem.PAN,
         ToolbarItem.SELECT, ToolbarItem.SCREENSHOT, ToolbarItem.SHAPE,
         ToolbarItem.TEXT, ToolbarItem.TEXT_BOX, ToolbarItem.TABLE, ToolbarItem.TAPE, ToolbarItem.INSERT_SPACE -> {
@@ -303,6 +306,8 @@ private fun ToolbarItemView(
         }
 
         // Marks a PDF's text, so a note without a PDF has no use for it.
+        ToolbarItem.SPEED -> Unit // Speed Pen is intentionally retired from the tool UI.
+
         ToolbarItem.MARKUP ->
             if (editor.hasPdf) ToolButton(editor, Tool.MARKUP, toolIcons[Tool.MARKUP], configForTool, setConfigForTool)
 
@@ -393,9 +398,34 @@ private fun ToolButton(
     setConfigForTool: (Tool?) -> Unit,
 ) {
     if (icon == null) return
+    // The regular Pen toolbar slot becomes the active pen slot: its artwork follows
+    // whichever of the six pen styles is currently selected.
+    val displayTool = if (tool == Tool.PEN && editor.tool.isStroke) editor.tool else tool
+    val popupTool = displayTool
     val selectionModeActive = tool == Tool.SELECT && editor.tool == Tool.LASSO
-    val armed = editor.tool == tool || selectionModeActive
+    val armed = editor.tool == tool || (tool == Tool.PEN && editor.tool.isStroke) || selectionModeActive
     val configurable = tool.isStroke || tool == Tool.SHAPE || tool == Tool.ERASER || tool == Tool.SELECT || tool == Tool.LASSO || tool == Tool.TEXT || tool == Tool.TABLE || tool == Tool.MARKUP || tool == Tool.TAPE
+    val imageRes = when (displayTool) {
+        Tool.PEN -> R.drawable.pen_tool_pen
+        Tool.CALLIGRAPHY -> R.drawable.pen_tool_calligraphy
+        Tool.HIGHLIGHTER -> R.drawable.pen_tool_highlighter
+        Tool.TAPER -> R.drawable.pen_tool_taper
+        Tool.LASER -> R.drawable.pen_tool_laser
+        Tool.STAMP -> R.drawable.pen_tool_stamp
+        else -> null
+    }
+    val nibMaskRes = when (displayTool) {
+        Tool.PEN -> R.drawable.pen_nib_mask
+        Tool.CALLIGRAPHY -> R.drawable.calligraphy_nib_mask
+        Tool.HIGHLIGHTER -> R.drawable.highlighter_nib_mask
+        Tool.TAPER -> R.drawable.taper_nib_mask
+        else -> null
+    }
+    val image = imageRes?.let { painterResource(it) }
+    val nibMask = nibMaskRes?.let { painterResource(it) }
+    val nibColor = editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor()
+        ?: androidx.compose.ui.graphics.Color.Black
+    val stampGlyph = if (displayTool == Tool.STAMP) editor.toolConfig(Tool.STAMP).stampGlyph else null
     Box {
         ToolbarIcon(
             icon,
@@ -404,37 +434,32 @@ private fun ToolButton(
             glideKey = tool,
             hint = if (armed && configurable) stringResource(R.string.tip_tap_for_settings) else null,
             shortcut = PAGED_TOOL_KEYS[tool],
+            image = image,
+            nibMask = nibMask,
+            nibColor = nibColor,
+            stampGlyph = stampGlyph,
         ) {
             if (armed && configurable) {
-                setConfigForTool(if (tool == Tool.SELECT && editor.tool == Tool.LASSO) Tool.LASSO else tool)
+                setConfigForTool(if (tool == Tool.SELECT && editor.tool == Tool.LASSO) Tool.LASSO else popupTool)
             } else {
                 editor.selectTool(tool)
                 setConfigForTool(null)
             }
         }
-        if (tool == Tool.STAMP && editor.tool == Tool.STAMP) {
-            Text(
-                editor.toolConfig(Tool.STAMP).stampGlyph,
-                fontSize = 10.sp,
-                modifier = Modifier.align(Alignment.TopCenter).offset(y = 1.dp),
-            )
-        }
-        if (configForTool == tool || (tool == Tool.SELECT && configForTool == Tool.LASSO)) {
+        if (configForTool == popupTool || (tool == Tool.SELECT && configForTool == Tool.LASSO)) {
             when {
-                tool == Tool.SHAPE -> ShapeConfigPopup(editor) { setConfigForTool(null) }
-                tool == Tool.TABLE -> TableConfigPopup(editor) { setConfigForTool(null) }
-                tool == Tool.ERASER -> EraserConfigPopup(editor) { setConfigForTool(null) }
-                tool == Tool.SELECT || tool == Tool.LASSO -> SelectConfigPopup(
+                popupTool == Tool.SHAPE -> ShapeConfigPopup(editor) { setConfigForTool(null) }
+                popupTool == Tool.TABLE -> TableConfigPopup(editor) { setConfigForTool(null) }
+                popupTool == Tool.ERASER -> EraserConfigPopup(editor) { setConfigForTool(null) }
+                popupTool == Tool.SELECT || popupTool == Tool.LASSO -> SelectConfigPopup(
                     editor,
-                    configForTool ?: tool,
+                    configForTool ?: popupTool,
                     onSelectTool = { editor.selectTool(it); setConfigForTool(null) },
                 ) { setConfigForTool(null) }
-                tool == Tool.TEXT -> TextToolConfigPopup(editor) { setConfigForTool(null) }
-                tool == Tool.MARKUP -> MarkupToolPopup(editor) { setConfigForTool(null) }
-                tool == Tool.TAPE -> TapeConfigPopup(editor) { setConfigForTool(null) }
-                tool == Tool.LASER -> LaserConfigPopup(editor) { setConfigForTool(null) }
-                tool == Tool.STAMP -> StampConfigPopup(editor) { setConfigForTool(null) }
-                else -> ToolConfigPopup(editor, tool, onSelectTool = { editor.selectTool(it) }) { setConfigForTool(null) }
+                popupTool == Tool.TEXT -> TextToolConfigPopup(editor) { setConfigForTool(null) }
+                popupTool == Tool.MARKUP -> MarkupToolPopup(editor) { setConfigForTool(null) }
+                popupTool == Tool.TAPE -> TapeConfigPopup(editor) { setConfigForTool(null) }
+                else -> ToolConfigPopup(editor, popupTool, onSelectTool = { editor.selectTool(it) }) { setConfigForTool(null) }
             }
         }
     }
@@ -608,6 +633,10 @@ internal fun ToolbarIcon(
     glideKey: Any? = null,
     hint: String? = null,
     shortcut: String? = null,
+    image: androidx.compose.ui.graphics.painter.Painter? = null,
+    nibMask: androidx.compose.ui.graphics.painter.Painter? = null,
+    nibColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Black,
+    stampGlyph: String? = null,
     onClick: () -> Unit,
 ) {
     val palette = LocalPalette.current
@@ -675,7 +704,18 @@ internal fun ToolbarIcon(
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(icon, contentDescription = contentDescription, tint = tint, modifier = Modifier.size(bar.icon))
+                if (image == null) {
+                    Icon(icon, contentDescription = contentDescription, tint = tint, modifier = Modifier.size(bar.icon))
+                } else {
+                    Box(Modifier.size(bar.icon), contentAlignment = Alignment.Center) {
+                        Image(image, contentDescription = contentDescription, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+                        if (nibMask != null) {
+                            Image(nibMask, contentDescription = null, contentScale = ContentScale.Fit,
+                                colorFilter = ColorFilter.tint(nibColor, BlendMode.SrcIn), modifier = Modifier.fillMaxSize())
+                        }
+                        if (!stampGlyph.isNullOrBlank()) Text(stampGlyph, fontSize = 9.sp)
+                    }
+                }
             }
         }
     }
