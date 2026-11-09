@@ -1744,10 +1744,10 @@ class InteractionController(
             val dirty = if (area) eraseAreaFromPage(page, cx, cy, radius)
             else eraseStrokesFromPage(page, cx, cy, radius)
             if (dirty != null) {
-                // Repaint only the erased area in place; fall back to a full
-                // rebuild only when the page has no live cache yet.
-                val rect = dirty.outset(REPAIR_PAD)
-                if (!state.repairRegion(page, rect)) state.invalidatePage(page)
+                // Erasing must invalidate both the page cache and the sharp-viewport cache.
+                // A partial repair can leave the old sharp raster visible until the next zoom,
+                // which makes erased ink appear to return. Force the next frame to rebuild it.
+                state.invalidatePage(page)
                 changed = true
             }
             if (eraseMarkupsFromPage(page, cx, cy, radius)) changed = true
