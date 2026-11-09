@@ -421,6 +421,95 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
     }
 }
 
+/**
+ * Dedicated laser preset. The visual style is intentionally fixed: fully opaque red,
+ * maximum neon bloom, and the taper profile. Only width is exposed to the user.
+ */
+@Composable
+fun LaserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
+    val base = remember(editor) { editor.toolConfig(Tool.LASER) }
+    var width by remember { mutableStateOf(base.baseWidth.toFloat().coerceIn(1f, 20f)) }
+    val laserRed = Rgba(255, 0, 0, 255)
+
+    fun emit() {
+        editor.updateToolConfig(
+            Tool.LASER,
+            base.copy(
+                baseWidth = width.toDouble(),
+                rgba = laserRed,
+                colorOverride = laserRed,
+                pressureEnabled = true,
+                pressureMinFactor = 0.45,
+                directionStrength = 0.0,
+                speedStrength = 0.0,
+                taperEnabled = true,
+                taperMinFactor = 0.50,
+                neon = true,
+                neonStrength = 1.0,
+                highlighterAlpha = 1.0,
+            ),
+        )
+    }
+
+    DropdownMenu(
+        expanded = true,
+        onDismissRequest = onDismiss,
+        modifier = Modifier.clip(RoundedCornerShape(22.dp)),
+        frameless = true,
+    ) {
+        Column(
+            Modifier.width(250.dp)
+                .liquidGlassSurface(
+                    RoundedCornerShape(22.dp),
+                    LocalPalette.current.panel.toComposeColor(),
+                    elevation = 14.dp,
+                )
+                .padding(horizontal = 16.dp, vertical = 13.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(Modifier.size(10.dp).clip(CircleShape).background(Color(0xFFFF0000)))
+                    PopupTitle("Laser Pen")
+                }
+                Text(
+                    "×",
+                    color = LocalPalette.current.text.toComposeColor(),
+                    fontSize = 20.sp,
+                    modifier = Modifier.clip(CircleShape).clickable { onDismiss() }.padding(horizontal = 5.dp),
+                )
+            }
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                StyleCaption(stringResource(R.string.laser_width))
+                Text("%.1f".format(width), color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
+            }
+            Slider(
+                value = width,
+                onValueChange = { width = it; emit() },
+                valueRange = 1f..20f,
+                colors = SliderDefaults.colors(
+                    thumbColor = LocalPalette.current.accent.toComposeColor(),
+                    activeTrackColor = LocalPalette.current.accent.toComposeColor(),
+                    inactiveTrackColor = LocalPalette.current.border.toComposeColor(),
+                ),
+            )
+            Text(
+                "Red • Neon Glow • 100% opacity • Taper",
+                color = LocalPalette.current.muted.toComposeColor(),
+                fontSize = 11.sp,
+            )
+        }
+    }
+}
+
 @Composable
 private fun ToolModeButton(tool: Tool, selected: Boolean, onClick: () -> Unit) {
     val palette = LocalPalette.current
