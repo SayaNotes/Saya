@@ -5,6 +5,7 @@ enum class Tool(val id: String) {
     PEN("pen"),
     DASHED("dashed"),
     CALLIGRAPHY("calligraphy"),
+    /** Legacy tool id retained so existing documents can still be opened; no longer user-selectable. */
     SPEED("speed"),
     TAPER("taper"),
     LASER("laser"),
