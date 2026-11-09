@@ -713,7 +713,7 @@ internal fun ToolbarIcon(
                             Image(nibMask, contentDescription = null, contentScale = ContentScale.Fit,
                                 colorFilter = ColorFilter.tint(nibColor, BlendMode.SrcIn), modifier = Modifier.fillMaxSize())
                         }
-                        if (!stampGlyph.isNullOrBlank()) Text(stampGlyph, fontSize = 9.sp)
+                        if (!stampGlyph.isNullOrBlank()) Text(stampGlyph, fontSize = 9.sp, modifier = Modifier.align(Alignment.TopCenter).offset(y = 1.dp))
                     }
                 }
             }
