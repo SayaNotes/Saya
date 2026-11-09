@@ -1497,7 +1497,7 @@ interface SwatchStore {
 }
 
 /**
- * A role's five colour circles. A tap applies one; a tap on the one already [selected] opens the
+ * A role's editable colour circles. A tap applies one; a tap on the one already [selected] opens the
  * picker and recolours that circle, as the toolbar's pen swatches do. Emits the circles straight
  * into the caller's row, so a Default chip can sit before them.
  */
