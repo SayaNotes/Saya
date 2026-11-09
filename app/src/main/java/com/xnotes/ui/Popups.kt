@@ -36,6 +36,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -510,6 +511,127 @@ fun LaserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
     }
 }
 
+/**
+ * Stamp Pen setup: the selected emoji/symbol is repeated down the gesture path. The preview,
+ * size and spacing controls mirror the original Stamp Pen panel.
+ */
+@Composable
+fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
+    val base = remember(editor) { editor.toolConfig(Tool.STAMP) }
+    var glyph by remember { mutableStateOf(base.stampGlyph) }
+    var size by remember { mutableStateOf(base.stampSize.toFloat().coerceIn(8f, 96f)) }
+    var spacing by remember { mutableStateOf(base.stampSpacing.toFloat().coerceIn(8f, 160f)) }
+    val presets = listOf("⭐", "✨", "❤️", "✓", "✔", "★", "🌸", "🔥", "⚡", "•", "♥", "✦")
+
+    fun emit() {
+        val clean = glyph.trim().take(8).ifBlank { "⭐" }
+        editor.updateToolConfig(
+            Tool.STAMP,
+            base.copy(
+                baseWidth = size.toDouble(),
+                pressureEnabled = false,
+                pressureMinFactor = 1.0,
+                directionStrength = 0.0,
+                stampGlyph = clean,
+                stampSize = size.toDouble(),
+                stampSpacing = spacing.toDouble(),
+            ),
+        )
+    }
+
+    DropdownMenu(
+        expanded = true,
+        onDismissRequest = onDismiss,
+        modifier = Modifier.clip(RoundedCornerShape(22.dp)),
+        frameless = true,
+    ) {
+        Column(
+            Modifier.width(320.dp)
+                .liquidGlassSurface(
+                    RoundedCornerShape(22.dp),
+                    LocalPalette.current.panel.toComposeColor(),
+                    elevation = 14.dp,
+                )
+                .padding(horizontal = 16.dp, vertical = 13.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                PopupTitle(stringResource(R.string.tool_stamp))
+                Text(
+                    "×",
+                    color = LocalPalette.current.text.toComposeColor(),
+                    fontSize = 20.sp,
+                    modifier = Modifier.clip(CircleShape).clickable { onDismiss() }.padding(horizontal = 5.dp),
+                )
+            }
+            StyleCaption(stringResource(R.string.stamp_choose))
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                presets.forEach { preset ->
+                    val selected = glyph == preset
+                    Box(
+                        Modifier.size(42.dp).clip(RoundedCornerShape(7.dp))
+                            .background(if (selected) LocalPalette.current.accent.toComposeColor().copy(alpha = 0.22f) else LocalPalette.current.surface.toComposeColor())
+                            .border(1.dp, if (selected) LocalPalette.current.accent.toComposeColor() else LocalPalette.current.border.toComposeColor(), RoundedCornerShape(7.dp))
+                            .clickable { glyph = preset; emit() },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(preset, fontSize = 20.sp)
+                    }
+                }
+            }
+            OutlinedTextField(
+                value = glyph,
+                onValueChange = { glyph = it.take(8); emit() },
+                label = { Text(stringResource(R.string.stamp_custom)) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Row(
+                Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                repeat(3) { Text(glyph.ifBlank { "⭐" }, fontSize = (size * 0.72f).sp) }
+            }
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                StyleCaption(stringResource(R.string.stamp_size))
+                Text(size.toInt().toString(), color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
+            }
+            Slider(
+                value = size,
+                onValueChange = { size = it; emit() },
+                valueRange = 8f..96f,
+                colors = SliderDefaults.colors(
+                    thumbColor = LocalPalette.current.accent.toComposeColor(),
+                    activeTrackColor = LocalPalette.current.accent.toComposeColor(),
+                    inactiveTrackColor = LocalPalette.current.border.toComposeColor(),
+                ),
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                StyleCaption(stringResource(R.string.stamp_spacing))
+                Text(spacing.toInt().toString(), color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
+            }
+            Slider(
+                value = spacing,
+                onValueChange = { spacing = it; emit() },
+                valueRange = 8f..160f,
+                colors = SliderDefaults.colors(
+                    thumbColor = LocalPalette.current.accent.toComposeColor(),
+                    activeTrackColor = LocalPalette.current.accent.toComposeColor(),
+                    inactiveTrackColor = LocalPalette.current.border.toComposeColor(),
+                ),
+            )
+        }
+    }
+}
+
 @Composable
 private fun ToolModeButton(tool: Tool, selected: Boolean, onClick: () -> Unit) {
     val palette = LocalPalette.current
@@ -518,6 +640,7 @@ private fun ToolModeButton(tool: Tool, selected: Boolean, onClick: () -> Unit) {
         Tool.CALLIGRAPHY -> ImageVector.vectorResource(R.drawable.ic_stroke_calligraphy)
         Tool.SPEED -> ImageVector.vectorResource(R.drawable.ic_stroke_speed)
         Tool.TAPER -> ImageVector.vectorResource(R.drawable.ic_stroke_taper)
+        Tool.STAMP -> ImageVector.vectorResource(R.drawable.ic_stamp_pen)
         Tool.HIGHLIGHTER -> ImageVector.vectorResource(R.drawable.ic_stroke_highlighter)
         else -> XnotesIcons.eraser
     }
