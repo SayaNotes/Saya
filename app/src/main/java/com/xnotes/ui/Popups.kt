@@ -412,7 +412,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 }
                 if (tool == Tool.CALLIGRAPHY) SliderRow(stringResource(R.string.caption_multiplier), multiplier, 1f..5f) { multiplier = it; emit() }
                 if (tool == Tool.TAPER) SliderRow(stringResource(R.string.caption_tip_width), taperTip, 0f..100f) { taperTip = it; emit() }
-                ToggleRow(stringResource(R.string.caption_scale), scale) { scale = it; emit() }
+                if (tool != Tool.LASER) ToggleRow(stringResource(R.string.caption_scale), scale) { scale = it; emit() }
                 if (tool.isStroke && tool != Tool.HIGHLIGHTER && tool != Tool.LASER) {
                     ToggleRow(stringResource(R.string.caption_snap_to_shapes), snapShapes) { snapShapes = it; editor.snapHeldToShapes = it }
                 }
@@ -712,11 +712,11 @@ private fun ToolModeButton(
             .background(if (selected) palette.selectionBackground.toComposeColor() else Color.Transparent)
             .border(1.dp, if (selected) palette.accent.toComposeColor() else Color.Transparent, RoundedCornerShape(9.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 5.dp, vertical = 6.dp),
+            .padding(horizontal = 2.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        Box(Modifier.size(38.dp, 56.dp).offset(y = if (selected) (-5).dp else 0.dp), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(32.dp, 56.dp).offset(y = if (selected) (-5).dp else 0.dp), contentAlignment = Alignment.Center) {
             if (art != 0) {
                 Image(painterResource(art), contentDescription = label, contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxWidth().height(56.dp))
@@ -730,7 +730,7 @@ private fun ToolModeButton(
                 Text(stampGlyph, fontSize = 12.sp, modifier = Modifier.align(Alignment.TopCenter).offset(y = 1.dp))
             }
         }
-        Text(label, color = if (selected) Color(0xFF4D2A9B) else Color(0xFF34363B), fontSize = 9.sp, maxLines = 1)
+        Text(label, color = if (selected) Color(0xFF4D2A9B) else Color(0xFF34363B), fontSize = 8.sp, maxLines = 1, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 38.dp))
     }
 }/**
  * Page-styles popup (spec 10): two tabs, "All Pages" (the document-wide override) and "Current
