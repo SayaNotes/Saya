@@ -35,6 +35,7 @@ class ToolbarLayoutTest {
     }
 
     @Test fun defaultContainsEveryItemOnce() {
+        assertFalse(ToolbarItem.SPEED in ToolbarLayout.NOTE_ITEMS)
         val items = ToolbarLayout.DEFAULT.items()
         assertEquals(ToolbarLayout.NOTE_ITEMS, items.toSet())
         assertEquals(ToolbarLayout.NOTE_ITEMS.size, items.size)
