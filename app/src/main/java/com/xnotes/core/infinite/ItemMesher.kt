@@ -20,6 +20,8 @@ import com.xnotes.core.pal.TextMeasurer
 import com.xnotes.core.stroke.RibbonPoints
 import com.xnotes.core.tape.TapeGeometry
 import com.xnotes.core.tools.Tool
+import com.xnotes.core.vector.VectorContour
+import com.xnotes.core.vector.VectorSeg
 
 /** How an item's geometry has to reach the framebuffer. */
 enum class InkPass {
@@ -204,13 +206,22 @@ object ItemMesher {
         val outline = measure.outline(glyph, font, wrapWidth, flags)
         if (outline.isEmpty()) return null
         val block = measure.measure(glyph, font, wrapWidth, flags)
-        val parts = ArrayList<MeshPart>()
+        val contours = ArrayList<VectorContour>()
         fun addStamp(x: Double, y: Double) {
             val left = x - block.w / 2.0
             val top = y - block.h / 2.0
-            val part = ShapeTessellator.textPart(outline, stroke.renderColor) { Pt(left + it.x, top + it.y) } ?: return
-            val clipped = MeshClip.clip(part.mesh, stroke.cuts)
-            if (!clipped.isEmpty) parts.add(MeshPart(clipped, part.color, InkPass.OPAQUE))
+            for (contour in outline) {
+                fun place(p: Pt) = Pt(left + p.x, top + p.y)
+                val segments = contour.segments.map { segment ->
+                    when (segment) {
+                        is VectorSeg.Line -> VectorSeg.Line(place(segment.end))
+                        is VectorSeg.Cubic -> VectorSeg.Cubic(
+                            place(segment.c1), place(segment.c2), place(segment.end),
+                        )
+                    }
+                }
+                contours.add(VectorContour(place(contour.start), segments, contour.closed))
+            }
         }
         addStamp(geometry.cx(0), geometry.cy(0))
         var next = spacing
@@ -229,8 +240,10 @@ object ItemMesher {
             }
             travelled += length
         }
-        if (parts.isEmpty()) return null
-        return MeshedItem(parts, stroke.paintBounds())
+        val part = ShapeTessellator.textPart(contours, stroke.renderColor) { it } ?: return null
+        val clipped = MeshClip.clip(part.mesh, stroke.cuts)
+        if (clipped.isEmpty) return null
+        return MeshedItem(listOf(MeshPart(clipped, part.color, InkPass.OPAQUE)), stroke.paintBounds())
     }
 
     /**
