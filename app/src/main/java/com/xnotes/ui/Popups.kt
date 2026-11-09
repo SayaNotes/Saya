@@ -141,6 +141,7 @@ fun ToolConfigPopup(
     )
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTool: (Tool) -> Unit, onDismiss: () -> Unit) {
     val base = remember(tool) { editor.toolConfig(tool) }
