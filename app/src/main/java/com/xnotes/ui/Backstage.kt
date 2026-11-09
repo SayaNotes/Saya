@@ -2183,8 +2183,9 @@ private fun ExplorerSection(
                 calls.exportPdfs(picked, name) { selection.clear() }
             },
             modifier = Modifier
-                .align(if (showRecent) Alignment.TopEnd else Alignment.BottomEnd)
-                .padding(if (showRecent) PaddingValues(top = 16.dp, end = 20.dp) else PaddingValues(20.dp)),
+                // Keep the selection export action anchored to the bottom in both Home and Recent.
+                .align(Alignment.BottomEnd)
+                .padding(20.dp),
         )
         }
     }
