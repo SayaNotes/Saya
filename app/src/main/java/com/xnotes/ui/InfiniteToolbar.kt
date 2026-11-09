@@ -116,7 +116,6 @@ fun InfiniteToolbar(
                                         tool == Tool.SHAPE && editor.tool == tool -> shapeOpen = true
                                         tool == Tool.SELECT && (editor.tool == Tool.SELECT || editor.tool == Tool.LASSO) -> selectOpen = editor.tool
                                         tool == Tool.TAPE && editor.tool == tool -> tapeOpen = true
-                                        tool == Tool.STAMP && editor.tool == tool -> penOpen = tool
                                         tool.isStroke && editor.tool == tool -> penOpen = tool
                                         else -> editor.armTool(tool)
                                     }
