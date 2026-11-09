@@ -1,6 +1,13 @@
 package com.xnotes.core.infinite
 
 import com.xnotes.core.geometry.Rect
+import com.xnotes.core.geometry.Pt
+import com.xnotes.core.pal.FontSpec
+import com.xnotes.core.pal.LineMetrics
+import com.xnotes.core.pal.TextFlags
+import com.xnotes.core.pal.TextMeasurer
+import com.xnotes.core.vector.VectorContour
+import com.xnotes.core.vector.VectorSeg
 import com.xnotes.core.model.ImageData
 import com.xnotes.core.model.ImageItem
 import com.xnotes.core.model.Rgba
@@ -99,6 +106,30 @@ class ItemMesherTest {
             m.parts[0].mesh.vertexCount != StrokeTessellator.tessellate(s.geometry()).vertexCount,
         )
         assertEquals(s.config.baseWidth / 2.0, m.minHalfWidth, 1e-9)
+    }
+
+    @Test fun aStampStrokeMeshesItsGlyphTrailAsOneVectorPart() {
+        val measurer = object : TextMeasurer {
+            override fun measure(text: String, font: FontSpec, wrapWidth: Double, flags: TextFlags) =
+                Rect(0.0, 0.0, wrapWidth, font.pointSize)
+            override fun lineHeight(font: FontSpec) = font.pointSize
+            override fun metrics(font: FontSpec) = LineMetrics(font.pointSize * 0.8, font.pointSize * 0.2)
+            override fun advances(text: String, font: FontSpec) = DoubleArray(text.length) { font.pointSize }
+            override fun outline(text: String, font: FontSpec, wrapWidth: Double, flags: TextFlags) =
+                listOf(
+                    VectorContour(
+                        Pt(0.0, 0.0),
+                        listOf(VectorSeg.Line(Pt(font.pointSize, 0.0)), VectorSeg.Line(Pt(font.pointSize, font.pointSize)), VectorSeg.Line(Pt(0.0, font.pointSize))),
+                        true,
+                    ),
+                )
+        }
+        val stamp = stroke(Tool.STAMP)
+        val meshed = ItemMesher.mesh(stamp, measurer = measurer)!!
+        assertEquals(1, meshed.parts.size)
+        assertEquals(InkPass.OPAQUE, meshed.parts.single().pass)
+        assertTrue(meshed.parts.single().mesh.vertexCount > 0)
+        assertEquals(stamp.paintBounds(), meshed.bounds)
     }
 
     @Test fun aDashedStrokeNeverGlows() {
