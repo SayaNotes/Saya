@@ -206,7 +206,7 @@ data class Settings(
             if (o == null) return emptyMap()
             return SwatchRole.entries.mapNotNull { role ->
                 val saved = rgbaList(o.optJSONArray(role.id))
-                if (saved.isEmpty()) null else role to List(SwatchRole.COUNT) { saved.getOrNull(it) ?: role.defaults[it] }
+                if (saved.isEmpty()) null else role to List(role.defaults.size) { saved.getOrNull(it) ?: role.defaults[it] }
             }.toMap()
         }
 
