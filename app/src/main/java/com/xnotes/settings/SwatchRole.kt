@@ -13,6 +13,4 @@ enum class SwatchRole(val id: String, val defaults: List<Rgba>) {
     PEN("pen", listOf(Rgba(245, 20, 24), Rgba(255, 145, 20), Rgba(255, 215, 20), Rgba(45, 205, 65), Rgba(35, 65, 235), Rgba(20, 145, 235), Rgba(20, 185, 195), Rgba(225, 25, 185), Rgba(35, 115, 45), Rgba(25, 25, 28), Rgba(135, 135, 140), Rgba(255, 255, 255))),
     SHAPE("shape", listOf(Rgba(245, 20, 24), Rgba(255, 145, 20), Rgba(255, 215, 20), Rgba(45, 205, 65), Rgba(35, 65, 235), Rgba(20, 145, 235), Rgba(20, 185, 195), Rgba(225, 25, 185), Rgba(35, 115, 45), Rgba(25, 25, 28), Rgba(135, 135, 140), Rgba(255, 255, 255)));
 
-    companion object {
-    }
 }
