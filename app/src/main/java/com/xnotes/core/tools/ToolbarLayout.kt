@@ -160,11 +160,11 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
             ToolbarItem.TEXT_BOX to ToolbarItem.TEXT,
             ToolbarItem.VIEW to ToolbarItem.STYLES,
             ToolbarItem.MARGINS to ToolbarItem.STYLES,
-            ToolbarItem.WAND to ToolbarItem.LASSO,
+            ToolbarItem.WAND to ToolbarItem.SELECT,
             ToolbarItem.TABLE to ToolbarItem.IMAGE,
             ToolbarItem.SEARCH to ToolbarItem.PAGE_NAV,
             ToolbarItem.TAPE to ToolbarItem.WAND,
-            ToolbarItem.INSERT_SPACE to ToolbarItem.LASSO,
+            ToolbarItem.INSERT_SPACE to ToolbarItem.SELECT,
             ToolbarItem.MARKUP to ToolbarItem.TEXT_BOX,
             ToolbarItem.READER to ToolbarItem.PAN,
         )
@@ -179,7 +179,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
             ToolbarItem.HOME, ToolbarItem.TITLE,
             ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY, ToolbarItem.SPEED,
             ToolbarItem.TAPER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER,
-            ToolbarItem.PAN, ToolbarItem.SELECT, ToolbarItem.LASSO, ToolbarItem.WAND,
+            ToolbarItem.PAN, ToolbarItem.SELECT, ToolbarItem.WAND,
             ToolbarItem.TAPE, ToolbarItem.SHAPE,
             ToolbarItem.IMAGE, ToolbarItem.COLORS, ToolbarItem.UNDO, ToolbarItem.REDO,
             ToolbarItem.STYLES, ToolbarItem.WAYPOINTS, ToolbarItem.MINIMAP,
@@ -188,7 +188,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
 
         /** Everything the paged bar can hold: the whole enum bar the two canvas-only additions. Insert space is the note bar's alone. */
         val NOTE_ITEMS: Set<ToolbarItem> =
-            ToolbarItem.entries.toSet() - setOf(ToolbarItem.WAYPOINTS, ToolbarItem.MINIMAP)
+            ToolbarItem.entries.toSet() - setOf(ToolbarItem.WAYPOINTS, ToolbarItem.MINIMAP, ToolbarItem.LASSO)
 
         /**
          * Three deliberate zones: document/page overview on the left, the eight everyday tools
@@ -207,7 +207,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
                         ToolbarItem.TAPER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER, ToolbarItem.SHAPE,
                         // Wand is hidden by default, but Tape is kept immediately after it in the
                         // persisted order so older/custom layouts migrate consistently.
-                        ToolbarItem.WAND, ToolbarItem.TAPE, ToolbarItem.PAN, ToolbarItem.SELECT, ToolbarItem.LASSO,
+                        ToolbarItem.WAND, ToolbarItem.TAPE, ToolbarItem.PAN, ToolbarItem.SELECT,
                         // Remaining tools stay available in the customizer, but start hidden.
                         ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY, ToolbarItem.SPEED,
                         ToolbarItem.READER, ToolbarItem.INSERT_SPACE, ToolbarItem.SCREENSHOT,
@@ -219,7 +219,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
                             it in setOf(
                                 ToolbarItem.TAPER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER,
                                 ToolbarItem.SHAPE, ToolbarItem.TAPE, ToolbarItem.PAN,
-                                ToolbarItem.SELECT, ToolbarItem.LASSO,
+                                ToolbarItem.SELECT,
                             ),
                         )
                     },
@@ -241,7 +241,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
                 ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY, ToolbarItem.SPEED,
                 ToolbarItem.TAPER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER,
             ),
-            listOf(ToolbarItem.PAN, ToolbarItem.SELECT, ToolbarItem.LASSO),
+            listOf(ToolbarItem.PAN, ToolbarItem.SELECT),
             listOf(ToolbarItem.WAND, ToolbarItem.TAPE, ToolbarItem.SHAPE),
             listOf(ToolbarItem.IMAGE),
             listOf(ToolbarItem.COLORS),
