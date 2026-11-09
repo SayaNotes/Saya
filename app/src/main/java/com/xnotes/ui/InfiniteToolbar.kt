@@ -27,6 +27,7 @@ private val CANVAS_TOOL_OF: Map<ToolbarItem, Tool> = mapOf(
     ToolbarItem.SPEED to Tool.SPEED,
     ToolbarItem.TAPER to Tool.TAPER,
     ToolbarItem.LASER to Tool.LASER,
+    ToolbarItem.STAMP to Tool.STAMP,
     ToolbarItem.HIGHLIGHTER to Tool.HIGHLIGHTER,
     ToolbarItem.ERASER to Tool.ERASER,
     ToolbarItem.PAN to Tool.PAN,
@@ -63,6 +64,7 @@ fun InfiniteToolbar(
         Tool.SPEED to ImageVector.vectorResource(R.drawable.ic_stroke_speed),
         Tool.TAPER to ImageVector.vectorResource(R.drawable.ic_stroke_taper),
         Tool.LASER to ImageVector.vectorResource(R.drawable.ic_laser_pen),
+        Tool.STAMP to ImageVector.vectorResource(R.drawable.ic_stamp_pen),
         Tool.HIGHLIGHTER to ImageVector.vectorResource(R.drawable.ic_stroke_highlighter),
         Tool.PAN to XnotesIcons.pan,
         Tool.ERASER to XnotesIcons.eraser,
@@ -114,6 +116,7 @@ fun InfiniteToolbar(
                                         tool == Tool.SHAPE && editor.tool == tool -> shapeOpen = true
                                         tool == Tool.SELECT && (editor.tool == Tool.SELECT || editor.tool == Tool.LASSO) -> selectOpen = editor.tool
                                         tool == Tool.TAPE && editor.tool == tool -> tapeOpen = true
+                                        tool == Tool.STAMP && editor.tool == tool -> penOpen = tool
                                         tool.isStroke && editor.tool == tool -> penOpen = tool
                                         else -> editor.armTool(tool)
                                     }
@@ -131,8 +134,11 @@ fun InfiniteToolbar(
                                 }
                                 if (tool == Tool.TAPE && tapeOpen) TapeConfigPopup(editor) { tapeOpen = false }
                                 if (penOpen == tool) {
-                                    if (tool == Tool.LASER) LaserConfigPopup(editor) { penOpen = null }
-                                    else ToolConfigPopup(editor, tool, onSelectTool = { editor.armTool(it) }) { penOpen = null }
+                                    when (tool) {
+                                        Tool.LASER -> LaserConfigPopup(editor) { penOpen = null }
+                                        Tool.STAMP -> StampConfigPopup(editor) { penOpen = null }
+                                        else -> ToolConfigPopup(editor, tool, onSelectTool = { editor.armTool(it) }) { penOpen = null }
+                                    }
                                 }
                             }
                         }
