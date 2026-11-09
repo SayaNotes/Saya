@@ -190,7 +190,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
 
         /** Everything the paged bar can hold: the whole enum bar the two canvas-only additions. Insert space is the note bar's alone. */
         val NOTE_ITEMS: Set<ToolbarItem> =
-            ToolbarItem.entries.toSet() - setOf(ToolbarItem.WAYPOINTS, ToolbarItem.MINIMAP, ToolbarItem.LASSO)
+            ToolbarItem.entries.toSet() - setOf(ToolbarItem.WAYPOINTS, ToolbarItem.MINIMAP, ToolbarItem.LASSO, ToolbarItem.SPEED)
 
         /**
          * Three deliberate zones: document/page overview on the left, the nine everyday tools
