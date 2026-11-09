@@ -3019,6 +3019,12 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
             p.snapRotation90,
         )
         infiniteOrNull?.applyZoomRange(p.canvasMinZoomPercent, p.canvasMaxZoomPercent)
+        controller.wandHoldMs = p.wandHoldMs.toLong()
+        controller.wandFadeMs = p.wandFadeMs.toDouble()
+        controller.wandFadeStyle = p.wandFadeStyle
+        infiniteOrNull?.wandHoldMs = p.wandHoldMs.toLong()
+        infiniteOrNull?.wandFadeMs = p.wandFadeMs.toDouble()
+        infiniteOrNull?.wandFadeStyle = p.wandFadeStyle
         // Both surfaces' pads: the switch is about the device, not about one of them.
         pad.frontBuffering = !p.disableFrontBuffering
         infiniteOrNull?.pad?.frontBuffering = !p.disableFrontBuffering
