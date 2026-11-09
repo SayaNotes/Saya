@@ -886,9 +886,10 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
                 preferences.stylusDoubleTap.takeIf { action -> action != "none" }?.let { action -> dispatchTapGesture(action); true } ?: false
             }
             it.interaction.onFingerLongPressAction = {
-                preferences.stylusButtonTap.takeIf { action -> action != "none" }?.let { action -> dispatchTapGesture(action); true } ?: false
+                preferences.stylusButtonTap.takeIf { action -> action != "none" && action != "toggle_eraser" }?.let { action -> dispatchTapGesture(action); true } ?: false
             }
             it.interaction.hasFingerLongPressAction = { preferences.stylusButtonTap != "none" }
+            it.interaction.fingerLongPressEraseEnabled = { preferences.stylusButtonTap == "toggle_eraser" }
             it.view.onTwoFingerTap = { dispatchTapGesture(preferences.twoFingerTap) }
             it.view.onThreeFingerTap = { dispatchTapGesture(preferences.threeFingerTap) }
         }
@@ -1780,9 +1781,10 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
             preferences.stylusDoubleTap.takeIf { action -> action != "none" }?.let { action -> dispatchTapGesture(action); true } ?: false
         }
         controller.onFingerLongPressAction = {
-            preferences.stylusButtonTap.takeIf { action -> action != "none" }?.let { action -> dispatchTapGesture(action); true } ?: false
+            preferences.stylusButtonTap.takeIf { action -> action != "none" && action != "toggle_eraser" }?.let { action -> dispatchTapGesture(action); true } ?: false
         }
         controller.hasFingerLongPressAction = { preferences.stylusButtonTap != "none" }
+        controller.fingerLongPressEraseEnabled = { preferences.stylusButtonTap == "toggle_eraser" }
         view.onTwoFingerTap = { dispatchTapGesture(preferences.twoFingerTap) }
         view.onThreeFingerTap = { dispatchTapGesture(preferences.threeFingerTap) }
         view.hover = { controller.onHover(it) }
