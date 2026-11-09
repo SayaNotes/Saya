@@ -82,11 +82,13 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
         editor.updateShapeConfig(next)
     }
 
-    val shapes = ShapePresets.shown(editor.hostHiddenShapes, editor.hostShapeOrder)
-        .flatMap { it.presets }
+    // Cache the flattened preset list against the actual preference inputs. Building a fresh
+    // list on every recomposition made remember(shapes) ineffective and needlessly rebuilt pages.
+    val shapes = remember(editor.hostHiddenShapes, editor.hostShapeOrder) {
+        ShapePresets.shown(editor.hostHiddenShapes, editor.hostShapeOrder).flatMap { it.presets }
+    }
     // Keep the same 4 × 4 horizontal pages, but compose only the visible page and its
-    // immediate neighbours. The old wide Row eagerly composed every shape chip each time the
-    // panel opened, which made first-open and repeated-open interactions unnecessarily heavy.
+    // immediate neighbours rather than eagerly creating every shape chip.
     val shapePages = remember(shapes) { shapes.chunked(16) }
     val initialShapePage = config.shapePage.coerceIn(0, (shapePages.lastIndex).coerceAtLeast(0))
     var visibleShapePage by remember(shapes) { mutableStateOf(initialShapePage) }
