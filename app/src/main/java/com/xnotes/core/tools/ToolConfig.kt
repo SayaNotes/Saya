@@ -194,8 +194,8 @@ object ToolConversions {
 
     fun highlighterAlphaToIntensity(a: Double): Double = a * 100.0
 
-    /** WIDTH slider range per tool (spec 04 §5): 4..120 for the highlighter, 1..80 for the eraser
-     *  (its radius, default 24), tape's own range, else 1..20. */
+    /** WIDTH slider range per tool: highlighter 4..120, Stamp 8..96, eraser 1..80,
+     *  tape's own range, and 1..20 for the remaining stroke tools. */
     fun widthRange(tool: Tool): ClosedFloatingPointRange<Double> = when (tool) {
         Tool.HIGHLIGHTER -> 4.0..120.0
         Tool.STAMP -> 8.0..96.0
