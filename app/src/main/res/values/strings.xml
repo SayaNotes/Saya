@@ -8,6 +8,8 @@
     <string name="tool_calligraphy">Calligraphy</string>
     <string name="tool_speed">Speed</string>
     <string name="tool_taper">Taper</string>
+    <string name="tool_laser">Laser Pen</string>
+    <string name="laser_width">Laser width</string>
     <string name="tool_highlighter">Highlighter</string>
     <string name="tool_eraser">Eraser</string>
     <string name="tool_pan">Pan</string>
