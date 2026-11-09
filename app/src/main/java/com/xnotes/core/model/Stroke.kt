@@ -8,6 +8,10 @@ import com.xnotes.core.pal.BlendMode
 import com.xnotes.core.pal.FillRule
 import com.xnotes.core.pal.Pen
 import com.xnotes.core.pal.Renderer
+import com.xnotes.core.pal.FontFace
+import com.xnotes.core.pal.FontSpec
+import com.xnotes.core.pal.TextFlags
+import com.xnotes.core.pal.HAlign
 import com.xnotes.core.stroke.Sample
 import com.xnotes.core.stroke.StrokeEngine
 import com.xnotes.core.stroke.StrokeGeometry
@@ -388,6 +392,7 @@ class Stroke(
         val g = geometry()
         val color = renderColor
         when {
+            tool == Tool.STAMP -> paintStamps(r, g, color)
             // The dashed pen draws its (uniform-width) centreline as a dashed, round-capped
             // line rather than a solid ribbon; the full ribbon geometry is still used for
             // bounds/hit-testing/erasing, so the whole line stays selectable through the gaps.
@@ -408,6 +413,40 @@ class Stroke(
                 paintFills(r, g, color.withAlpha(255))
                 r.restore()
             }
+        }
+    }
+
+    /**
+     * Stamp Pen lays the selected glyph along the captured path at fixed arc-length intervals.
+     * The stroke remains one model item, so selection, erasing, undo and export treat the whole
+     * stamped trail as a single gesture.
+     */
+    private fun paintStamps(r: Renderer, g: StrokeGeometry, color: Rgba) {
+        if (g.pointCount == 0 || config.stampGlyph.isEmpty()) return
+        val size = config.stampSize.coerceIn(8.0, 96.0)
+        val step = config.stampSpacing.coerceIn(8.0, 160.0)
+        val font = FontSpec(size, FontFace.SANS)
+        val flags = TextFlags(wordWrap = false, alignLeft = false, alignTop = false, hAlign = HAlign.CENTER)
+        val half = size * 0.72
+        fun stamp(x: Double, y: Double) {
+            r.drawText(config.stampGlyph, Rect(x - half, y - half, half * 2.0, half * 2.0), font, color, flags)
+        }
+        stamp(g.cx(0), g.cy(0))
+        var next = step
+        var travelled = 0.0
+        for (i in 1 until g.pointCount) {
+            val x0 = g.cx(i - 1)
+            val y0 = g.cy(i - 1)
+            val dx = g.cx(i) - x0
+            val dy = g.cy(i) - y0
+            val length = kotlin.math.hypot(dx, dy)
+            if (length <= 1e-6) continue
+            while (next <= travelled + length) {
+                val t = ((next - travelled) / length).coerceIn(0.0, 1.0)
+                stamp(x0 + dx * t, y0 + dy * t)
+                next += step
+            }
+            travelled += length
         }
     }
 
