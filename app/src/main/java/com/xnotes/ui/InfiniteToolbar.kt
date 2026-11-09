@@ -101,9 +101,9 @@ fun InfiniteToolbar(
                             Box {
                                 // Taper is the active-pen slot on the canvas toolbar; its
                                 // illustration follows the selected pen style.
-                                val displayTool = if (tool == Tool.TAPER && editor.tool.isStroke) editor.tool else tool
+                                val displayTool = if (tool == Tool.TAPER && editor.tool.isPenPanelStyle) editor.tool else tool
                                 val selectionModeActive = tool == Tool.SELECT && editor.tool == Tool.LASSO
-                                val armed = editor.tool == tool || (tool == Tool.TAPER && editor.tool.isStroke) || selectionModeActive
+                                val armed = if (editor.tool.isPenPanelStyle && tool.isStroke) tool == Tool.TAPER else editor.tool == tool || selectionModeActive
                                 val configurable = tool.isStroke || tool == Tool.ERASER || tool == Tool.SHAPE || tool == Tool.SELECT || tool == Tool.TAPE
                                 val imageRes = when (displayTool) {
                                     Tool.PEN -> R.drawable.pen_tool_pen
