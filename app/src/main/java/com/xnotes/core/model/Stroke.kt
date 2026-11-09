@@ -427,7 +427,7 @@ class Stroke(
         val step = config.stampSpacing.coerceIn(8.0, 160.0)
         val font = FontSpec(size, FontFace.SANS)
         val flags = TextFlags(wordWrap = false, alignLeft = false, alignTop = false, hAlign = HAlign.CENTER)
-        val half = size * 0.72
+        val half = size * 0.50
         fun stamp(x: Double, y: Double) {
             r.drawText(config.stampGlyph, Rect(x - half, y - half, half * 2.0, half * 2.0), font, color, flags)
         }
@@ -507,7 +507,7 @@ class Stroke(
      *  layers composited at an alpha, and translucent ink compounds where it overlaps itself, so
      *  neither survives being painted in two runs; both keep the plain every-frame redraw. */
     val wetCacheable: Boolean
-        get() = !config.neon && renderColor.a >= 255
+        get() = tool != Tool.STAMP && !config.neon && renderColor.a >= 255
 
     /**
      * The dashed pen: a constant-width, round-capped dashed line traced down the smoothed
