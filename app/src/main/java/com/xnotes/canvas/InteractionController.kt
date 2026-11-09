@@ -1338,6 +1338,8 @@ class InteractionController(
                 baseWidth = cfg0.baseWidth / z,
                 dashLength = cfg0.dashLength / z,
                 dashGap = cfg0.dashGap / z,
+                stampSize = cfg0.stampSize / z,
+                stampSpacing = cfg0.stampSpacing / z,
                 scale = true,
             )
         }
