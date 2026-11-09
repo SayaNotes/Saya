@@ -117,6 +117,7 @@ fun Toolbar(
         Tool.CALLIGRAPHY to ImageVector.vectorResource(R.drawable.ic_stroke_calligraphy),
         Tool.SPEED to ImageVector.vectorResource(R.drawable.ic_stroke_speed),
         Tool.TAPER to ImageVector.vectorResource(R.drawable.ic_stroke_taper),
+        Tool.LASER to ImageVector.vectorResource(R.drawable.ic_laser_pen),
         Tool.HIGHLIGHTER to ImageVector.vectorResource(R.drawable.ic_stroke_highlighter),
         Tool.ERASER to XnotesIcons.eraser,
         Tool.PAN to XnotesIcons.pan,
@@ -423,6 +424,7 @@ private fun ToolButton(
                 tool == Tool.TEXT -> TextToolConfigPopup(editor) { setConfigForTool(null) }
                 tool == Tool.MARKUP -> MarkupToolPopup(editor) { setConfigForTool(null) }
                 tool == Tool.TAPE -> TapeConfigPopup(editor) { setConfigForTool(null) }
+                tool == Tool.LASER -> LaserConfigPopup(editor) { setConfigForTool(null) }
                 else -> ToolConfigPopup(editor, tool, onSelectTool = { editor.selectTool(it) }) { setConfigForTool(null) }
             }
         }
