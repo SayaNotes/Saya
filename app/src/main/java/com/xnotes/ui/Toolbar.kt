@@ -412,6 +412,13 @@ private fun ToolButton(
                 setConfigForTool(null)
             }
         }
+        if (tool == Tool.STAMP && editor.tool == Tool.STAMP) {
+            Text(
+                editor.toolConfig(Tool.STAMP).stampGlyph,
+                fontSize = 10.sp,
+                modifier = Modifier.align(Alignment.TopCenter).offset(y = 1.dp),
+            )
+        }
         if (configForTool == tool || (tool == Tool.SELECT && configForTool == Tool.LASSO)) {
             when {
                 tool == Tool.SHAPE -> ShapeConfigPopup(editor) { setConfigForTool(null) }
