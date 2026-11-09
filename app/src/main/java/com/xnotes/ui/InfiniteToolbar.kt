@@ -55,23 +55,33 @@ fun InfiniteToolbar(
     onRecordAudio: () -> Unit = {},
     onTakePhoto: () -> Unit = {},
 ) {
-    // The stroke tools use the same designed drawables the paged toolbar does, so a pen looks like
-    // a pen on either canvas rather than like a generic glyph.
-    val toolIcons: Map<Tool, ImageVector> = mapOf(
-        Tool.PEN to ImageVector.vectorResource(R.drawable.ic_stroke_regular),
-        Tool.DASHED to ImageVector.vectorResource(R.drawable.ic_stroke_dashed),
-        Tool.CALLIGRAPHY to ImageVector.vectorResource(R.drawable.ic_stroke_calligraphy),
-        Tool.TAPER to ImageVector.vectorResource(R.drawable.ic_stroke_taper),
-        Tool.LASER to ImageVector.vectorResource(R.drawable.ic_laser_pen),
-        Tool.STAMP to ImageVector.vectorResource(R.drawable.ic_stamp_pen),
-        Tool.HIGHLIGHTER to ImageVector.vectorResource(R.drawable.ic_stroke_highlighter),
-        Tool.PAN to XnotesIcons.pan,
-        Tool.ERASER to XnotesIcons.eraser,
-        Tool.SHAPE to XnotesIcons.shape,
-        Tool.SELECT to XnotesIcons.select,
-        Tool.LASSO to XnotesIcons.lasso,
-        Tool.TAPE to XnotesIcons.tape,
-    )
+    // Retain the resource-backed icon lookup across canvas toolbar recompositions.
+    val penIcon = ImageVector.vectorResource(R.drawable.ic_stroke_regular)
+    val dashedIcon = ImageVector.vectorResource(R.drawable.ic_stroke_dashed)
+    val calligraphyIcon = ImageVector.vectorResource(R.drawable.ic_stroke_calligraphy)
+    val taperIcon = ImageVector.vectorResource(R.drawable.ic_stroke_taper)
+    val laserIcon = ImageVector.vectorResource(R.drawable.ic_laser_pen)
+    val stampIcon = ImageVector.vectorResource(R.drawable.ic_stamp_pen)
+    val highlighterIcon = ImageVector.vectorResource(R.drawable.ic_stroke_highlighter)
+    val toolIcons: Map<Tool, ImageVector> = remember(
+        penIcon, dashedIcon, calligraphyIcon, taperIcon, laserIcon, stampIcon, highlighterIcon,
+    ) {
+        mapOf(
+            Tool.PEN to penIcon,
+            Tool.DASHED to dashedIcon,
+            Tool.CALLIGRAPHY to calligraphyIcon,
+            Tool.TAPER to taperIcon,
+            Tool.LASER to laserIcon,
+            Tool.STAMP to stampIcon,
+            Tool.HIGHLIGHTER to highlighterIcon,
+            Tool.PAN to XnotesIcons.pan,
+            Tool.ERASER to XnotesIcons.eraser,
+            Tool.SHAPE to XnotesIcons.shape,
+            Tool.SELECT to XnotesIcons.select,
+            Tool.LASSO to XnotesIcons.lasso,
+            Tool.TAPE to XnotesIcons.tape,
+        )
+    }
     var stylesOpen by remember { mutableStateOf(false) }
     var eraserOpen by remember { mutableStateOf(false) }
     var shapeOpen by remember { mutableStateOf(false) }
