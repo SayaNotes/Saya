@@ -118,7 +118,6 @@ fun Toolbar(
         Tool.PEN to ImageVector.vectorResource(R.drawable.ic_stroke_regular),
         Tool.DASHED to ImageVector.vectorResource(R.drawable.ic_stroke_dashed),
         Tool.CALLIGRAPHY to ImageVector.vectorResource(R.drawable.ic_stroke_calligraphy),
-        Tool.SPEED to ImageVector.vectorResource(R.drawable.ic_stroke_speed),
         Tool.TAPER to ImageVector.vectorResource(R.drawable.ic_stroke_taper),
         Tool.LASER to ImageVector.vectorResource(R.drawable.ic_laser_pen),
         Tool.STAMP to ImageVector.vectorResource(R.drawable.ic_stamp_pen),
