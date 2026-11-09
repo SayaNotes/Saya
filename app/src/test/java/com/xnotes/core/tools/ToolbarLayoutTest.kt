@@ -195,6 +195,25 @@ class ToolbarLayoutTest {
         assertEquals(ToolbarLayout.CANVAS_ITEMS.size, items.size)
     }
 
+    @Test fun canvasDefaultUsesOneDynamicPenSlot() {
+        val entries = ToolbarLayout.CANVAS_DEFAULT.sections.flatMap { it.entries }.associateBy { it.item }
+        assertTrue(entries.getValue(ToolbarItem.TAPER).visible)
+        assertFalse(entries.getValue(ToolbarItem.PEN).visible)
+        assertFalse(entries.getValue(ToolbarItem.DASHED).visible)
+        assertFalse(entries.getValue(ToolbarItem.CALLIGRAPHY).visible)
+    }
+
+    @Test fun penPanelContainsExactlyTheSixIllustratedStyles() {
+        assertTrue(Tool.PEN.isPenPanelStyle)
+        assertTrue(Tool.CALLIGRAPHY.isPenPanelStyle)
+        assertTrue(Tool.HIGHLIGHTER.isPenPanelStyle)
+        assertTrue(Tool.TAPER.isPenPanelStyle)
+        assertTrue(Tool.LASER.isPenPanelStyle)
+        assertTrue(Tool.STAMP.isPenPanelStyle)
+        assertFalse(Tool.DASHED.isPenPanelStyle)
+        assertFalse(Tool.SPEED.isPenPanelStyle)
+    }
+
     @Test fun theTwoBarsDoNotShareTheirOwnItems() {
         assertTrue(ToolbarItem.WAYPOINTS !in ToolbarLayout.NOTE_ITEMS)
         assertTrue(ToolbarItem.MINIMAP !in ToolbarLayout.NOTE_ITEMS)
