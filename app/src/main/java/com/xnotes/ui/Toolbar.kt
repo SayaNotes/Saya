@@ -397,12 +397,12 @@ private fun ToolButton(
     setConfigForTool: (Tool?) -> Unit,
 ) {
     if (icon == null) return
-    // The regular Pen toolbar slot becomes the active pen slot: its artwork follows
+    // The Pen/Taper toolbar slot acts as the active pen slot: its artwork follows
     // whichever of the six pen styles is currently selected.
-    val displayTool = if (tool == Tool.PEN && editor.tool.isStroke) editor.tool else tool
+    val displayTool = if ((tool == Tool.PEN || tool == Tool.TAPER) && editor.tool.isStroke) editor.tool else tool
     val popupTool = displayTool
     val selectionModeActive = tool == Tool.SELECT && editor.tool == Tool.LASSO
-    val armed = editor.tool == tool || (tool == Tool.PEN && editor.tool.isStroke) || selectionModeActive
+    val armed = editor.tool == tool || ((tool == Tool.PEN || tool == Tool.TAPER) && editor.tool.isStroke) || selectionModeActive
     val configurable = tool.isStroke || tool == Tool.SHAPE || tool == Tool.ERASER || tool == Tool.SELECT || tool == Tool.LASSO || tool == Tool.TEXT || tool == Tool.TABLE || tool == Tool.MARKUP || tool == Tool.TAPE
     val imageRes = when (displayTool) {
         Tool.PEN -> R.drawable.pen_tool_pen
