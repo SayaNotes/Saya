@@ -182,7 +182,7 @@ fun Toolbar(
     } else {
         // Pinned outside the scrolling strip so closing a split pane is always one tap away.
         ToolbarFrame(
-            armed = editor.tool,
+            armed = if (editor.tool == Tool.LASSO) Tool.SELECT else editor.tool,
             trailing = onClosePane?.let { { ClosePaneButton(it) } },
             separateSections = true,
         ) {
