@@ -1,5 +1,8 @@
 package com.xnotes.ui
 
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -211,7 +214,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
         frameless = true,
     ) {
         Column(
-            Modifier.widthIn(min = 410.dp, max = 560.dp)
+            Modifier.fillMaxWidth().widthIn(max = 560.dp)
                 .liquidGlassSurface(
                     RoundedCornerShape(26.dp),
                     LocalPalette.current.panel.toComposeColor(),
@@ -256,18 +259,20 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     )
 
                     // Light, inset pen tray echoes the original X Notes illustrated selector.
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(LocalPalette.current.surface.toComposeColor())
-                            .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(16.dp))
-                            .padding(horizontal = 6.dp, vertical = 7.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        penTools.forEach { candidate ->
-                            ToolModeButton(candidate, selected = candidate == tool, stampGlyph = if (candidate == Tool.STAMP) editor.toolConfig(Tool.STAMP).stampGlyph else null, nibColor = editor.toolConfig(candidate).colorOverride?.toComposeColor() ?: (editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor() ?: Color.Black)) { onSelectTool(candidate) }
+                    // On a narrow phone, wrap to two rows rather than clipping the six tools.
+                    BoxWithConstraints(Modifier.fillMaxWidth()) {
+                        val buttons: @Composable () -> Unit = {
+                            penTools.forEach { candidate ->
+                                ToolModeButton(
+                                    candidate,
+                                    selected = candidate == tool,
+                                    stampGlyph = if (candidate == Tool.STAMP) editor.toolConfig(Tool.STAMP).stampGlyph else null,
+                                    nibColor = editor.toolConfig(candidate).colorOverride?.toComposeColor()
+                                        ?: (editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor() ?: Color.Black),
+                                ) { onSelectTool(candidate) }
+                            }
                         }
+                        ColumnOrRowPenTray(maxWidth, buttons)
                     }
                 }
 
@@ -681,6 +686,29 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
 }
 
 @Composable
+private fun ColumnOrRowPenTray(maxWidth: Dp, buttons: @Composable () -> Unit) {
+    val trayModifier = Modifier.fillMaxWidth()
+        .clip(RoundedCornerShape(16.dp))
+        .background(LocalPalette.current.surface.toComposeColor())
+        .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(16.dp))
+        .padding(horizontal = 6.dp, vertical = 7.dp)
+    if (maxWidth < 300.dp) {
+        FlowRow(
+            modifier = trayModifier,
+            maxItemsInEachRow = 3,
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) { buttons() }
+    } else {
+        Row(
+            modifier = trayModifier,
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically,
+        ) { buttons() }
+    }
+}
+
+@Composable
 private fun ToolModeButton(
     tool: Tool,
     selected: Boolean,
@@ -715,7 +743,8 @@ private fun ToolModeButton(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        Box(Modifier.size(32.dp, 56.dp).offset(y = if (selected) (-5).dp else 0.dp), contentAlignment = Alignment.Center) {
+        val lift by animateDpAsState(if (selected) (-5).dp else 0.dp, animationSpec = tween(160), label = "penSelectedLift")
+    Box(Modifier.size(32.dp, 56.dp).offset(y = lift), contentAlignment = Alignment.Center) {
             if (art != 0) {
                 Image(painterResource(art), contentDescription = label, contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxWidth().height(56.dp))
@@ -729,7 +758,7 @@ private fun ToolModeButton(
                 Text(stampGlyph, fontSize = 12.sp, modifier = Modifier.align(Alignment.TopCenter).offset(y = 1.dp))
             }
         }
-        Text(label, color = if (selected) Color(0xFF4D2A9B) else Color(0xFF34363B), fontSize = 8.sp, maxLines = 1, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 38.dp))
+        Text(label, color = if (selected) palette.selectionForeground.toComposeColor() else palette.text.toComposeColor(), fontSize = 8.sp, maxLines = 1, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 38.dp))
     }
 }/**
  * Page-styles popup (spec 10): two tabs, "All Pages" (the document-wide override) and "Current
