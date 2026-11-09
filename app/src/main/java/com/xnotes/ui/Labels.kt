@@ -34,6 +34,7 @@ val Tool.labelRes: Int
         Tool.CALLIGRAPHY -> R.string.tool_calligraphy
         Tool.SPEED -> R.string.tool_speed
         Tool.TAPER -> R.string.tool_taper
+        Tool.LASER -> R.string.tool_laser
         Tool.HIGHLIGHTER -> R.string.tool_highlighter
         Tool.ERASER -> R.string.tool_eraser
         Tool.PAN -> R.string.tool_pan
@@ -89,6 +90,7 @@ val ToolbarItem.labelRes: Int
         ToolbarItem.CALLIGRAPHY -> R.string.tool_calligraphy
         ToolbarItem.SPEED -> R.string.tool_speed
         ToolbarItem.TAPER -> R.string.tool_taper
+        ToolbarItem.LASER -> R.string.tool_laser
         ToolbarItem.HIGHLIGHTER -> R.string.tool_highlighter
         ToolbarItem.ERASER -> R.string.tool_eraser
         ToolbarItem.PAN -> R.string.tool_pan
