@@ -912,6 +912,7 @@ internal fun HomeShelves(
     b: ExplorerBody,
     recents: List<RecentEntry>,
     pinnedNotes: List<BrowseEntry>,
+    allNotes: List<BrowseEntry>,
     wholePins: Boolean,
     pins: List<com.xnotes.settings.PinnedFolder>,
     rootName: String,
@@ -933,8 +934,8 @@ internal fun HomeShelves(
     val primaryText = palette.text.toComposeColor()
     val secondary = palette.textDim.toComposeColor()
     val hairline = palette.border.toComposeColor()
-    val notes = remember(recents, pinnedNotes, b.groups, b.pinned) {
-        (recents.map { it.entry } + pinnedNotes + b.pinned + b.groups.flatMap { it.items })
+    val notes = remember(recents, pinnedNotes, allNotes, b.groups, b.pinned) {
+        (recents.map { it.entry } + pinnedNotes + allNotes + b.pinned + b.groups.flatMap { it.items })
             .filterNot { it.isDir }
             .distinctBy { it.documentUri }
     }
