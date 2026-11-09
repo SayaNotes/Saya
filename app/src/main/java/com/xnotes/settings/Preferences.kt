@@ -45,6 +45,12 @@ data class Preferences(
     val detectShapes: Boolean = true,
     /** Whether rotating a selection snaps to the nearest 90 degrees. */
     val snapRotation90: Boolean = false,
+    /** Time the Laser Pen stays fully visible after the last stroke, in milliseconds. */
+    val wandHoldMs: Int = 1000,
+    /** Time taken by the Laser Pen to disappear, in milliseconds. */
+    val wandFadeMs: Int = 500,
+    /** Disappearance animation: "fade" or "blink". */
+    val wandFadeStyle: String = "fade",
     /** Language for handwriting-to-text (Convert to text): BCP-47 tag, "cs" (Czech) | "en" (English). */
     val ocrLanguage: String = "cs",
     /** Tool the stylus side button activates while held; "none" disables it. */
@@ -179,6 +185,9 @@ data class Preferences(
         .put("zoom_lock_pan", zoomLockPan)
         .put("detect_shapes", detectShapes)
         .put("snap_rotation_90", snapRotation90)
+        .put("wand_hold_ms", wandHoldMs)
+        .put("wand_fade_ms", wandFadeMs)
+        .put("wand_fade_style", wandFadeStyle)
         .put("ocr_language", ocrLanguage)
         .put("pen_button_tool", penButtonTool)
         .put("pen_button_hover", penButtonHover)
@@ -330,6 +339,9 @@ data class Preferences(
                 zoomLockPan = zoomLockPan,
                 detectShapes = o.optBoolean("detect_shapes", true),
                 snapRotation90 = o.optBoolean("snap_rotation_90", false),
+                wandHoldMs = o.optInt("wand_hold_ms", 1000).coerceIn(500, 5000),
+                wandFadeMs = o.optInt("wand_fade_ms", 500).coerceIn(250, 5000),
+                wandFadeStyle = o.optString("wand_fade_style", "fade").let { if (it == "blink") "blink" else "fade" },
                 ocrLanguage = o.optString("ocr_language", "cs").ifEmpty { "cs" },
                 penButtonTool = o.optString("pen_button_tool", "eraser").ifEmpty { "eraser" },
                 penButtonHover = o.optBoolean("pen_button_hover", false),
