@@ -423,7 +423,8 @@ private fun ToolButton(
     }
     val image = imageRes?.let { painterResource(it) }
     val nibMask = nibMaskRes?.let { painterResource(it) }
-    val nibColor = editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor()
+    val nibColor = editor.toolConfig(displayTool).colorOverride?.toComposeColor()
+        ?: editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor()
         ?: androidx.compose.ui.graphics.Color.Black
     val stampGlyph = if (displayTool == Tool.STAMP) editor.toolConfig(Tool.STAMP).stampGlyph else null
     Box {
