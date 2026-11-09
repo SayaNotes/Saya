@@ -150,8 +150,15 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                     Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    SliderRow("Outline size", config.strokeWidth.toFloat(), 1f..20f) {
-                        emit(config.copy(strokeWidth = it.toDouble()))
+                    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text("Outline size", color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
+                            Text("%.1f".format(config.strokeWidth), color = LocalPalette.current.text.toComposeColor(), fontSize = 11.sp)
+                        }
+                        DesignedSizeSlider(config.strokeWidth.toFloat(), 1f..20f) {
+                            emit(config.copy(strokeWidth = it.toDouble()))
+                        }
                     }
 
                     Column(
