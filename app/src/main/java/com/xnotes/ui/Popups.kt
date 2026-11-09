@@ -603,7 +603,13 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 StyleCaption(stringResource(R.string.stamp_size))
-                Box(Modifier.clip(RoundedCornerShape(6.dp)).background(LocalPalette.current.surface.toComposeColor()).padding(horizontal = 8.dp, vertical = 4.dp)) { Text(size.toInt().toString(), color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp) }
+                Box(
+                    Modifier.clip(RoundedCornerShape(6.dp))
+                        .background(LocalPalette.current.surface.toComposeColor())
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                ) {
+                    Text(size.toInt().toString(), color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
+                }
             }
             Slider(
                 value = size,
@@ -617,7 +623,13 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 StyleCaption(stringResource(R.string.stamp_spacing))
-                Box(Modifier.clip(RoundedCornerShape(6.dp)).background(LocalPalette.current.surface.toComposeColor()).padding(horizontal = 8.dp, vertical = 4.dp)) { Text(spacing.toInt().toString(), color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp) }
+                Box(
+                    Modifier.clip(RoundedCornerShape(6.dp))
+                        .background(LocalPalette.current.surface.toComposeColor())
+                        .padding(horizontal = 8.dp, vertical = 4.dp),
+                ) {
+                    Text(spacing.toInt().toString(), color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
+                }
             }
             Slider(
                 value = spacing,
