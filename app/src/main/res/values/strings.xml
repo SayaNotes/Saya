@@ -10,6 +10,11 @@
     <string name="tool_taper">Taper</string>
     <string name="tool_laser">Laser Pen</string>
     <string name="laser_width">Laser width</string>
+    <string name="tool_stamp">Stamp Pen</string>
+    <string name="stamp_choose">Choose a stamp</string>
+    <string name="stamp_custom">Custom emoji or symbol</string>
+    <string name="stamp_size">Stamp size</string>
+    <string name="stamp_spacing">Stamp spacing</string>
     <string name="tool_highlighter">Highlighter</string>
     <string name="tool_eraser">Eraser</string>
     <string name="tool_pan">Pan</string>
