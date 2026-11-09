@@ -1221,8 +1221,13 @@ fun EraserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
 
 /** Select/lasso configuration popup: whether a selection needs items fully inside it, plus the select tool's SWITCH BACK. */
 @Composable
-fun SelectConfigPopup(editor: ToolPopupHost, tool: Tool = Tool.SELECT, onDismiss: () -> Unit) {
-    val base = remember { editor.toolConfig(tool) }
+fun SelectConfigPopup(
+    editor: ToolPopupHost,
+    tool: Tool = Tool.SELECT,
+    onSelectTool: (Tool) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val base = remember(tool) { editor.toolConfig(tool) }
     var switchBack by remember { mutableStateOf(base.switchBackAfterSelect) }
     var whole by remember { mutableStateOf(base.selectWholeItems) }
 
@@ -1253,6 +1258,19 @@ fun SelectConfigPopup(editor: ToolPopupHost, tool: Tool = Tool.SELECT, onDismiss
                 PopupTitle(stringResource(if (tool == Tool.LASSO) R.string.tool_lasso else R.string.title_select))
                 Text("×", color = LocalPalette.current.text.toComposeColor(), fontSize = 20.sp,
                     modifier = Modifier.clip(CircleShape).clickable { onDismiss() }.padding(horizontal = 5.dp))
+            }
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                ModeChip("Rectangular", tool == Tool.SELECT) {
+                    if (tool != Tool.SELECT) onSelectTool(Tool.SELECT)
+                    onDismiss()
+                }
+                ModeChip("Free hand lasso", tool == Tool.LASSO) {
+                    if (tool != Tool.LASSO) onSelectTool(Tool.LASSO)
+                    onDismiss()
+                }
             }
             ToggleRow(stringResource(R.string.caption_select_whole_items), whole) { whole = it; emit() }
             // Re-arm the previous pen/highlighter once a selection action (move, resize, delete,
