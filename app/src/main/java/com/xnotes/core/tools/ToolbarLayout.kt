@@ -18,6 +18,7 @@ enum class ToolbarItem(val id: String) {
     CALLIGRAPHY("calligraphy"),
     SPEED("speed"),
     TAPER("taper"),
+    LASER("laser"),
     HIGHLIGHTER("highlighter"),
     ERASER("eraser"),
     PAN("pan"),
@@ -178,7 +179,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
         val CANVAS_ITEMS: Set<ToolbarItem> = setOf(
             ToolbarItem.HOME, ToolbarItem.TITLE,
             ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY, ToolbarItem.SPEED,
-            ToolbarItem.TAPER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER,
+            ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER,
             ToolbarItem.PAN, ToolbarItem.SELECT, ToolbarItem.WAND,
             ToolbarItem.TAPE, ToolbarItem.SHAPE,
             ToolbarItem.IMAGE, ToolbarItem.COLORS, ToolbarItem.UNDO, ToolbarItem.REDO,
@@ -204,7 +205,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
                 ToolbarSection(
                     listOf(
                         // The visible everyday tools lead in the exact requested order.
-                        ToolbarItem.TAPER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER, ToolbarItem.SHAPE,
+                        ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER, ToolbarItem.SHAPE,
                         // Wand is hidden by default, but Tape is kept immediately after it in the
                         // persisted order so older/custom layouts migrate consistently.
                         ToolbarItem.WAND, ToolbarItem.TAPE, ToolbarItem.PAN, ToolbarItem.SELECT,
@@ -217,7 +218,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
                         ToolbarEntry(
                             it,
                             it in setOf(
-                                ToolbarItem.TAPER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER,
+                                ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER,
                                 ToolbarItem.SHAPE, ToolbarItem.TAPE, ToolbarItem.PAN,
                                 ToolbarItem.SELECT,
                             ),
