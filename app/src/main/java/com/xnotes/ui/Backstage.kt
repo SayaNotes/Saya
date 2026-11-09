@@ -1578,6 +1578,9 @@ private fun ExplorerSection(
                 renaming = null; opError = null
                 if (selection.none { it.documentUri == e.documentUri }) selection.add(e)
             },
+            selectedCount = { selection.size },
+            clearSelection = { selection.clear() },
+            deleteSelection = { remove(selection.toList()) },
             onPlaced = { e, c ->
                 val spots = if (e.isDir) folderSpots else fileSpots
                 if (c == null) spots.remove(e.documentUri) else spots[e.documentUri] = c
