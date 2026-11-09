@@ -469,7 +469,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
             "undo" -> undo()
             "redo" -> redo()
             "toggle_pan" -> toggleTool(Tool.PAN)
-            "toggle_eraser" -> toggleTool(Tool.ERASER)
+            "toggle_eraser" -> armTool(Tool.ERASER)
             "toggle_previous" -> previousTool?.let { armTool(it) }
         }
     }
