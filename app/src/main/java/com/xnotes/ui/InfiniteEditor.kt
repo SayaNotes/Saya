@@ -340,7 +340,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
             return
         }
         val started = System.nanoTime()
-        val meshed = ItemMesher.mesh(item)
+        val meshed = ItemMesher.mesh(item, measurer = textMeasurer)
         scene.lastTessellateMs = (System.nanoTime() - started) / 1_000_000.0
         if (meshed == null || meshed.isEmpty) {
             scene.remove(item)
@@ -1429,7 +1429,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         if (ribbon == null || !stroke.wetCacheable) {
             endFrontInk()
             forgetWetStroke()
-            val meshed = ItemMesher.mesh(stroke) ?: return
+            val meshed = ItemMesher.mesh(stroke, measurer = textMeasurer) ?: return
             // Every run, not just the first: a neon stroke is a halo, a lit body and a white core,
             // and keeping only one of them left the wet stroke invisible until the pen lifted.
             scene.setWetParts(meshed.parts, meshed.bounds)
