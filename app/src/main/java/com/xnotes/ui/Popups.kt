@@ -16,6 +16,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -29,6 +30,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -64,6 +66,7 @@ import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -71,6 +74,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.Dp
@@ -243,15 +247,10 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                         StyleCaption("Size")
                         Text("%.1f".format(width), color = LocalPalette.current.text.toComposeColor(), fontSize = 11.sp)
                     }
-                    Slider(
+                    DesignedSizeSlider(
                         value = width,
-                        onValueChange = { width = it; emit() },
                         valueRange = ToolConversions.widthRange(tool).let { it.start.toFloat()..it.endInclusive.toFloat() },
-                        colors = SliderDefaults.colors(
-                            thumbColor = LocalPalette.current.accent.toComposeColor(),
-                            activeTrackColor = LocalPalette.current.accent.toComposeColor(),
-                            inactiveTrackColor = LocalPalette.current.border.toComposeColor(),
-                        ),
+                        onValueChange = { width = it; emit() },
                     )
 
                     // Light, inset pen tray echoes the original X Notes illustrated selector.
@@ -419,6 +418,28 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 }
             }
         }
+    }
+}
+
+
+/** The supplied metallic size control, with its thumb kept live and draggable. */
+@Composable
+internal fun DesignedSizeSlider(
+    value: Float,
+    valueRange: ClosedFloatingPointRange<Float>,
+    onValueChange: (Float) -> Unit,
+) {
+    val fraction = ((value - valueRange.start) / (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
+    BoxWithConstraints(Modifier.fillMaxWidth().height(36.dp), contentAlignment = Alignment.CenterStart) {
+        Image(painterResource(R.drawable.pen_size_track), null, contentScale = ContentScale.FillBounds,
+            modifier = Modifier.fillMaxWidth().height(8.dp))
+        Image(painterResource(R.drawable.pen_size_thumb), null,
+            modifier = Modifier.offset(x = (maxWidth - 30.dp) * fraction).size(30.dp))
+        Slider(value = value, onValueChange = onValueChange, valueRange = valueRange,
+            modifier = Modifier.fillMaxWidth(),
+            colors = SliderDefaults.colors(thumbColor = Color.Transparent, activeTrackColor = Color.Transparent,
+                inactiveTrackColor = Color.Transparent, activeTickColor = Color.Transparent,
+                inactiveTickColor = Color.Transparent))
     }
 }
 
