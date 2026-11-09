@@ -443,6 +443,8 @@ private fun itemIcon(item: ToolbarItem): ImageVector = when (item) {
     ToolbarItem.CALLIGRAPHY -> ImageVector.vectorResource(R.drawable.ic_stroke_calligraphy)
     ToolbarItem.SPEED -> ImageVector.vectorResource(R.drawable.ic_stroke_speed)
     ToolbarItem.TAPER -> ImageVector.vectorResource(R.drawable.ic_stroke_taper)
+    ToolbarItem.LASER -> ImageVector.vectorResource(R.drawable.ic_laser_pen)
+    ToolbarItem.STAMP -> ImageVector.vectorResource(R.drawable.ic_stamp_pen)
     ToolbarItem.HIGHLIGHTER -> ImageVector.vectorResource(R.drawable.ic_stroke_highlighter)
     ToolbarItem.ERASER -> XnotesIcons.eraser
     ToolbarItem.PAN -> XnotesIcons.pan
