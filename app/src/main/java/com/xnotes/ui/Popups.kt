@@ -596,10 +596,10 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
             )
             Row(
                 Modifier.fillMaxWidth().padding(vertical = 2.dp),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                horizontalArrangement = Arrangement.spacedBy((spacing - size).coerceAtLeast(4f).dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                repeat(3) { Text(glyph.ifBlank { "⭐" }, fontSize = (size * 0.72f).sp) }
+                repeat(3) { Text(glyph.ifBlank { "⭐" }, fontSize = size.sp) }
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 StyleCaption(stringResource(R.string.stamp_size))
