@@ -25,8 +25,8 @@ android {
         applicationId = "com.sameer.saya"
         minSdk = 26
         targetSdk = 36
-        versionCode = 106
-        versionName = "1.0.0"
+        versionCode = 107
+        versionName = "1.0.1"
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a", "x86_64")
         }
