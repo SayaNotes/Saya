@@ -103,6 +103,12 @@ data class ToolConfig(
     val tapeMode: TapeMode = TapeMode.STRAIGHT,
     /** Tape: what is printed on it. Only used by [Tool.TAPE]. */
     val tapePattern: TapePattern = TapePattern.SOLID,
+    /** Stamp Pen: one emoji or symbol repeated along the drawn path. */
+    val stampGlyph: String = "⭐",
+    /** Stamp Pen: glyph size in page pixels. */
+    val stampSize: Double = 24.0,
+    /** Stamp Pen: centre-to-centre spacing in page pixels. */
+    val stampSpacing: Double = 55.0,
 ) {
     companion object {
         const val DEFAULT_MARKUP_INTENSITY = 0.9
@@ -128,6 +134,7 @@ object ToolDefaults {
         Tool.TAPER -> ToolConfig(baseWidth = 4.0, pressureEnabled = true, pressureMinFactor = 0.45, directionStrength = 0.0, taperEnabled = true, taperMinFactor = DEFAULT_TAPER_TIP)
         // Dedicated laser: locked red (fully opaque) neon taper; only its width is user-adjustable.
         Tool.LASER -> ToolConfig(baseWidth = 7.0, pressureEnabled = true, pressureMinFactor = 0.45, directionStrength = 0.0, rgba = Rgba(255, 0, 0, 255), taperEnabled = true, neon = true, neonStrength = 1.0, taperMinFactor = DEFAULT_TAPER_TIP, colorOverride = Rgba(255, 0, 0, 255))
+        Tool.STAMP -> ToolConfig(baseWidth = 24.0, pressureEnabled = false, pressureMinFactor = 1.0, directionStrength = 0.0, stampGlyph = "⭐", stampSize = 24.0, stampSpacing = 55.0)
         Tool.HIGHLIGHTER -> ToolConfig(baseWidth = 16.0, pressureEnabled = false, pressureMinFactor = 1.0, directionStrength = 0.0, highlighterAlpha = 0.90)
         Tool.ERASER -> ToolConfig(baseWidth = 24.0, pressureEnabled = false, pressureMinFactor = 1.0, directionStrength = 0.0)
         Tool.LASSO -> ToolConfig(baseWidth = 2.0, pressureEnabled = false, pressureMinFactor = 1.0, directionStrength = 0.0, selectWholeItems = true)
@@ -139,7 +146,7 @@ object ToolDefaults {
     }
 
     /** Tools whose config is persisted in settings (spec 09 §2). */
-    val persistedTools = listOf(Tool.PEN, Tool.DASHED, Tool.CALLIGRAPHY, Tool.SPEED, Tool.TAPER, Tool.LASER, Tool.HIGHLIGHTER, Tool.ERASER, Tool.SELECT, Tool.LASSO, Tool.MARKUP, Tool.TAPE)
+    val persistedTools = listOf(Tool.PEN, Tool.DASHED, Tool.CALLIGRAPHY, Tool.SPEED, Tool.TAPER, Tool.LASER, Tool.STAMP, Tool.HIGHLIGHTER, Tool.ERASER, Tool.SELECT, Tool.LASSO, Tool.MARKUP, Tool.TAPE)
 }
 
 /**
