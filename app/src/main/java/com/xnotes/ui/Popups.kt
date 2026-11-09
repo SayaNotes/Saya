@@ -547,7 +547,7 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
         frameless = true,
     ) {
         Column(
-            Modifier.width(320.dp)
+            Modifier.width(380.dp)
                 .liquidGlassSurface(
                     RoundedCornerShape(22.dp),
                     LocalPalette.current.panel.toComposeColor(),
@@ -577,7 +577,7 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                 presets.forEach { preset ->
                     val selected = glyph == preset
                     Box(
-                        Modifier.size(42.dp).clip(RoundedCornerShape(7.dp))
+                        Modifier.size(44.dp).clip(RoundedCornerShape(7.dp))
                             .background(if (selected) LocalPalette.current.accent.toComposeColor().copy(alpha = 0.22f) else LocalPalette.current.surface.toComposeColor())
                             .border(1.dp, if (selected) LocalPalette.current.accent.toComposeColor() else LocalPalette.current.border.toComposeColor(), RoundedCornerShape(7.dp))
                             .clickable { glyph = preset; emit() },
@@ -603,7 +603,7 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
             }
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 StyleCaption(stringResource(R.string.stamp_size))
-                Text(size.toInt().toString(), color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
+                Box(Modifier.clip(RoundedCornerShape(6.dp)).background(LocalPalette.current.surface.toComposeColor()).padding(horizontal = 8.dp, vertical = 4.dp)) { Text(size.toInt().toString(), color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp) }
             }
             Slider(
                 value = size,
@@ -617,7 +617,7 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
             )
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 StyleCaption(stringResource(R.string.stamp_spacing))
-                Text(spacing.toInt().toString(), color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
+                Box(Modifier.clip(RoundedCornerShape(6.dp)).background(LocalPalette.current.surface.toComposeColor()).padding(horizontal = 8.dp, vertical = 4.dp)) { Text(spacing.toInt().toString(), color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp) }
             }
             Slider(
                 value = spacing,
