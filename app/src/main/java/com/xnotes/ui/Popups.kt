@@ -154,7 +154,6 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
     var pressure by remember(tool) { mutableStateOf(base.pressureEnabled) }
     var sensitivity by remember(tool) { mutableStateOf(ToolConversions.minFactorToSensitivity(base.pressureMinFactor).toFloat()) }
     var multiplier by remember(tool) { mutableStateOf(ToolConversions.directionStrengthToMultiplier(base.directionStrength).toFloat()) }
-    var speed by remember(tool) { mutableStateOf(ToolConversions.strengthToSpeed(base.speedStrength).toFloat()) }
     var taperTip by remember(tool) { mutableStateOf((base.taperMinFactor * 100).toFloat()) }
     var width by remember(tool) { mutableStateOf(base.baseWidth.toFloat()) }
     var stampGlyph by remember(tool) { mutableStateOf(base.stampGlyph) }
@@ -175,7 +174,6 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
     fun emit() {
         val m = ToolConversions.sensitivityToMinFactor(sensitivity.toDouble())
         val ds = if (tool == Tool.CALLIGRAPHY) ToolConversions.multiplierToDirectionStrength(multiplier.toDouble()) else 0.0
-        val sp = if (tool == Tool.SPEED) ToolConversions.speedToStrength(speed.toDouble()) else 0.0
         val tmf = if (tool == Tool.TAPER) taperTip.toDouble() / 100.0 else base.taperMinFactor
         val ha = if (tool == Tool.HIGHLIGHTER) ToolConversions.intensityToHighlighterAlpha(intensity.toDouble()) else base.highlighterAlpha
         editor.updateToolConfig(
@@ -185,7 +183,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 pressureEnabled = pressure,
                 pressureMinFactor = m,
                 directionStrength = ds,
-                speedStrength = sp,
+                speedStrength = base.speedStrength,
                 taperMinFactor = tmf,
                 neon = glow,
                 neonStrength = ToolConversions.intensityToNeonStrength(glowIntensity.toDouble()),
@@ -204,7 +202,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
 
     // Twelve high-contrast presets arranged as the compact 3-column palette in the reference.
     val paletteColors = editor.swatches(SwatchRole.PEN)
-    val penTools = listOf(Tool.PEN, Tool.CALLIGRAPHY, Tool.SPEED, Tool.TAPER, Tool.HIGHLIGHTER)
+    val penTools = listOf(Tool.PEN, Tool.CALLIGRAPHY, Tool.HIGHLIGHTER, Tool.TAPER, Tool.LASER, Tool.STAMP)
 
     DropdownMenu(
         expanded = true,
@@ -395,7 +393,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     }
                 }
 
-                val hasPressure = tool == Tool.PEN || tool == Tool.CALLIGRAPHY || tool == Tool.SPEED || tool == Tool.TAPER
+                val hasPressure = tool == Tool.PEN || tool == Tool.CALLIGRAPHY || tool == Tool.TAPER
                 if (hasPressure) {
                     ToggleRow(stringResource(R.string.caption_pressure), pressure) { pressure = it; emit() }
                     SliderRow(stringResource(R.string.caption_sensitivity), sensitivity, 0f..100f, enabled = pressure) { sensitivity = it; emit() }
@@ -412,7 +410,6 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     SliderRow(stringResource(R.string.stamp_spacing), stampSpacing, 8f..160f) { stampSpacing = it; emit() }
                 }
                 if (tool == Tool.CALLIGRAPHY) SliderRow(stringResource(R.string.caption_multiplier), multiplier, 1f..5f) { multiplier = it; emit() }
-                if (tool == Tool.SPEED) SliderRow(stringResource(R.string.caption_speed), speed, 0f..100f) { speed = it; emit() }
                 if (tool == Tool.TAPER) SliderRow(stringResource(R.string.caption_tip_width), taperTip, 0f..100f) { taperTip = it; emit() }
                 ToggleRow(stringResource(R.string.caption_scale), scale) { scale = it; emit() }
                 if (tool.isStroke && tool != Tool.HIGHLIGHTER) {
@@ -682,48 +679,57 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun ToolModeButton(tool: Tool, selected: Boolean, stampGlyph: String? = null, nibColor: Color = Color.Black, onClick: () -> Unit) {
+private fun ToolModeButton(
+    tool: Tool,
+    selected: Boolean,
+    stampGlyph: String? = null,
+    nibColor: Color = Color.Black,
+    onClick: () -> Unit,
+) {
     val palette = LocalPalette.current
-    val icon = when (tool) {
-        Tool.CALLIGRAPHY -> ImageVector.vectorResource(R.drawable.ic_stroke_calligraphy)
-        Tool.SPEED -> ImageVector.vectorResource(R.drawable.ic_stroke_speed)
-        Tool.TAPER -> ImageVector.vectorResource(R.drawable.ic_stroke_taper)
-        Tool.LASER -> ImageVector.vectorResource(R.drawable.ic_laser_pen)
-        Tool.STAMP -> ImageVector.vectorResource(R.drawable.ic_stamp_pen)
-        Tool.HIGHLIGHTER -> ImageVector.vectorResource(R.drawable.ic_stroke_highlighter)
-        else -> XnotesIcons.eraser
-    }
     val label = stringResource(tool.labelRes)
+    val art = when (tool) {
+        Tool.PEN -> R.drawable.pen_tool_pen
+        Tool.CALLIGRAPHY -> R.drawable.pen_tool_calligraphy
+        Tool.HIGHLIGHTER -> R.drawable.pen_tool_highlighter
+        Tool.TAPER -> R.drawable.pen_tool_taper
+        Tool.LASER -> R.drawable.pen_tool_laser
+        Tool.STAMP -> R.drawable.pen_tool_stamp
+        else -> 0
+    }
+    val nibMask = when (tool) {
+        Tool.PEN -> R.drawable.pen_nib_mask
+        Tool.CALLIGRAPHY -> R.drawable.calligraphy_nib_mask
+        Tool.HIGHLIGHTER -> R.drawable.highlighter_nib_mask
+        Tool.TAPER -> R.drawable.taper_nib_mask
+        else -> 0
+    }
     Column(
         modifier = Modifier.clip(RoundedCornerShape(9.dp))
             .background(if (selected) palette.selectionBackground.toComposeColor() else Color.Transparent)
             .border(1.dp, if (selected) palette.accent.toComposeColor() else Color.Transparent, RoundedCornerShape(9.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 7.dp, vertical = 6.dp),
+            .padding(horizontal = 5.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        Box(Modifier.size(34.dp, 54.dp).offset(y = if (selected) (-5).dp else 0.dp), contentAlignment = Alignment.Center) {
-            if (tool == Tool.PEN) {
-                Image(painterResource(R.drawable.pen_tool_pen), contentDescription = label, contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxWidth().height(54.dp))
-            } else {
-                Icon(icon, contentDescription = label,
-                    tint = if (tool == Tool.LASER) Color(0xFFFF3030) else if (selected) Color(0xFF5B35B8) else Color(0xFF303238),
-                    modifier = Modifier.size(30.dp))
-            }
-            if (tool in setOf(Tool.PEN, Tool.CALLIGRAPHY, Tool.HIGHLIGHTER, Tool.TAPER)) {
-                Box(Modifier.align(Alignment.TopCenter).offset(y = 7.dp).size(12.dp, 6.dp)
-                    .clip(RoundedCornerShape(50)).background(nibColor))
+        Box(Modifier.size(38.dp, 56.dp).offset(y = if (selected) (-5).dp else 0.dp), contentAlignment = Alignment.Center) {
+            if (art != 0) {
+                Image(painterResource(art), contentDescription = label, contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxWidth().height(56.dp))
+                if (nibMask != 0) {
+                    Image(painterResource(nibMask), contentDescription = null, contentScale = ContentScale.Fit,
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(nibColor, androidx.compose.ui.graphics.BlendMode.SrcIn),
+                        modifier = Modifier.fillMaxWidth().height(56.dp))
+                }
             }
             if (tool == Tool.STAMP && !stampGlyph.isNullOrBlank()) {
                 Text(stampGlyph, fontSize = 12.sp, modifier = Modifier.align(Alignment.TopCenter).offset(y = 1.dp))
             }
         }
-        Text(label, color = if (selected) Color(0xFF4D2A9B) else Color(0xFF34363B), fontSize = 10.sp, maxLines = 1)
+        Text(label, color = if (selected) Color(0xFF4D2A9B) else Color(0xFF34363B), fontSize = 9.sp, maxLines = 1)
     }
-}
-/**
+}/**
  * Page-styles popup (spec 10): two tabs, "All Pages" (the document-wide override) and "Current
  * Page", each editing the paper colour and the template. Controls are tri-state: "Default"
  * leaves the field unset so it inherits the level below (page, document, then the global
