@@ -861,6 +861,9 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
             it.recentColors = recentColors
             it.toolbarColorCount = toolbarColorCount
             it.toolbarLayout = canvasToolbarLayout
+            it.wandHoldMs = settings.prefs.wandHoldMs.toLong()
+            it.wandFadeMs = settings.prefs.wandFadeMs.toDouble()
+            it.wandFadeStyle = settings.prefs.wandFadeStyle
             it.pad.frontBuffering = !settings.prefs.disableFrontBuffering
             it.pickColor(activeColorIndex)
             // A style tuned on the canvas is the same style, so it persists through this editor.
