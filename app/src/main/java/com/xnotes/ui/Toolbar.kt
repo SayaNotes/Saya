@@ -294,7 +294,7 @@ private fun ToolbarItemView(
 
         ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY, ToolbarItem.SPEED,
         ToolbarItem.TAPER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER, ToolbarItem.PAN,
-        ToolbarItem.SELECT, ToolbarItem.LASSO, ToolbarItem.SCREENSHOT, ToolbarItem.SHAPE,
+        ToolbarItem.SELECT, ToolbarItem.SCREENSHOT, ToolbarItem.SHAPE,
         ToolbarItem.TEXT, ToolbarItem.TEXT_BOX, ToolbarItem.TABLE, ToolbarItem.TAPE, ToolbarItem.INSERT_SPACE -> {
             val tool = Tool.fromId(item.id)
             if (tool != null) ToolButton(editor, tool, toolIcons[tool], configForTool, setConfigForTool)
@@ -391,7 +391,8 @@ private fun ToolButton(
     setConfigForTool: (Tool?) -> Unit,
 ) {
     if (icon == null) return
-    val armed = editor.tool == tool
+    val selectionModeActive = tool == Tool.SELECT && editor.tool == Tool.LASSO
+    val armed = editor.tool == tool || selectionModeActive
     val configurable = tool.isStroke || tool == Tool.SHAPE || tool == Tool.ERASER || tool == Tool.SELECT || tool == Tool.LASSO || tool == Tool.TEXT || tool == Tool.TABLE || tool == Tool.MARKUP || tool == Tool.TAPE
     Box {
         ToolbarIcon(
@@ -403,18 +404,22 @@ private fun ToolButton(
             shortcut = PAGED_TOOL_KEYS[tool],
         ) {
             if (armed && configurable) {
-                setConfigForTool(tool)
+                setConfigForTool(if (tool == Tool.SELECT && editor.tool == Tool.LASSO) Tool.LASSO else tool)
             } else {
                 editor.selectTool(tool)
                 setConfigForTool(null)
             }
         }
-        if (configForTool == tool) {
+        if (configForTool == tool || (tool == Tool.SELECT && configForTool == Tool.LASSO)) {
             when {
                 tool == Tool.SHAPE -> ShapeConfigPopup(editor) { setConfigForTool(null) }
                 tool == Tool.TABLE -> TableConfigPopup(editor) { setConfigForTool(null) }
                 tool == Tool.ERASER -> EraserConfigPopup(editor) { setConfigForTool(null) }
-                tool == Tool.SELECT || tool == Tool.LASSO -> SelectConfigPopup(editor, tool) { setConfigForTool(null) }
+                tool == Tool.SELECT || tool == Tool.LASSO -> SelectConfigPopup(
+                    editor,
+                    configForTool ?: tool,
+                    onSelectTool = { editor.selectTool(it); setConfigForTool(null) },
+                ) { setConfigForTool(null) }
                 tool == Tool.TEXT -> TextToolConfigPopup(editor) { setConfigForTool(null) }
                 tool == Tool.MARKUP -> MarkupToolPopup(editor) { setConfigForTool(null) }
                 tool == Tool.TAPE -> TapeConfigPopup(editor) { setConfigForTool(null) }
