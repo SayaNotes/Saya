@@ -12,10 +12,10 @@ import com.xnotes.core.model.ShapeItem
 import com.xnotes.core.model.Stroke
 import com.xnotes.core.model.TapeItem
 import com.xnotes.core.model.TapePattern
-import com.xnotes.core.pal.FontSpec
 import com.xnotes.core.pal.FontFace
-import com.xnotes.core.pal.TextFlags
+import com.xnotes.core.pal.FontSpec
 import com.xnotes.core.pal.HAlign
+import com.xnotes.core.pal.TextFlags
 import com.xnotes.core.pal.TextMeasurer
 import com.xnotes.core.stroke.RibbonPoints
 import com.xnotes.core.tape.TapeGeometry
