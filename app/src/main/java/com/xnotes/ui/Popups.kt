@@ -503,7 +503,7 @@ fun LaserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
             )
             Text(
                 "Red • Neon Glow • 100% opacity • Taper",
-                color = LocalPalette.current.muted.toComposeColor(),
+                color = LocalPalette.current.textDim.toComposeColor(),
                 fontSize = 11.sp,
             )
         }
