@@ -1937,7 +1937,8 @@ private fun ExplorerSection(
         ) {
             // Saya's library is rendered as its own home surface below, never as a tile above the old Explorer.
             val gridTop: (LazyGridScope.() -> Unit)? = null
-            when {
+            Crossfade(targetState = showRecent, animationSpec = tween(180), label = "homeRecentTransition") { _ ->
+                when {
                 empty != null && !shelves -> Column(Modifier.fillMaxSize()) {
                     Spacer(Modifier.height(EXPLORER_HEADER))
                     chipRow(48.dp)
@@ -1983,6 +1984,7 @@ private fun ExplorerSection(
                         modifier = Modifier.fillMaxSize(),
                     )
                 }
+            }
             }
             // Floating stack of the dragged notes, the primary card centred on the finger and lifted.
             val pos = dragPos
