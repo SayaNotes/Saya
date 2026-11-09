@@ -415,6 +415,9 @@ data class Settings(
                     .coerceIn(ToolConfig.MARKUP_INTENSITY_MIN, 1.0),
                 tapeMode = if (o.has("tape_mode")) TapeMode.fromId(o.optString("tape_mode")) else d.tapeMode,
                 tapePattern = if (o.has("tape_pattern")) TapePattern.fromId(o.optString("tape_pattern")) else d.tapePattern,
+                stampGlyph = o.optString("stamp_glyph", d.stampGlyph).ifBlank { d.stampGlyph }.take(8),
+                stampSize = o.optDouble("stamp_size", d.stampSize).coerceIn(8.0, 96.0),
+                stampSpacing = o.optDouble("stamp_spacing", d.stampSpacing).coerceIn(8.0, 160.0),
                 colorOverride = o.optJSONArray("color_override")
                     ?.let { a -> Rgba.fromList((0 until a.length()).map { i -> a.optInt(i, 0) }) }
                     ?: d.colorOverride,
