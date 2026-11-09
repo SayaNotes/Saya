@@ -714,7 +714,7 @@ internal fun ListRow(b: ExplorerBody, e: BrowseEntry, wide: Boolean) {
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
                 onClick = { b.host.onClick(e) },
-                onLongClick = if (e.isDir) ({ b.host.onLongClick(e) }) else null,
+                onLongClick = { b.host.onLongClick(e) },
             )
             .padding(start = 8.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
