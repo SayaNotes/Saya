@@ -30,7 +30,6 @@ private val CANVAS_TOOL_OF: Map<ToolbarItem, Tool> = mapOf(
     ToolbarItem.ERASER to Tool.ERASER,
     ToolbarItem.PAN to Tool.PAN,
     ToolbarItem.SELECT to Tool.SELECT,
-    ToolbarItem.LASSO to Tool.LASSO,
     ToolbarItem.SHAPE to Tool.SHAPE,
     ToolbarItem.TAPE to Tool.TAPE,
 )
@@ -98,7 +97,8 @@ fun InfiniteToolbar(
                         if (icon != null) {
                             Box {
                                 // Tapping the armed tool again opens its settings, as the paged bar does.
-                                val armed = editor.tool == tool
+                                val selectionModeActive = tool == Tool.SELECT && editor.tool == Tool.LASSO
+                                val armed = editor.tool == tool || selectionModeActive
                                 val configurable = tool.isStroke || tool == Tool.ERASER || tool == Tool.SHAPE || tool == Tool.SELECT || tool == Tool.TAPE
                                 ToolbarIcon(
                                     icon,
@@ -110,7 +110,7 @@ fun InfiniteToolbar(
                                     when {
                                         tool == Tool.ERASER && editor.tool == tool -> eraserOpen = true
                                         tool == Tool.SHAPE && editor.tool == tool -> shapeOpen = true
-                                        (tool == Tool.SELECT || tool == Tool.LASSO) && editor.tool == tool -> selectOpen = tool
+                                        tool == Tool.SELECT && (editor.tool == Tool.SELECT || editor.tool == Tool.LASSO) -> selectOpen = editor.tool
                                         tool == Tool.TAPE && editor.tool == tool -> tapeOpen = true
                                         tool.isStroke && editor.tool == tool -> penOpen = tool
                                         else -> editor.armTool(tool)
@@ -120,7 +120,13 @@ fun InfiniteToolbar(
                                 // controls, same wording, same ranges, and they cannot drift apart.
                                 if (tool == Tool.ERASER && eraserOpen) EraserConfigPopup(editor) { eraserOpen = false }
                                 if (tool == Tool.SHAPE && shapeOpen) ShapeConfigPopup(editor) { shapeOpen = false }
-                                if (selectOpen == tool) SelectConfigPopup(editor, tool) { selectOpen = null }
+                                if (tool == Tool.SELECT && selectOpen != null) {
+                                    SelectConfigPopup(
+                                        editor,
+                                        selectOpen ?: Tool.SELECT,
+                                        onSelectTool = { editor.armTool(it); selectOpen = null },
+                                    ) { selectOpen = null }
+                                }
                                 if (tool == Tool.TAPE && tapeOpen) TapeConfigPopup(editor) { tapeOpen = false }
                                 if (penOpen == tool) ToolConfigPopup(editor, tool, onSelectTool = { editor.armTool(it) }) { penOpen = null }
                             }
