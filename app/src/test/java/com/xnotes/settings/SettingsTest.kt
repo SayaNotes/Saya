@@ -14,6 +14,17 @@ import org.junit.Test
 
 class SettingsTest {
 
+    @Test fun penAndShapePalettesPersistIndependently() {
+        val pen = SwatchRole.PEN.defaults.toMutableList().also { it[0] = Rgba(12, 34, 56, 255) }
+        val shape = SwatchRole.SHAPE.defaults.toMutableList().also { it[0] = Rgba(65, 43, 21, 255) }
+        val original = Settings(swatches = mapOf(SwatchRole.PEN to pen, SwatchRole.SHAPE to shape))
+        val restored = Settings.fromJson(original.toJson())
+        assertEquals(12, restored.swatchesFor(SwatchRole.PEN).size)
+        assertEquals(12, restored.swatchesFor(SwatchRole.SHAPE).size)
+        assertEquals(pen, restored.swatchesFor(SwatchRole.PEN))
+        assertEquals(shape, restored.swatchesFor(SwatchRole.SHAPE))
+    }
+
     @Test fun emptyJsonYieldsDefaults() {
         val s = Settings.fromJson(JSONObject())
         assertEquals(15, s.toolbarColors.size)
