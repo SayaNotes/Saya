@@ -515,6 +515,7 @@ fun LaserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
  * Stamp Pen setup: the selected emoji/symbol is repeated down the gesture path. The preview,
  * size and spacing controls mirror the original Stamp Pen panel.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
     val base = remember(editor) { editor.toolConfig(Tool.STAMP) }
