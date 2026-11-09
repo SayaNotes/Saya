@@ -11,6 +11,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.unit.dp
 import com.xnotes.R
@@ -24,7 +25,6 @@ private val CANVAS_TOOL_OF: Map<ToolbarItem, Tool> = mapOf(
     ToolbarItem.PEN to Tool.PEN,
     ToolbarItem.DASHED to Tool.DASHED,
     ToolbarItem.CALLIGRAPHY to Tool.CALLIGRAPHY,
-    ToolbarItem.SPEED to Tool.SPEED,
     ToolbarItem.TAPER to Tool.TAPER,
     ToolbarItem.LASER to Tool.LASER,
     ToolbarItem.STAMP to Tool.STAMP,
@@ -61,7 +61,6 @@ fun InfiniteToolbar(
         Tool.PEN to ImageVector.vectorResource(R.drawable.ic_stroke_regular),
         Tool.DASHED to ImageVector.vectorResource(R.drawable.ic_stroke_dashed),
         Tool.CALLIGRAPHY to ImageVector.vectorResource(R.drawable.ic_stroke_calligraphy),
-        Tool.SPEED to ImageVector.vectorResource(R.drawable.ic_stroke_speed),
         Tool.TAPER to ImageVector.vectorResource(R.drawable.ic_stroke_taper),
         Tool.LASER to ImageVector.vectorResource(R.drawable.ic_laser_pen),
         Tool.STAMP to ImageVector.vectorResource(R.drawable.ic_stamp_pen),
@@ -100,23 +99,51 @@ fun InfiniteToolbar(
                         val icon = toolIcons[tool]
                         if (icon != null) {
                             Box {
-                                // Tapping the armed tool again opens its settings, as the paged bar does.
+                                // Taper is the active-pen slot on the canvas toolbar; its
+                                // illustration follows the selected pen style.
+                                val displayTool = if (tool == Tool.TAPER && editor.tool.isStroke) editor.tool else tool
                                 val selectionModeActive = tool == Tool.SELECT && editor.tool == Tool.LASSO
-                                val armed = editor.tool == tool || selectionModeActive
+                                val armed = editor.tool == tool || (tool == Tool.TAPER && editor.tool.isStroke) || selectionModeActive
                                 val configurable = tool.isStroke || tool == Tool.ERASER || tool == Tool.SHAPE || tool == Tool.SELECT || tool == Tool.TAPE
+                                val imageRes = when (displayTool) {
+                                    Tool.PEN -> R.drawable.pen_tool_pen
+                                    Tool.CALLIGRAPHY -> R.drawable.pen_tool_calligraphy
+                                    Tool.HIGHLIGHTER -> R.drawable.pen_tool_highlighter
+                                    Tool.TAPER -> R.drawable.pen_tool_taper
+                                    Tool.LASER -> R.drawable.pen_tool_laser
+                                    Tool.STAMP -> R.drawable.pen_tool_stamp
+                                    else -> null
+                                }
+                                val nibMaskRes = when (displayTool) {
+                                    Tool.PEN -> R.drawable.pen_nib_mask
+                                    Tool.CALLIGRAPHY -> R.drawable.calligraphy_nib_mask
+                                    Tool.HIGHLIGHTER -> R.drawable.highlighter_nib_mask
+                                    Tool.TAPER -> R.drawable.taper_nib_mask
+                                    else -> null
+                                }
+                                val image = imageRes?.let { painterResource(it) }
+                                val nibMask = nibMaskRes?.let { painterResource(it) }
+                                val nibColor = editor.toolConfig(displayTool).colorOverride?.toComposeColor()
+                                    ?: editor.toolbarColors.getOrNull(editor.activeColorIndex)?.toComposeColor()
+                                    ?: androidx.compose.ui.graphics.Color.Black
+                                val stampGlyph = if (displayTool == Tool.STAMP) editor.toolConfig(Tool.STAMP).stampGlyph else null
                                 ToolbarIcon(
                                     icon,
-                                    stringResource(tool.labelRes),
+                                    stringResource(displayTool.labelRes),
                                     active = armed,
-                                    glideKey = tool,
+                                    glideKey = displayTool,
                                     hint = if (armed && configurable) stringResource(R.string.tip_tap_for_settings) else null,
+                                    image = image,
+                                    nibMask = nibMask,
+                                    nibColor = nibColor,
+                                    stampGlyph = stampGlyph,
                                 ) {
                                     when {
                                         tool == Tool.ERASER && editor.tool == tool -> eraserOpen = true
                                         tool == Tool.SHAPE && editor.tool == tool -> shapeOpen = true
                                         tool == Tool.SELECT && (editor.tool == Tool.SELECT || editor.tool == Tool.LASSO) -> selectOpen = editor.tool
                                         tool == Tool.TAPE && editor.tool == tool -> tapeOpen = true
-                                        tool.isStroke && editor.tool == tool -> penOpen = tool
+                                        tool.isStroke && armed -> penOpen = tool
                                         else -> editor.armTool(tool)
                                     }
                                 }
@@ -133,11 +160,7 @@ fun InfiniteToolbar(
                                 }
                                 if (tool == Tool.TAPE && tapeOpen) TapeConfigPopup(editor) { tapeOpen = false }
                                 if (penOpen == tool) {
-                                    when (tool) {
-                                        Tool.LASER -> LaserConfigPopup(editor) { penOpen = null }
-                                        Tool.STAMP -> StampConfigPopup(editor) { penOpen = null }
-                                        else -> ToolConfigPopup(editor, tool, onSelectTool = { editor.armTool(it) }) { penOpen = null }
-                                    }
+                                    ToolConfigPopup(editor, displayTool, onSelectTool = { editor.armTool(it) }) { penOpen = null }
                                 }
                             }
                         }
