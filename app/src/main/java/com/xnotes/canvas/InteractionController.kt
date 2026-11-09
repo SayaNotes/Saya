@@ -199,6 +199,8 @@ class InteractionController(
     var onFingerDoubleTapAction: (() -> Boolean)? = null
     var onFingerLongPressAction: (() -> Boolean)? = null
     var hasFingerLongPressAction: () -> Boolean = { false }
+    /** True when a finger long-press should temporarily erase without changing the armed pen. */
+    var fingerLongPressEraseEnabled: () -> Boolean = { false }
 
     /** The inline-flow caret controller; TEXT-tool gestures route here (installed by the Editor). */
     var flowText: FlowTextController? = null
@@ -4097,6 +4099,28 @@ class InteractionController(
         lassoPoints.clear()
         val fingerHold = longPressIsFinger
         longPressIsFinger = false
+        // A finger long-press configured as "Enable eraser" becomes a live, temporary erase
+        // gesture. Keep the selected pen armed; the same finger continues into handleMove/eraseAt
+        // and lifting commits the erase without requiring a second touch.
+        if (fingerHold && fingerLongPressEraseEnabled() &&
+            mode == PointerMode.DRAW && liveStroke != null && tool.isStroke
+        ) {
+            cancelDwell()
+            dwellEligible = false
+            liveStroke = null
+            strokePageIndex = null
+            strokeDismissedSelection = false
+            snapEngaged = false
+            snapRunStartEdge = null
+            snapCurrentEdge = null
+            snapPenViewport = null
+            tapCandidate = false
+            clearSelection()
+            erasingWithFinger = true
+            beginErase(longPressStart.x, longPressStart.y)
+            requestRender()
+            return
+        }
         if (fingerHold && onFingerLongPressAction?.invoke() == true) {
             mode = PointerMode.IDLE
             requestRender()
