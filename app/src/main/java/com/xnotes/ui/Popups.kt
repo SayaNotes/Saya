@@ -180,6 +180,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
             tool,
             base.copy(
                 baseWidth = width.toDouble(),
+                stampSize = if (tool == Tool.STAMP) width.toDouble() else base.stampSize,
                 pressureEnabled = pressure,
                 pressureMinFactor = m,
                 directionStrength = ds,
@@ -375,7 +376,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
 
             if (advancedExpanded) {
                 HorizontalDivider(color = LocalPalette.current.border.toComposeColor())
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (tool != Tool.LASER) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     StyleCaption(stringResource(R.string.caption_colour))
                     ModeChip(stringResource(R.string.default_choice), colorOverride == null) { colorOverride = null; emit() }
                     ColorPickerDot(
@@ -412,7 +413,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 if (tool == Tool.CALLIGRAPHY) SliderRow(stringResource(R.string.caption_multiplier), multiplier, 1f..5f) { multiplier = it; emit() }
                 if (tool == Tool.TAPER) SliderRow(stringResource(R.string.caption_tip_width), taperTip, 0f..100f) { taperTip = it; emit() }
                 ToggleRow(stringResource(R.string.caption_scale), scale) { scale = it; emit() }
-                if (tool.isStroke && tool != Tool.HIGHLIGHTER) {
+                if (tool.isStroke && tool != Tool.HIGHLIGHTER && tool != Tool.LASER) {
                     ToggleRow(stringResource(R.string.caption_snap_to_shapes), snapShapes) { snapShapes = it; editor.snapHeldToShapes = it }
                 }
                 if (tool == Tool.DASHED) {
@@ -424,7 +425,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     ToggleRow(stringResource(R.string.caption_straight_line), straight) { straight = it; emit() }
                     ToggleRow(stringResource(R.string.caption_inverse), inverse) { inverse = it; emit() }
                 }
-                if (tool.isStroke && tool != Tool.HIGHLIGHTER && tool != Tool.DASHED) {
+                if (tool.isStroke && tool != Tool.HIGHLIGHTER && tool != Tool.DASHED && tool != Tool.LASER) {
                     ToggleRow(stringResource(R.string.caption_neon), glow) { glow = it; emit() }
                     if (glow) SliderRow(stringResource(R.string.caption_glow_intensity), glowIntensity, 0f..100f) { glowIntensity = it; emit() }
                 }
@@ -445,6 +446,8 @@ internal fun DesignedSizeSlider(
     BoxWithConstraints(Modifier.fillMaxWidth().height(36.dp), contentAlignment = Alignment.CenterStart) {
         Image(painterResource(R.drawable.pen_size_track), null, contentScale = ContentScale.FillBounds,
             modifier = Modifier.fillMaxWidth().height(8.dp))
+        Box(Modifier.width(15.dp + (maxWidth - 30.dp) * fraction).height(8.dp)
+            .clip(RoundedCornerShape(8.dp)).background(Color(0xFF414345)))
         Image(painterResource(R.drawable.pen_size_thumb), null,
             modifier = Modifier.offset(x = (maxWidth - 30.dp) * fraction).size(30.dp))
         Slider(value = value, onValueChange = onValueChange, valueRange = valueRange,
