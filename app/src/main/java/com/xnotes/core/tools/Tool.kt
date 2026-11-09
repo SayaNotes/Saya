@@ -35,6 +35,10 @@ enum class Tool(val id: String) {
     val isStroke: Boolean get() = this == PEN || this == DASHED || this == CALLIGRAPHY ||
         this == SPEED || this == TAPER || this == LASER || this == STAMP || this == HIGHLIGHTER
 
+    /** The six illustrated styles shown together in the pen selector (not the legacy Speed or dashed tools). */
+    val isPenPanelStyle: Boolean get() = this == PEN || this == CALLIGRAPHY ||
+        this == HIGHLIGHTER || this == TAPER || this == LASER || this == STAMP
+
     /**
      * Tools the "draw with finger" gate covers: when finger-draw is off, a finger pans
      * instead of activating these (the stroke tools plus select/lasso/shape/eraser/markup). The
