@@ -10,6 +10,12 @@ import org.junit.Test
 
 class ToolsTest {
 
+    @Test fun stampGlyphNormalizationPreservesUnicodeCodePoints() {
+        val emoji = String(Character.toChars(0x1F680))
+        assertEquals(emoji, normalizeStampGlyph(emoji))
+        assertEquals("⭐", normalizeStampGlyph("   "))
+    }
+
     @Test fun theMarkupToolHighlightsAtNinetyAndPansAFreeFinger() {
         val c = ToolDefaults.configFor(Tool.MARKUP)
         assertEquals(MarkupMode.HIGHLIGHT, c.markupMode)
