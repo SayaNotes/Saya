@@ -418,7 +418,11 @@ private fun ToolButton(
                 tool == Tool.TEXT -> TextToolConfigPopup(editor) { setConfigForTool(null) }
                 tool == Tool.MARKUP -> MarkupToolPopup(editor) { setConfigForTool(null) }
                 tool == Tool.TAPE -> TapeConfigPopup(editor) { setConfigForTool(null) }
-                else -> ToolConfigPopup(editor, tool, onSelectTool = { editor.selectTool(it) }) { setConfigForTool(null) }
+                else -> ToolConfigPopup(editor, tool, onSelectTool = { next ->
+                    editor.selectTool(next)
+                    // Keep the popup anchored to the newly selected pen, not the tool that opened it.
+                    setConfigForTool(next)
+                }) { setConfigForTool(null) }
             }
         }
     }
