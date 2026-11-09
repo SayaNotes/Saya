@@ -9,9 +9,10 @@ enum class SwatchRole(val id: String, val defaults: List<Rgba>) {
     ACCENT("accent", listOf(Rgba(214, 72, 72), Rgba(70, 120, 255), Rgba(60, 170, 90), Rgba(230, 160, 40), Rgba(150, 100, 220))),
 
     /** A template's own colour parameters, such as a cover's board. */
-    TEMPLATE("template", listOf(Rgba(34, 56, 90), Rgba(29, 58, 51), Rgba(90, 35, 40), Rgba(200, 169, 126), Rgba(239, 232, 216)));
+    TEMPLATE("template", listOf(Rgba(34, 56, 90), Rgba(29, 58, 51), Rgba(90, 35, 40), Rgba(200, 169, 126), Rgba(239, 232, 216))),
+    PEN("pen", listOf(Rgba(245, 20, 24), Rgba(255, 145, 20), Rgba(255, 215, 20), Rgba(45, 205, 65), Rgba(35, 65, 235), Rgba(20, 145, 235), Rgba(20, 185, 195), Rgba(225, 25, 185), Rgba(35, 115, 45), Rgba(25, 25, 28), Rgba(135, 135, 140), Rgba(255, 255, 255))),
+    SHAPE("shape", listOf(Rgba(245, 20, 24), Rgba(255, 145, 20), Rgba(255, 215, 20), Rgba(45, 205, 65), Rgba(35, 65, 235), Rgba(20, 145, 235), Rgba(20, 185, 195), Rgba(225, 25, 185), Rgba(35, 115, 45), Rgba(25, 25, 28), Rgba(135, 135, 140), Rgba(255, 255, 255)));
 
     companion object {
-        const val COUNT = 5
     }
 }
