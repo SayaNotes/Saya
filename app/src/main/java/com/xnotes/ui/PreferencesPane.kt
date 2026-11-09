@@ -469,6 +469,25 @@ fun PreferencesPane(
                     Chip(stringResource(R.string.pan_none), prefs.zoomLockPan == "none") { update(prefs.copy(zoomLockPan = "none")) }
                 }
                 CheckRow(stringResource(R.string.pref_detect_shapes), prefs.detectShapes) { update(prefs.copy(detectShapes = it)) }
+                FieldLabel("Laser Pen: visible time before disappearing")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(500, 1000, 2000, 3000, 5000).forEach { ms ->
+                        val label = if (ms < 1000) "${ms} ms" else "${ms / 1000} s"
+                        Chip(label, prefs.wandHoldMs == ms) { update(prefs.copy(wandHoldMs = ms)) }
+                    }
+                }
+                FieldLabel("Laser Pen: disappearance duration")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(250, 500, 1000, 2000, 3000, 5000).forEach { ms ->
+                        val label = if (ms < 1000) "${ms} ms" else "${ms / 1000} s"
+                        Chip(label, prefs.wandFadeMs == ms) { update(prefs.copy(wandFadeMs = ms)) }
+                    }
+                }
+                FieldLabel("Laser Pen disappearance style")
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Chip("Gradual fade", prefs.wandFadeStyle == "fade") { update(prefs.copy(wandFadeStyle = "fade")) }
+                    Chip("Slow blink", prefs.wandFadeStyle == "blink") { update(prefs.copy(wandFadeStyle = "blink")) }
+                }
                 FieldLabel("Snap rotation to 90 degrees")
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
