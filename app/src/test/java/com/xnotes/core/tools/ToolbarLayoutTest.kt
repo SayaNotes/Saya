@@ -25,7 +25,7 @@ class ToolbarLayoutTest {
         )
         assertEquals(
             listOf(
-                ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER,
+                ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.STAMP, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER,
                 ToolbarItem.SHAPE, ToolbarItem.TAPE, ToolbarItem.PAN,
                 ToolbarItem.SELECT,
             ),
