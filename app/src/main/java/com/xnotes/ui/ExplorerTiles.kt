@@ -92,6 +92,9 @@ internal class TileHost(
     val onPulseDone: (BrowseEntry) -> Unit,
     val onClick: (BrowseEntry) -> Unit,
     val onLongClick: (BrowseEntry) -> Unit,
+    val selectedCount: () -> Int,
+    val clearSelection: () -> Unit,
+    val deleteSelection: () -> Unit,
     val onPlaced: (BrowseEntry, LayoutCoordinates?) -> Unit,
     val menu: EntryActions,
 )
@@ -903,7 +906,7 @@ internal fun formatClock(w: ExplorerWords, time: Long, clock24: Boolean, zone: Z
  * Saya's landscape library: real note thumbnails first, then a quiet row of root folders.
  * The editor tools intentionally do not appear in this home-only surface.
  */
-@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 internal fun HomeShelves(
     b: ExplorerBody,
@@ -934,7 +937,6 @@ internal fun HomeShelves(
         (recents.map { it.entry } + pinnedNotes + b.pinned + b.groups.flatMap { it.items })
             .filterNot { it.isDir }
             .distinctBy { it.documentUri }
-            .take(4)
     }
     val folders = b.folders
     Column(
@@ -968,65 +970,100 @@ internal fun HomeShelves(
             )
         }
 
+        if (b.host.selecting()) {
+            Row(
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(palette.selectionBackground.toComposeColor())
+                    .border(1.dp, palette.accent.toComposeColor(), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 5.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    stringResource(R.string.n_selected, b.host.selectedCount()),
+                    color = palette.selectionForeground.toComposeColor(),
+                    fontSize = 13.sp,
+                    modifier = Modifier.weight(1f),
+                )
+                Text(
+                    b.deleteLabel,
+                    color = palette.danger.toComposeColor(),
+                    fontSize = 13.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                        .clickable { b.host.deleteSelection() }
+                        .padding(horizontal = 10.dp, vertical = 8.dp),
+                )
+                IconButton(onClick = b.host.clearSelection, modifier = Modifier.size(32.dp)) {
+                    Icon(XnotesIcons.close, stringResource(R.string.clear_selection), tint = palette.selectionForeground.toComposeColor())
+                }
+            }
+        }
+
         if (notes.isNotEmpty()) {
-            BoxWithConstraints(Modifier.fillMaxWidth()) {
-                val gap = 16.dp
-                val cardWidth = ((maxWidth - gap * (notes.size - 1)) / notes.size).coerceAtMost(250.dp)
-                Row(
-                    Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(gap),
-                ) {
-                    notes.forEach { entry ->
-                        val shape = RoundedCornerShape(15.dp)
-                        Column(
-                            Modifier.width(cardWidth)
-                                .clip(shape)
-                                .background(card)
-                                .border(1.dp, hairline, shape)
-                                .clickable(
-                                    interactionSource = remember { MutableInteractionSource() },
-                                    indication = null,
-                                ) { onOpenRecent(entry) }
-                                .padding(8.dp),
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = androidx.compose.foundation.layout.PaddingValues(end = 8.dp),
+            ) {
+                items(notes, key = { it.documentUri }) { entry ->
+                    val shape = RoundedCornerShape(15.dp)
+                    val selected = b.host.isSelected(entry)
+                    Column(
+                        Modifier.width(250.dp)
+                            .clip(shape)
+                            .background(if (selected) palette.selectionBackground.toComposeColor() else card)
+                            .border(1.dp, if (selected) palette.accent.toComposeColor() else hairline, shape)
+                            .combinedClickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                onClick = { onOpenRecent(entry) },
+                                onLongClick = { b.host.onLongClick(entry) },
+                            )
+                            .padding(8.dp),
+                    ) {
+                        Box(
+                            Modifier.fillMaxWidth()
+                                .aspectRatio(0.82f)
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(previewWell),
+                            contentAlignment = Alignment.Center,
                         ) {
-                            Box(
-                                Modifier.fillMaxWidth()
-                                    .aspectRatio(0.82f)
-                                    .clip(RoundedCornerShape(9.dp))
-                                    .background(previewWell),
-                                contentAlignment = Alignment.Center,
+                            EntryThumb(
+                                b.editor,
+                                entry,
+                                ThumbShape.PAGE,
+                                Modifier.fillMaxSize().padding(5.dp),
+                            )
+                            if (b.host.selecting()) {
+                                if (selected) Box(Modifier.fillMaxSize().background(palette.selectionBackground.toComposeColor().copy(alpha = 0.24f)))
+                                CheckRing(selected, Modifier.align(Alignment.TopStart).padding(8.dp))
+                            }
+                        }
+                        Row(
+                            Modifier.fillMaxWidth().padding(start = 7.dp, end = 3.dp, top = 12.dp, bottom = 7.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Column(
+                                Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(4.dp),
                             ) {
-                                EntryThumb(
-                                    b.editor,
-                                    entry,
-                                    ThumbShape.PAGE,
-                                    Modifier.fillMaxSize().padding(5.dp),
+                                Text(
+                                    b.label(entry),
+                                    color = primaryText,
+                                    fontSize = 13.5.sp,
+                                    fontWeight = FontWeight.Medium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                )
+                                Text(
+                                    b.metaText(entry),
+                                    color = secondary,
+                                    fontSize = 11.sp,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
                                 )
                             }
-                            Row(
-                                Modifier.fillMaxWidth().padding(start = 7.dp, end = 3.dp, top = 12.dp, bottom = 7.dp),
-                                verticalAlignment = Alignment.CenterVertically,
-                            ) {
-                                Column(
-                                    Modifier.weight(1f),
-                                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                                ) {
-                                    Text(
-                                        b.label(entry),
-                                        color = primaryText,
-                                        fontSize = 13.5.sp,
-                                        fontWeight = FontWeight.Medium,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                    Text(
-                                        b.metaText(entry),
-                                        color = secondary,
-                                        fontSize = 11.sp,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                    )
-                                }
+                            if (!b.host.selecting()) {
                                 IconButton(
                                     onClick = { b.host.menu.preview(entry) },
                                     modifier = Modifier.size(30.dp),
@@ -1035,10 +1072,6 @@ internal fun HomeShelves(
                                 }
                             }
                         }
-                    }
-                    if (notes.size < 4) {
-                        // Keep the library visually balanced without inventing placeholder documents.
-                        Spacer(Modifier.weight(1f))
                     }
                 }
             }
