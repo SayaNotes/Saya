@@ -184,7 +184,6 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 pressureEnabled = pressure,
                 pressureMinFactor = m,
                 directionStrength = ds,
-                speedStrength = base.speedStrength,
                 taperMinFactor = tmf,
                 neon = glow,
                 neonStrength = ToolConversions.intensityToNeonStrength(glowIntensity.toDouble()),
