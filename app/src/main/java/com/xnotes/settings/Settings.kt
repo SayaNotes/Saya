@@ -201,7 +201,7 @@ data class Settings(
             )
         }
 
-        /** Each saved role padded or cut to [SwatchRole.COUNT], filling gaps from its defaults. */
+        /** Each saved role is padded or cut to that role’s own default palette size. */
         private fun swatches(o: JSONObject?): Map<SwatchRole, List<Rgba>> {
             if (o == null) return emptyMap()
             return SwatchRole.entries.mapNotNull { role ->
