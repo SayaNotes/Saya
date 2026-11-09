@@ -8,6 +8,8 @@ import com.hrm.latex.renderer.model.LatexConfig
 import com.hrm.latex.renderer.model.LatexTheme
 import com.xnotes.core.shapes.ShapePreset
 import com.xnotes.core.shapes.ShapePresets
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -116,7 +118,7 @@ import kotlin.math.roundToInt
  * TIP WIDTH PERCENTAGE (taper pen), then WIDTH, and a NEON toggle (with INTENSITY) on
  * any stroke tool but the highlighter.
  */
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ToolConfigPopup(
     editor: ToolPopupHost,
@@ -157,6 +159,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
     var intensity by remember(tool) { mutableStateOf(ToolConversions.highlighterAlphaToIntensity(base.highlighterAlpha).toFloat()) }
     var inverse by remember(tool) { mutableStateOf(base.highlighterInverse) }
     var colorOverride by remember(tool) { mutableStateOf(base.colorOverride) }
+    var editingPaletteColor by remember(tool) { mutableStateOf<Rgba?>(null) }
     var snapShapes by remember(tool) { mutableStateOf(editor.snapHeldToShapes) }
     var advancedExpanded by remember(tool) { mutableStateOf(false) }
 
@@ -296,9 +299,23 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                                         } else LocalPalette.current.border.toComposeColor(),
                                         RoundedCornerShape(5.dp),
                                     )
-                                    .clickable { editor.setSwatchColor(editor.hostActiveColorIndex, swatch) },
+                                    .combinedClickable(
+                                        onClick = { editor.setSwatchColor(editor.hostActiveColorIndex, swatch) },
+                                        onLongClick = { editingPaletteColor = swatch },
+                                    ),
                             ) {}
                         }
+                    }
+                    editingPaletteColor?.let { seed ->
+                        ColorPickerPopup(
+                            initial = seed,
+                            recents = editor.hostRecentColors,
+                            onDismiss = { editingPaletteColor = null },
+                            onPick = { picked ->
+                                editor.setSwatchColor(editor.hostActiveColorIndex, picked)
+                                editingPaletteColor = null
+                            },
+                        )
                     }
                     // Keep a visible selection marker when the active ink is a custom colour
                     // rather than one of the twelve built-in swatches.
