@@ -120,8 +120,8 @@ import kotlin.math.roundToInt
 
 /**
  * Stroke-tool configuration popup (spec 10 §3): PRESSURE / SENSITIVITY, then the
- * tool's signature control: MULTIPLIER (calligraphy), SPEED (speed pen) or
- * TIP WIDTH PERCENTAGE (taper pen), then WIDTH, and a NEON toggle (with INTENSITY) on
+ * tool's signature control: MULTIPLIER (calligraphy) or TIP WIDTH PERCENTAGE (taper pen),
+ * then WIDTH, and a NEON toggle (with INTENSITY) on
  * any stroke tool but the highlighter.
  */
 @OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
