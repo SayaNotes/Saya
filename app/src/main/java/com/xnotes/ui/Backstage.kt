@@ -1938,9 +1938,9 @@ private fun ExplorerSection(
         ) {
             // Saya's library is rendered as its own home surface below, never as a tile above the old Explorer.
             val gridTop: (LazyGridScope.() -> Unit)? = null
-            Crossfade(targetState = showRecent, animationSpec = tween(180), label = "homeRecentTransition") { _ ->
+            Crossfade(targetState = showRecent, animationSpec = tween(180), label = "homeRecentTransition") { recent ->
                 when {
-                empty != null && !shelves -> Column(Modifier.fillMaxSize()) {
+                empty != null && !shelves && !recent -> Column(Modifier.fillMaxSize()) {
                     Spacer(Modifier.height(EXPLORER_HEADER))
                     chipRow(48.dp)
                     EmptyPane(empty.text, empty.art, if (!empty.offersCreate) null else { {
@@ -1954,7 +1954,7 @@ private fun ExplorerSection(
                 layout == ExplorerLayout.LIST -> BoxWithConstraints(Modifier.fillMaxSize()) {
                     ListBody(
                         body, listState, wide = maxWidth >= 720.dp,
-                        onSort = if (showRecent) null else ({ k -> setView(if (view.sortKey == k) view.copy(descending = !view.descending) else view.copy(sortKey = k, descending = k != ExplorerSortKey.NAME)) }),
+                        onSort = if (recent) null else ({ k -> setView(if (view.sortKey == k) view.copy(descending = !view.descending) else view.copy(sortKey = k, descending = k != ExplorerSortKey.NAME)) }),
                         chips = chipRow,
                         top = null, modifier = Modifier.fillMaxSize(),
                     )
