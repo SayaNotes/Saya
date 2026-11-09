@@ -268,7 +268,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         penTools.forEach { candidate ->
-                            ToolModeButton(candidate, selected = candidate == tool, stampGlyph = if (candidate == Tool.STAMP) editor.toolConfig(Tool.STAMP).stampGlyph else null) { onSelectTool(candidate) }
+                            ToolModeButton(candidate, selected = candidate == tool, stampGlyph = if (candidate == Tool.STAMP) editor.toolConfig(Tool.STAMP).stampGlyph else null, nibColor = editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor() ?: Color.Black) { onSelectTool(candidate) }
                         }
                     }
                 }
@@ -682,7 +682,7 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun ToolModeButton(tool: Tool, selected: Boolean, stampGlyph: String? = null, onClick: () -> Unit) {
+private fun ToolModeButton(tool: Tool, selected: Boolean, stampGlyph: String? = null, nibColor: Color = Color.Black, onClick: () -> Unit) {
     val palette = LocalPalette.current
     val icon = when (tool) {
         Tool.CALLIGRAPHY -> ImageVector.vectorResource(R.drawable.ic_stroke_calligraphy)
@@ -711,6 +711,10 @@ private fun ToolModeButton(tool: Tool, selected: Boolean, stampGlyph: String? = 
                 Icon(icon, contentDescription = label,
                     tint = if (tool == Tool.LASER) Color(0xFFFF3030) else if (selected) Color(0xFF5B35B8) else Color(0xFF303238),
                     modifier = Modifier.size(30.dp))
+            }
+            if (tool in setOf(Tool.PEN, Tool.CALLIGRAPHY, Tool.HIGHLIGHTER, Tool.TAPER)) {
+                Box(Modifier.align(Alignment.TopCenter).offset(y = 7.dp).size(12.dp, 6.dp)
+                    .clip(RoundedCornerShape(50)).background(nibColor))
             }
             if (tool == Tool.STAMP && !stampGlyph.isNullOrBlank()) {
                 Text(stampGlyph, fontSize = 12.sp, modifier = Modifier.align(Alignment.TopCenter).offset(y = 1.dp))
