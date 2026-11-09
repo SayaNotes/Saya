@@ -125,38 +125,39 @@ fun ToolConfigPopup(
     onDismiss: () -> Unit,
 ) {
     var selectedTool by remember(tool) { mutableStateOf(tool) }
-    key(selectedTool) {
-        ToolConfigPopupContent(
-            editor = editor,
-            tool = selectedTool,
-            onSelectTool = { next ->
-                selectedTool = next
-                onSelectTool(next)
-            },
-            onDismiss = onDismiss,
-        )
-    }
+    // Keep the popup composition mounted while switching pen styles. The content's small
+    // per-tool state is keyed below, so switching styles updates controls without tearing down
+    // and rebuilding the entire glass popup.
+    ToolConfigPopupContent(
+        editor = editor,
+        tool = selectedTool,
+        onSelectTool = { next ->
+            selectedTool = next
+            onSelectTool(next)
+        },
+        onDismiss = onDismiss,
+    )
 }
 
 @Composable
 private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTool: (Tool) -> Unit, onDismiss: () -> Unit) {
-    val base = remember { editor.toolConfig(tool) }
-    var pressure by remember { mutableStateOf(base.pressureEnabled) }
-    var sensitivity by remember { mutableStateOf(ToolConversions.minFactorToSensitivity(base.pressureMinFactor).toFloat()) }
-    var multiplier by remember { mutableStateOf(ToolConversions.directionStrengthToMultiplier(base.directionStrength).toFloat()) }
-    var speed by remember { mutableStateOf(ToolConversions.strengthToSpeed(base.speedStrength).toFloat()) }
-    var taperTip by remember { mutableStateOf((base.taperMinFactor * 100).toFloat()) }
-    var width by remember { mutableStateOf(base.baseWidth.toFloat()) }
-    var glow by remember { mutableStateOf(base.neon) }
-    var glowIntensity by remember { mutableStateOf(ToolConversions.neonStrengthToIntensity(base.neonStrength).toFloat()) }
-    var dashLen by remember { mutableStateOf(base.dashLength.toFloat()) }
-    var gapLen by remember { mutableStateOf(base.dashGap.toFloat()) }
-    var straight by remember { mutableStateOf(base.straightLine) }
-    var scale by remember { mutableStateOf(base.scale) }
-    var intensity by remember { mutableStateOf(ToolConversions.highlighterAlphaToIntensity(base.highlighterAlpha).toFloat()) }
-    var inverse by remember { mutableStateOf(base.highlighterInverse) }
-    var colorOverride by remember { mutableStateOf(base.colorOverride) }
-    var snapShapes by remember { mutableStateOf(editor.snapHeldToShapes) }
+    val base = remember(tool) { editor.toolConfig(tool) }
+    var pressure by remember(tool) { mutableStateOf(base.pressureEnabled) }
+    var sensitivity by remember(tool) { mutableStateOf(ToolConversions.minFactorToSensitivity(base.pressureMinFactor).toFloat()) }
+    var multiplier by remember(tool) { mutableStateOf(ToolConversions.directionStrengthToMultiplier(base.directionStrength).toFloat()) }
+    var speed by remember(tool) { mutableStateOf(ToolConversions.strengthToSpeed(base.speedStrength).toFloat()) }
+    var taperTip by remember(tool) { mutableStateOf((base.taperMinFactor * 100).toFloat()) }
+    var width by remember(tool) { mutableStateOf(base.baseWidth.toFloat()) }
+    var glow by remember(tool) { mutableStateOf(base.neon) }
+    var glowIntensity by remember(tool) { mutableStateOf(ToolConversions.neonStrengthToIntensity(base.neonStrength).toFloat()) }
+    var dashLen by remember(tool) { mutableStateOf(base.dashLength.toFloat()) }
+    var gapLen by remember(tool) { mutableStateOf(base.dashGap.toFloat()) }
+    var straight by remember(tool) { mutableStateOf(base.straightLine) }
+    var scale by remember(tool) { mutableStateOf(base.scale) }
+    var intensity by remember(tool) { mutableStateOf(ToolConversions.highlighterAlphaToIntensity(base.highlighterAlpha).toFloat()) }
+    var inverse by remember(tool) { mutableStateOf(base.highlighterInverse) }
+    var colorOverride by remember(tool) { mutableStateOf(base.colorOverride) }
+    var snapShapes by remember(tool) { mutableStateOf(editor.snapHeldToShapes) }
     var advancedExpanded by remember(tool) { mutableStateOf(false) }
 
     fun emit() {
