@@ -251,6 +251,11 @@ class CanvasCodec(private val imageCodec: ImageCodec, private val textMeasurer: 
             j.name("highlighter_alpha").value(s.config.highlighterAlpha)
             if (s.config.highlighterInverse) j.name("highlighter_inverse").value(true)
         }
+        if (s.tool == Tool.STAMP) {
+            j.name("stamp_glyph").value(s.config.stampGlyph)
+            j.name("stamp_size").value(s.config.stampSize)
+            j.name("stamp_spacing").value(s.config.stampSpacing)
+        }
         j.endObject()
         // Samples are almost all of a dense manifest's bytes, so they go out through [JsonWrite.samplePoint], which rounds them: 0.01
         // content px and 0.001 pressure are far below anything visible. Rounding is idempotent,
@@ -957,6 +962,9 @@ class CanvasCodec(private val imageCodec: ImageCodec, private val textMeasurer: 
             dashGap = c?.dashGap ?: def.dashGap,
             highlighterAlpha = c?.highlighterAlpha ?: def.highlighterAlpha,
             highlighterInverse = c?.highlighterInverse ?: def.highlighterInverse,
+            stampGlyph = c?.stampGlyph ?: def.stampGlyph,
+            stampSize = c?.stampSize ?: def.stampSize,
+            stampSpacing = c?.stampSpacing ?: def.stampSpacing,
         )
         val stroke = Stroke(tool, config, emptyList(), s.speedScale, s.straight, s.smoothScale)
         s.samples?.let { stroke.setSamples(it.xs, it.ys, it.ps, it.ts, it.n) }
@@ -1166,6 +1174,9 @@ class CanvasCodec(private val imageCodec: ImageCodec, private val textMeasurer: 
                 "dash_gap" -> c.dashGap = doubleOrNull(p)
                 "highlighter_alpha" -> c.highlighterAlpha = doubleOrNull(p)
                 "highlighter_inverse" -> c.highlighterInverse = boolOrNull(p)
+                "stamp_glyph" -> c.stampGlyph = stringOrNull(p)
+                "stamp_size" -> c.stampSize = doubleOrNull(p)
+                "stamp_spacing" -> c.stampSpacing = doubleOrNull(p)
                 else -> p.skipValue()
             }
         }
