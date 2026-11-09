@@ -1,6 +1,8 @@
 package com.xnotes.ui
 
 import androidx.annotation.StringRes
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -66,11 +68,12 @@ import kotlinx.coroutines.launch
  * colour, an open one or a connector a head at either end, and a star or polygon a minus/plus for
  * its count.
  */
-@OptIn(ExperimentalLayoutApi::class)
+@OptIn(ExperimentalLayoutApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
     var config by remember { mutableStateOf(editor.hostShapeConfig) }
     var colorPickerOpen by remember { mutableStateOf(false) }
+    var editingPaletteColor by remember { mutableStateOf<Rgba?>(null) }
     var advancedExpanded by remember { mutableStateOf(false) }
 
     fun emit(next: ShapeConfig) {
@@ -276,12 +279,28 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                                         else LocalPalette.current.border.toComposeColor(),
                                         RoundedCornerShape(6.dp),
                                     )
-                                    .clickable {
-                                        editor.setSwatchColor(editor.hostActiveColorIndex, color)
-                                        if (config.fill) emit(config.copy(fillColor = color))
-                                    },
+                                    .combinedClickable(
+                                        onClick = {
+                                            editor.setSwatchColor(editor.hostActiveColorIndex, color)
+                                            if (config.fill) emit(config.copy(fillColor = color))
+                                        },
+                                        onLongClick = { editingPaletteColor = color },
+                                    ),
                             )
                         }
+                    }
+
+                    editingPaletteColor?.let { seed ->
+                        ColorPickerPopup(
+                            initial = seed,
+                            recents = editor.hostRecentColors,
+                            onDismiss = { editingPaletteColor = null },
+                            onPick = { picked ->
+                                editor.setSwatchColor(editor.hostActiveColorIndex, picked)
+                                if (config.fill) emit(config.copy(fillColor = picked))
+                                editingPaletteColor = null
+                            },
+                        )
                     }
 
                     if (activeShapeColor !in paletteColors) {
