@@ -384,6 +384,9 @@ class InteractionController(
     private var fadeAlpha = 1.0                       // shared multiplier, 1 = solid, 0 = gone
     private var fading = false                        // true while the fade loop runs
     private var fadeStartMs = 0L
+    var wandHoldMs: Long = WAND_HOLD_MS
+    var wandFadeMs: Double = WAND_FADE_MS
+    var wandFadeStyle: String = "fade"
     private val fadeFrame = Choreographer.FrameCallback { t -> stepFade(t) }
     private var fadeTimerRunnable: Runnable? = null
 
@@ -5023,7 +5026,7 @@ class InteractionController(
         cancelFadeTimer()
         val r = Runnable { startFade() }
         fadeTimerRunnable = r
-        handler.postDelayed(r, WAND_HOLD_MS)
+        handler.postDelayed(r, wandHoldMs)
     }
 
     private fun cancelFadeTimer() {
@@ -5052,8 +5055,10 @@ class InteractionController(
     private fun stepFade(frameTimeNanos: Long) {
         if (!fading) return
         val now = frameTimeNanos / 1_000_000L
-        val t = ((now - fadeStartMs).toDouble() / WAND_FADE_MS).coerceIn(0.0, 1.0)
-        fadeAlpha = (1.0 - t) * (1.0 - t) // ease-out so the batch melts away rather than blinking off
+        val t = ((now - fadeStartMs).toDouble() / wandFadeMs.coerceAtLeast(1.0)).coerceIn(0.0, 1.0)
+        fadeAlpha = if (wandFadeStyle == "blink") {
+            if (((now - fadeStartMs) / 320L) % 2L == 0L) 1.0 else 0.22
+        } else (1.0 - t) * (1.0 - t) // ease-out so the batch melts away rather than blinking off
         requestRender()
         if (t >= 1.0) {
             fadingStrokes.clear()
