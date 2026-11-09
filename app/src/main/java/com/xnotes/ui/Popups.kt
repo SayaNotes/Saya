@@ -264,7 +264,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         penTools.forEach { candidate ->
-                            ToolModeButton(candidate, selected = candidate == tool) { onSelectTool(candidate) }
+                            ToolModeButton(candidate, selected = candidate == tool, stampGlyph = if (candidate == Tool.STAMP) editor.toolConfig(Tool.STAMP).stampGlyph else null) { onSelectTool(candidate) }
                         }
                     }
                 }
@@ -667,13 +667,13 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun ToolModeButton(tool: Tool, selected: Boolean, onClick: () -> Unit) {
+private fun ToolModeButton(tool: Tool, selected: Boolean, stampGlyph: String? = null, onClick: () -> Unit) {
     val palette = LocalPalette.current
     val icon = when (tool) {
-        Tool.PEN -> ImageVector.vectorResource(R.drawable.ic_stroke_regular)
         Tool.CALLIGRAPHY -> ImageVector.vectorResource(R.drawable.ic_stroke_calligraphy)
         Tool.SPEED -> ImageVector.vectorResource(R.drawable.ic_stroke_speed)
         Tool.TAPER -> ImageVector.vectorResource(R.drawable.ic_stroke_taper)
+        Tool.LASER -> ImageVector.vectorResource(R.drawable.ic_laser_pen)
         Tool.STAMP -> ImageVector.vectorResource(R.drawable.ic_stamp_pen)
         Tool.HIGHLIGHTER -> ImageVector.vectorResource(R.drawable.ic_stroke_highlighter)
         else -> XnotesIcons.eraser
@@ -684,15 +684,26 @@ private fun ToolModeButton(tool: Tool, selected: Boolean, onClick: () -> Unit) {
             .background(if (selected) palette.selectionBackground.toComposeColor() else Color.Transparent)
             .border(1.dp, if (selected) palette.accent.toComposeColor() else Color.Transparent, RoundedCornerShape(9.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 9.dp, vertical = 6.dp),
+            .padding(horizontal = 7.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        Icon(icon, contentDescription = label, tint = if (selected) Color(0xFF5B35B8) else Color(0xFF303238), modifier = Modifier.size(27.dp))
+        Box(Modifier.size(34.dp, 54.dp).offset(y = if (selected) (-5).dp else 0.dp), contentAlignment = Alignment.Center) {
+            if (tool == Tool.PEN) {
+                Image(painterResource(R.drawable.pen_tool_pen), contentDescription = label, contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxWidth().height(54.dp))
+            } else {
+                Icon(icon, contentDescription = label,
+                    tint = if (tool == Tool.LASER) Color(0xFFFF3030) else if (selected) Color(0xFF5B35B8) else Color(0xFF303238),
+                    modifier = Modifier.size(30.dp))
+            }
+            if (tool == Tool.STAMP && !stampGlyph.isNullOrBlank()) {
+                Text(stampGlyph, fontSize = 12.sp, modifier = Modifier.align(Alignment.TopCenter).offset(y = 1.dp))
+            }
+        }
         Text(label, color = if (selected) Color(0xFF4D2A9B) else Color(0xFF34363B), fontSize = 10.sp, maxLines = 1)
     }
 }
-
 /**
  * Page-styles popup (spec 10): two tabs, "All Pages" (the document-wide override) and "Current
  * Page", each editing the paper colour and the template. Controls are tri-state: "Default"
