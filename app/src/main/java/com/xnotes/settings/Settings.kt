@@ -20,6 +20,7 @@ import com.xnotes.core.tools.ShapeConfig
 import com.xnotes.core.shapes.ShapeKind
 import com.xnotes.core.tools.Tool
 import com.xnotes.core.tools.ToolConfig
+import com.xnotes.core.tools.normalizeStampGlyph
 import com.xnotes.core.tools.ToolDefaults
 import com.xnotes.core.tools.ToolbarLayout
 import org.json.JSONArray
@@ -415,7 +416,7 @@ data class Settings(
                     .coerceIn(ToolConfig.MARKUP_INTENSITY_MIN, 1.0),
                 tapeMode = if (o.has("tape_mode")) TapeMode.fromId(o.optString("tape_mode")) else d.tapeMode,
                 tapePattern = if (o.has("tape_pattern")) TapePattern.fromId(o.optString("tape_pattern")) else d.tapePattern,
-                stampGlyph = o.optString("stamp_glyph", d.stampGlyph).ifBlank { d.stampGlyph }.take(8),
+                stampGlyph = normalizeStampGlyph(o.optString("stamp_glyph", d.stampGlyph)),
                 stampSize = o.optDouble("stamp_size", d.stampSize).coerceIn(8.0, 96.0),
                 stampSpacing = o.optDouble("stamp_spacing", d.stampSpacing).coerceIn(8.0, 160.0),
                 colorOverride = o.optJSONArray("color_override")
