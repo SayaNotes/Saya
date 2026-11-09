@@ -250,10 +250,11 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
             listOf(ToolbarItem.UNDO, ToolbarItem.REDO),
             listOf(ToolbarItem.STYLES, ToolbarItem.WAYPOINTS, ToolbarItem.MINIMAP),
             listOf(ToolbarItem.ZOOM, ToolbarItem.FIT, ToolbarItem.ZOOM_LOCK),
+            hidden = setOf(ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY),
         )
 
-        private fun of(vararg groups: List<ToolbarItem>): ToolbarLayout =
-            ToolbarLayout(groups.map { g -> ToolbarSection(g.map { ToolbarEntry(it) }) })
+        private fun of(vararg groups: List<ToolbarItem>, hidden: Set<ToolbarItem> = emptySet()): ToolbarLayout =
+            ToolbarLayout(groups.map { g -> ToolbarSection(g.map { ToolbarEntry(it, it !in hidden) }) })
 
         /**
          * Build from raw (id, visible) pairs per section as read from storage: ids outside [among]
