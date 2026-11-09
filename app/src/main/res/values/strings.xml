@@ -443,6 +443,7 @@
     <string name="pref_toolbar_help">Tap a tool to show or hide it. Long-press to drag it within or across sections. Long-press a section\'s top to move the whole section.</string>
     <string name="toggle_pan">Toggle pan</string>
     <string name="toggle_eraser">Enable eraser</string>
+    <string name="slide_to_clear_page">Slide to clear whole page</string>
     <string name="toggle_previous">Toggle previous tool</string>
     <string name="pref_filename_template_help">YYYY YY MM DD HH mm ss expand to the creation date and time. # becomes the number that keeps the name free in its folder.</string>
     <string name="pref_next_note_named">The next note would be named %1$s</string>
