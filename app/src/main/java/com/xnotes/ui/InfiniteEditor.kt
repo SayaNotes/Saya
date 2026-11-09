@@ -1343,6 +1343,11 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
     /** The colour circles the styles popup offers, kept in the host's settings. */
     lateinit var swatchStore: SwatchStore
 
+    override fun swatches(role: com.xnotes.settings.SwatchRole): List<Rgba> = swatchStore.swatches(role)
+
+    override fun setSwatch(role: com.xnotes.settings.SwatchRole, index: Int, color: Rgba) =
+        swatchStore.setSwatch(role, index, color)
+
     /** Save (or, passing null, forget) the background new canvases start with. */
     fun saveNewCanvasBackground(background: CanvasBackground?) {
         if (newCanvasBackground == background) return
