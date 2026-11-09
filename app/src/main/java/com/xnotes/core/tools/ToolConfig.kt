@@ -40,6 +40,19 @@ enum class MarkupMode(val id: String, val type: com.xnotes.core.model.MarkupType
  *
  * The default `ToolConfig()` is `(3.0, on, 0.35, 0.0)` (spec 04 §3).
  */
+/** Keep custom stamp text bounded without ever splitting a UTF-16 surrogate pair. */
+fun normalizeStampGlyph(value: String): String {
+    val input = value.trim()
+    var index = 0
+    var count = 0
+    while (index < input.length && count < 16) {
+        val codePoint = Character.codePointAt(input, index)
+        index += Character.charCount(codePoint)
+        count++
+    }
+    return input.substring(0, index).ifBlank { "⭐" }
+}
+
 data class ToolConfig(
     val baseWidth: Double = 3.0,
     val pressureEnabled: Boolean = true,
