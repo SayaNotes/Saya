@@ -193,7 +193,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
             ToolbarItem.entries.toSet() - setOf(ToolbarItem.WAYPOINTS, ToolbarItem.MINIMAP, ToolbarItem.LASSO)
 
         /**
-         * Three deliberate zones: document/page overview on the left, the eight everyday tools
+         * Three deliberate zones: document/page overview on the left, the nine everyday tools
          * in the centre, and page navigation on the right. Other tools remain available but start
          * hidden in the customizer, so the default bar stays clean and balanced.
          */
