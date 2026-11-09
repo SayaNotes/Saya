@@ -73,7 +73,7 @@ import kotlinx.coroutines.launch
 fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
     var config by remember { mutableStateOf(editor.hostShapeConfig) }
     var colorPickerOpen by remember { mutableStateOf(false) }
-    var editingPaletteColor by remember { mutableStateOf<Rgba?>(null) }
+    var editingPaletteColor by remember { mutableStateOf<Int?>(null) }
     var advancedExpanded by remember { mutableStateOf(false) }
 
     fun emit(next: ShapeConfig) {
@@ -101,12 +101,7 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
         if (config.shapePage != safePage) emit(config.copy(shapePage = safePage))
     }
 
-    val paletteColors = listOf(
-        Rgba(245, 20, 24), Rgba(255, 145, 20), Rgba(255, 215, 20),
-        Rgba(45, 205, 65), Rgba(35, 65, 235), Rgba(20, 145, 235),
-        Rgba(20, 185, 195), Rgba(225, 25, 185), Rgba(35, 115, 45),
-        Rgba(25, 25, 28), Rgba(135, 135, 140), Rgba(255, 255, 255),
-    )
+    val paletteColors = editor.swatches(SwatchRole.SHAPE)
     val ink = editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex) ?: Rgba(0, 0, 0)
     val activeShapeColor = if (config.fill) config.fillColor ?: ink else ink
     val selected = ShapePresets.byKey(config.preset)
@@ -266,7 +261,7 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
                         verticalArrangement = Arrangement.spacedBy(5.dp),
                     ) {
-                        paletteColors.forEach { color ->
+                        paletteColors.forEachIndexed { paletteIndex, color ->
                             val swatchColor = color.toComposeColor()
                             val isCurrent = color == activeShapeColor
                             val luminance = swatchColor.red * 0.299f + swatchColor.green * 0.587f + swatchColor.blue * 0.114f
@@ -284,20 +279,24 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                                             editor.setSwatchColor(editor.hostActiveColorIndex, color)
                                             if (config.fill) emit(config.copy(fillColor = color))
                                         },
-                                        onLongClick = { editingPaletteColor = color },
+                                        onLongClick = { editingPaletteColor = paletteIndex },
                                     ),
                             )
                         }
                     }
 
-                    editingPaletteColor?.let { seed ->
-                        ColorPickerPopup(
+                    editingPaletteColor?.let { paletteIndex ->
+                        val seed = paletteColors.getOrNull(paletteIndex)
+                        if (seed != null) ColorPickerPopup(
                             initial = seed,
                             recents = editor.hostRecentColors,
                             onDismiss = { editingPaletteColor = null },
                             onPick = { picked ->
-                                editor.setSwatchColor(editor.hostActiveColorIndex, picked)
-                                if (config.fill) emit(config.copy(fillColor = picked))
+                                editor.setSwatch(SwatchRole.SHAPE, paletteIndex, picked)
+                                if (activeShapeColor == seed) {
+                                    if (config.fill) emit(config.copy(fillColor = picked))
+                                    else editor.setSwatchColor(editor.hostActiveColorIndex, picked)
+                                }
                                 editingPaletteColor = null
                             },
                         )
