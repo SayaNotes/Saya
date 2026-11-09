@@ -126,6 +126,8 @@ object ToolDefaults {
         Tool.CALLIGRAPHY -> ToolConfig(baseWidth = 6.0, pressureEnabled = true, pressureMinFactor = 0.40, directionStrength = 0.60)
         Tool.SPEED -> ToolConfig(baseWidth = 4.0, pressureEnabled = true, pressureMinFactor = 0.35, directionStrength = 0.0, speedStrength = 0.8)
         Tool.TAPER -> ToolConfig(baseWidth = 4.0, pressureEnabled = true, pressureMinFactor = 0.45, directionStrength = 0.0, taperEnabled = true, taperMinFactor = DEFAULT_TAPER_TIP)
+        // Dedicated laser: locked red (fully opaque) neon taper; only its width is user-adjustable.
+        Tool.LASER -> ToolConfig(baseWidth = 7.0, pressureEnabled = true, pressureMinFactor = 0.45, directionStrength = 0.0, rgba = Rgba(255, 0, 0, 255), taperEnabled = true, neon = true, neonStrength = 1.0, taperMinFactor = DEFAULT_TAPER_TIP, colorOverride = Rgba(255, 0, 0, 255))
         Tool.HIGHLIGHTER -> ToolConfig(baseWidth = 16.0, pressureEnabled = false, pressureMinFactor = 1.0, directionStrength = 0.0, highlighterAlpha = 0.90)
         Tool.ERASER -> ToolConfig(baseWidth = 24.0, pressureEnabled = false, pressureMinFactor = 1.0, directionStrength = 0.0)
         Tool.LASSO -> ToolConfig(baseWidth = 2.0, pressureEnabled = false, pressureMinFactor = 1.0, directionStrength = 0.0, selectWholeItems = true)
@@ -137,7 +139,7 @@ object ToolDefaults {
     }
 
     /** Tools whose config is persisted in settings (spec 09 §2). */
-    val persistedTools = listOf(Tool.PEN, Tool.DASHED, Tool.CALLIGRAPHY, Tool.SPEED, Tool.TAPER, Tool.HIGHLIGHTER, Tool.ERASER, Tool.SELECT, Tool.LASSO, Tool.MARKUP, Tool.TAPE)
+    val persistedTools = listOf(Tool.PEN, Tool.DASHED, Tool.CALLIGRAPHY, Tool.SPEED, Tool.TAPER, Tool.LASER, Tool.HIGHLIGHTER, Tool.ERASER, Tool.SELECT, Tool.LASSO, Tool.MARKUP, Tool.TAPE)
 }
 
 /**
