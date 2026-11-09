@@ -5057,7 +5057,7 @@ class InteractionController(
         val now = frameTimeNanos / 1_000_000L
         val t = ((now - fadeStartMs).toDouble() / wandFadeMs.coerceAtLeast(1.0)).coerceIn(0.0, 1.0)
         fadeAlpha = if (wandFadeStyle == "blink") {
-            if (((now - fadeStartMs) / 320L) % 2L == 0L) 1.0 else 0.22
+            if (((now - fadeStartMs) / 500L) % 2L == 0L) 1.0 else 0.22
         } else (1.0 - t) * (1.0 - t) // ease-out so the batch melts away rather than blinking off
         requestRender()
         if (t >= 1.0) {
