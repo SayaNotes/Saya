@@ -113,29 +113,39 @@ fun Toolbar(
     onTakePhoto: () -> Unit = {},
     onImagePage: () -> Unit = {},
 ) {
-    // The five stroke tools use the designed vector drawables (res/drawable/ic_stroke_*),
-    // tinted at the call site like every other icon; the rest use the built-in line set.
-    val toolIcons: Map<Tool, ImageVector> = mapOf(
-        Tool.PEN to ImageVector.vectorResource(R.drawable.ic_stroke_regular),
-        Tool.DASHED to ImageVector.vectorResource(R.drawable.ic_stroke_dashed),
-        Tool.CALLIGRAPHY to ImageVector.vectorResource(R.drawable.ic_stroke_calligraphy),
-        Tool.TAPER to ImageVector.vectorResource(R.drawable.ic_stroke_taper),
-        Tool.LASER to ImageVector.vectorResource(R.drawable.ic_laser_pen),
-        Tool.STAMP to ImageVector.vectorResource(R.drawable.ic_stamp_pen),
-        Tool.HIGHLIGHTER to ImageVector.vectorResource(R.drawable.ic_stroke_highlighter),
-        Tool.ERASER to XnotesIcons.eraser,
-        Tool.PAN to XnotesIcons.pan,
-        Tool.SELECT to XnotesIcons.select,
-        Tool.LASSO to XnotesIcons.lasso,
-        Tool.SCREENSHOT to XnotesIcons.scissors,
-        Tool.SHAPE to XnotesIcons.shape,
-        Tool.TEXT to XnotesIcons.text,
-        Tool.TEXT_BOX to XnotesIcons.textBox,
-        Tool.TABLE to XnotesIcons.table,
-        Tool.MARKUP to XnotesIcons.markup,
-        Tool.TAPE to XnotesIcons.tape,
-        Tool.INSERT_SPACE to XnotesIcons.insertSpace,
-    )
+    // Resolve resource vectors once, then retain the lookup table across toolbar recompositions.
+    val penIcon = ImageVector.vectorResource(R.drawable.ic_stroke_regular)
+    val dashedIcon = ImageVector.vectorResource(R.drawable.ic_stroke_dashed)
+    val calligraphyIcon = ImageVector.vectorResource(R.drawable.ic_stroke_calligraphy)
+    val taperIcon = ImageVector.vectorResource(R.drawable.ic_stroke_taper)
+    val laserIcon = ImageVector.vectorResource(R.drawable.ic_laser_pen)
+    val stampIcon = ImageVector.vectorResource(R.drawable.ic_stamp_pen)
+    val highlighterIcon = ImageVector.vectorResource(R.drawable.ic_stroke_highlighter)
+    val toolIcons: Map<Tool, ImageVector> = remember(
+        penIcon, dashedIcon, calligraphyIcon, taperIcon, laserIcon, stampIcon, highlighterIcon,
+    ) {
+        mapOf(
+            Tool.PEN to penIcon,
+            Tool.DASHED to dashedIcon,
+            Tool.CALLIGRAPHY to calligraphyIcon,
+            Tool.TAPER to taperIcon,
+            Tool.LASER to laserIcon,
+            Tool.STAMP to stampIcon,
+            Tool.HIGHLIGHTER to highlighterIcon,
+            Tool.ERASER to XnotesIcons.eraser,
+            Tool.PAN to XnotesIcons.pan,
+            Tool.SELECT to XnotesIcons.select,
+            Tool.LASSO to XnotesIcons.lasso,
+            Tool.SCREENSHOT to XnotesIcons.scissors,
+            Tool.SHAPE to XnotesIcons.shape,
+            Tool.TEXT to XnotesIcons.text,
+            Tool.TEXT_BOX to XnotesIcons.textBox,
+            Tool.TABLE to XnotesIcons.table,
+            Tool.MARKUP to XnotesIcons.markup,
+            Tool.TAPE to XnotesIcons.tape,
+            Tool.INSERT_SPACE to XnotesIcons.insertSpace,
+        )
+    }
     var configForTool by remember { mutableStateOf<Tool?>(null) }
     var switcherIndex by remember { mutableStateOf<Int?>(null) }
     var renaming by remember { mutableStateOf(false) }
