@@ -196,7 +196,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
 
     // Twelve high-contrast presets arranged as the compact 3-column palette in the reference.
     val paletteColors = editor.swatches(SwatchRole.PEN)
-    val penTools = listOf(Tool.PEN, Tool.CALLIGRAPHY, Tool.HIGHLIGHTER, Tool.TAPER, Tool.LASER, Tool.STAMP)
+    val penTools = listOf(Tool.PEN, Tool.CALLIGRAPHY, Tool.SPEED, Tool.TAPER, Tool.HIGHLIGHTER)
 
     DropdownMenu(
         expanded = true,
@@ -398,6 +398,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     SliderRow(stringResource(R.string.caption_sensitivity), sensitivity, 0f..100f, enabled = pressure) { sensitivity = it; emit() }
                 }
                 if (tool == Tool.CALLIGRAPHY) SliderRow(stringResource(R.string.caption_multiplier), multiplier, 1f..5f) { multiplier = it; emit() }
+                if (tool == Tool.SPEED) SliderRow(stringResource(R.string.caption_speed), speed, 0f..100f) { speed = it; emit() }
                 if (tool == Tool.TAPER) SliderRow(stringResource(R.string.caption_tip_width), taperTip, 0f..100f) { taperTip = it; emit() }
                 ToggleRow(stringResource(R.string.caption_scale), scale) { scale = it; emit() }
                 if (tool.isStroke && tool != Tool.HIGHLIGHTER) {
@@ -652,7 +653,6 @@ private fun ToolModeButton(tool: Tool, selected: Boolean, onClick: () -> Unit) {
         Tool.CALLIGRAPHY -> ImageVector.vectorResource(R.drawable.ic_stroke_calligraphy)
         Tool.SPEED -> ImageVector.vectorResource(R.drawable.ic_stroke_speed)
         Tool.TAPER -> ImageVector.vectorResource(R.drawable.ic_stroke_taper)
-        Tool.LASER -> ImageVector.vectorResource(R.drawable.ic_laser_pen)
         Tool.STAMP -> ImageVector.vectorResource(R.drawable.ic_stamp_pen)
         Tool.HIGHLIGHTER -> ImageVector.vectorResource(R.drawable.ic_stroke_highlighter)
         else -> XnotesIcons.eraser
@@ -667,7 +667,7 @@ private fun ToolModeButton(tool: Tool, selected: Boolean, onClick: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        Icon(icon, contentDescription = label, tint = if (tool == Tool.LASER) Color(0xFFFF3030) else if (selected) Color(0xFF5B35B8) else Color(0xFF303238), modifier = Modifier.size(27.dp).offset(y = if (selected) (-5).dp else 0.dp))
+        Icon(icon, contentDescription = label, tint = if (selected) Color(0xFF5B35B8) else Color(0xFF303238), modifier = Modifier.size(27.dp))
         Text(label, color = if (selected) Color(0xFF4D2A9B) else Color(0xFF34363B), fontSize = 10.sp, maxLines = 1)
     }
 }
