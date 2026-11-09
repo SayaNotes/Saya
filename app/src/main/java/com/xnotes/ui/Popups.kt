@@ -1618,7 +1618,10 @@ internal fun DropdownMenu(
         onDismissRequest = onDismissRequest,
         modifier = modifier,
         offset = LocalMenuOffset.current,
-        properties = properties,
+        // Frameless floating tool panels should not take window focus: on Android that can
+        // reveal the system navigation bar over an immersive editor. They remain touchable and
+        // dismiss on outside taps; regular menus keep their normal focus/keyboard behaviour.
+        properties = if (frameless) PopupProperties(focusable = false, dismissOnClickOutside = true) else properties,
         shape = if (frameless) RoundedCornerShape(26.dp) else MaterialTheme.shapes.extraSmall,
         containerColor = if (frameless) Color.Transparent else palette.menuBg.toComposeColor(),
         tonalElevation = if (frameless) 0.dp else 3.dp,
