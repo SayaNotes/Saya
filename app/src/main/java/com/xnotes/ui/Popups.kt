@@ -267,7 +267,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         penTools.forEach { candidate ->
-                            ToolModeButton(candidate, selected = candidate == tool, stampGlyph = if (candidate == Tool.STAMP) editor.toolConfig(Tool.STAMP).stampGlyph else null, nibColor = editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor() ?: Color.Black) { onSelectTool(candidate) }
+                            ToolModeButton(candidate, selected = candidate == tool, stampGlyph = if (candidate == Tool.STAMP) editor.toolConfig(Tool.STAMP).stampGlyph else null, nibColor = editor.toolConfig(candidate).colorOverride?.toComposeColor() ?: (editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor() ?: Color.Black)) { onSelectTool(candidate) }
                         }
                     }
                 }
