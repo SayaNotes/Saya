@@ -264,7 +264,7 @@ private fun ToolbarItemView(
 ) {
     when (item) {
         // Canvas-only items; a stored paged layout can never hold one, so nothing is drawn.
-        ToolbarItem.WAYPOINTS, ToolbarItem.MINIMAP -> Unit
+        ToolbarItem.WAYPOINTS, ToolbarItem.MINIMAP, ToolbarItem.LASSO -> Unit
 
         ToolbarItem.HOME -> ToolbarIcon(XnotesIcons.home, stringResource(R.string.toolbar_home)) { onOpenBackstage() }
         // A name has no room down a side rail.
