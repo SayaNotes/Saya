@@ -379,6 +379,9 @@ data class Settings(
             .put("markup_intensity", c.markupIntensity)
             .put("tape_mode", c.tapeMode.id)
             .put("tape_pattern", c.tapePattern.id)
+            .put("stamp_glyph", c.stampGlyph)
+            .put("stamp_size", c.stampSize)
+            .put("stamp_spacing", c.stampSpacing)
             .put("rgba", rgbaArr(c.rgba))
             .apply { c.colorOverride?.let { put("color_override", rgbaArr(it)) } }
 
