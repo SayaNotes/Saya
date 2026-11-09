@@ -118,6 +118,7 @@ fun Toolbar(
         Tool.SPEED to ImageVector.vectorResource(R.drawable.ic_stroke_speed),
         Tool.TAPER to ImageVector.vectorResource(R.drawable.ic_stroke_taper),
         Tool.LASER to ImageVector.vectorResource(R.drawable.ic_laser_pen),
+        Tool.STAMP to ImageVector.vectorResource(R.drawable.ic_stamp_pen),
         Tool.HIGHLIGHTER to ImageVector.vectorResource(R.drawable.ic_stroke_highlighter),
         Tool.ERASER to XnotesIcons.eraser,
         Tool.PAN to XnotesIcons.pan,
@@ -294,7 +295,7 @@ private fun ToolbarItemView(
             }
 
         ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY, ToolbarItem.SPEED,
-        ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER, ToolbarItem.PAN,
+        ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.STAMP, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER, ToolbarItem.PAN,
         ToolbarItem.SELECT, ToolbarItem.SCREENSHOT, ToolbarItem.SHAPE,
         ToolbarItem.TEXT, ToolbarItem.TEXT_BOX, ToolbarItem.TABLE, ToolbarItem.TAPE, ToolbarItem.INSERT_SPACE -> {
             val tool = Tool.fromId(item.id)
@@ -425,6 +426,7 @@ private fun ToolButton(
                 tool == Tool.MARKUP -> MarkupToolPopup(editor) { setConfigForTool(null) }
                 tool == Tool.TAPE -> TapeConfigPopup(editor) { setConfigForTool(null) }
                 tool == Tool.LASER -> LaserConfigPopup(editor) { setConfigForTool(null) }
+                tool == Tool.STAMP -> StampConfigPopup(editor) { setConfigForTool(null) }
                 else -> ToolConfigPopup(editor, tool, onSelectTool = { editor.selectTool(it) }) { setConfigForTool(null) }
             }
         }
