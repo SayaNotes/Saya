@@ -180,7 +180,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
         val CANVAS_ITEMS: Set<ToolbarItem> = setOf(
             ToolbarItem.HOME, ToolbarItem.TITLE,
             ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY, ToolbarItem.SPEED,
-            ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.STAMP, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER,
+            ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER,
             ToolbarItem.PAN, ToolbarItem.SELECT, ToolbarItem.WAND,
             ToolbarItem.TAPE, ToolbarItem.SHAPE,
             ToolbarItem.IMAGE, ToolbarItem.COLORS, ToolbarItem.UNDO, ToolbarItem.REDO,
