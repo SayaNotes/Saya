@@ -27,7 +27,7 @@ class ToolbarLayoutTest {
             listOf(
                 ToolbarItem.TAPER, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER,
                 ToolbarItem.SHAPE, ToolbarItem.TAPE, ToolbarItem.PAN,
-                ToolbarItem.SELECT, ToolbarItem.LASSO,
+                ToolbarItem.SELECT,
             ),
             d.sections[1].visibleEntries.map { it.item },
         )
@@ -256,13 +256,17 @@ class ToolbarLayoutTest {
         assertTrue(ToolbarItem.TAPE in ToolbarLayout.CANVAS_ITEMS)
     }
 
-    @Test fun insertSpaceSlotsInRightAfterTheLassoOnTheNoteBarOnly() {
-        val note = ToolbarLayout.fromRaw(listOf(listOf("pan" to true, "lasso" to true, "screenshot" to true)))
+    @Test fun insertSpaceSlotsAfterSelectAndLegacyLassoIsDropped() {
+        val note = ToolbarLayout.fromRaw(listOf(listOf("pan" to true, "select" to true, "screenshot" to true)))
         val items = note.items()
-        assertEquals(items.indexOf(ToolbarItem.LASSO) + 1, items.indexOf(ToolbarItem.INSERT_SPACE))
+        assertEquals(items.indexOf(ToolbarItem.SELECT) + 1, items.indexOf(ToolbarItem.INSERT_SPACE))
+        val legacy = ToolbarLayout.fromRaw(listOf(listOf("pan" to true, "lasso" to true, "screenshot" to true)))
+        assertTrue(ToolbarItem.LASSO !in legacy.items())
+        assertTrue(ToolbarItem.LASSO !in ToolbarLayout.NOTE_ITEMS)
         assertTrue(ToolbarItem.INSERT_SPACE !in ToolbarLayout.CANVAS_ITEMS)
         assertTrue(ToolbarItem.INSERT_SPACE !in ToolbarLayout.CANVAS_DEFAULT.items())
         val canvas = ToolbarLayout.fromRaw(listOf(listOf("lasso" to true, "insert_space" to true)), ToolbarLayout.CANVAS_ITEMS, ToolbarLayout.CANVAS_DEFAULT)
+        assertTrue(ToolbarItem.LASSO !in canvas.items())
         assertTrue(ToolbarItem.INSERT_SPACE !in canvas.items())
     }
 }
