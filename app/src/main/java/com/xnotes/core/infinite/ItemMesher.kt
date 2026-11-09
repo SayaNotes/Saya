@@ -13,6 +13,10 @@ import com.xnotes.core.model.Stroke
 import com.xnotes.core.model.TapeItem
 import com.xnotes.core.model.TapePattern
 import com.xnotes.core.pal.FontSpec
+import com.xnotes.core.pal.FontFace
+import com.xnotes.core.pal.TextFlags
+import com.xnotes.core.pal.HAlign
+import com.xnotes.core.pal.TextMeasurer
 import com.xnotes.core.stroke.RibbonPoints
 import com.xnotes.core.tape.TapeGeometry
 import com.xnotes.core.tools.Tool
@@ -106,9 +110,9 @@ class MeshedItem(
  */
 object ItemMesher {
 
-    fun mesh(item: CanvasItem, tolerance: Double = StrokeTessellator.DEFAULT_TOLERANCE): MeshedItem? =
+    fun mesh(item: CanvasItem, measurer: TextMeasurer? = null, tolerance: Double = StrokeTessellator.DEFAULT_TOLERANCE): MeshedItem? =
         when (item) {
-            is Stroke -> meshStroke(item, tolerance)
+            is Stroke -> meshStroke(item, measurer, tolerance)
             is ShapeItem -> meshShape(item, tolerance)
             is ConnectorItem -> meshConnector(item, tolerance)
             is AudioItem -> meshAudio(item, tolerance)
@@ -169,8 +173,9 @@ object ItemMesher {
         return MeshedItem(parts, item.paintBounds())
     }
 
-    private fun meshStroke(stroke: Stroke, tolerance: Double): MeshedItem? {
+    private fun meshStroke(stroke: Stroke, measurer: TextMeasurer?, tolerance: Double): MeshedItem? {
         if (stroke.isEmpty) return null
+        if (stroke.tool == Tool.STAMP) return meshStamps(stroke, measurer, tolerance)
         if (stroke.tool == Tool.DASHED) return meshDashed(stroke, tolerance)
         val mesh = MeshClip.clip(StrokeTessellator.tessellate(stroke.geometry(), tolerance), stroke.cuts)
         if (mesh.isEmpty) return null
@@ -179,6 +184,53 @@ object ItemMesher {
         }
         val part = MeshPart(mesh, stroke.renderColor, passFor(stroke))
         return MeshedItem(listOf(part), stroke.paintBounds(), narrowestHalfWidth(stroke))
+    }
+
+    /**
+     * Stamp glyph outlines are tessellated into the same triangle pipeline as shape labels.
+     * This keeps stamps sharp at every zoom and makes them participate in culling, selection,
+     * erasing, export and document persistence without a texture per stamp.
+     */
+    private fun meshStamps(stroke: Stroke, measurer: TextMeasurer?, tolerance: Double): MeshedItem? {
+        val measure = measurer ?: return null
+        val glyph = stroke.config.stampGlyph.ifBlank { return null }
+        val geometry = stroke.geometry()
+        if (geometry.pointCount == 0) return null
+        val size = stroke.config.stampSize.coerceIn(8.0, 96.0)
+        val spacing = stroke.config.stampSpacing.coerceIn(8.0, 160.0)
+        val font = FontSpec(size, FontFace.SANS)
+        val flags = TextFlags(wordWrap = false, alignLeft = false, alignTop = false, hAlign = HAlign.CENTER)
+        val wrapWidth = size * 2.0
+        val outline = measure.outline(glyph, font, wrapWidth, flags)
+        if (outline.isEmpty()) return null
+        val block = measure.measure(glyph, font, wrapWidth, flags)
+        val parts = ArrayList<MeshPart>()
+        fun addStamp(x: Double, y: Double) {
+            val left = x - block.w / 2.0
+            val top = y - block.h / 2.0
+            val part = ShapeTessellator.textPart(outline, stroke.renderColor) { Pt(left + it.x, top + it.y) } ?: return
+            val clipped = MeshClip.clip(part.mesh, stroke.cuts)
+            if (!clipped.isEmpty) parts.add(MeshPart(clipped, part.color, InkPass.OPAQUE))
+        }
+        addStamp(geometry.cx(0), geometry.cy(0))
+        var next = spacing
+        var travelled = 0.0
+        for (i in 1 until geometry.pointCount) {
+            val x0 = geometry.cx(i - 1)
+            val y0 = geometry.cy(i - 1)
+            val dx = geometry.cx(i) - x0
+            val dy = geometry.cy(i) - y0
+            val length = kotlin.math.hypot(dx, dy)
+            if (length <= 1e-6) continue
+            while (next <= travelled + length) {
+                val t = ((next - travelled) / length).coerceIn(0.0, 1.0)
+                addStamp(x0 + dx * t, y0 + dy * t)
+                next += spacing
+            }
+            travelled += length
+        }
+        if (parts.isEmpty()) return null
+        return MeshedItem(parts, stroke.paintBounds())
     }
 
     /**
