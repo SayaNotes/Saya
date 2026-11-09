@@ -177,7 +177,7 @@ object ItemMesher {
 
     private fun meshStroke(stroke: Stroke, measurer: TextMeasurer?, tolerance: Double): MeshedItem? {
         if (stroke.isEmpty) return null
-        if (stroke.tool == Tool.STAMP) return meshStamps(stroke, measurer, tolerance)
+        if (stroke.tool == Tool.STAMP) return meshStamps(stroke, measurer)
         if (stroke.tool == Tool.DASHED) return meshDashed(stroke, tolerance)
         val mesh = MeshClip.clip(StrokeTessellator.tessellate(stroke.geometry(), tolerance), stroke.cuts)
         if (mesh.isEmpty) return null
@@ -193,7 +193,7 @@ object ItemMesher {
      * This keeps stamps sharp at every zoom and makes them participate in culling, selection,
      * erasing, export and document persistence without a texture per stamp.
      */
-    private fun meshStamps(stroke: Stroke, measurer: TextMeasurer?, tolerance: Double): MeshedItem? {
+    private fun meshStamps(stroke: Stroke, measurer: TextMeasurer?): MeshedItem? {
         val measure = measurer ?: return null
         val glyph = stroke.config.stampGlyph.ifBlank { return null }
         val geometry = stroke.geometry()
