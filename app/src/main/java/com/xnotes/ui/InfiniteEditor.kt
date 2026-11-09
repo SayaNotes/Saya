@@ -2080,6 +2080,9 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
     private var fadeAlpha = 1.0
     private var fading = false
     private var fadeStartMs = 0L
+    var wandHoldMs: Long = InteractionController.WAND_HOLD_MS
+    var wandFadeMs: Double = InteractionController.WAND_FADE_MS
+    var wandFadeStyle: String = "fade"
     private var fadeTimer: Runnable? = null
 
     /** The stroke the wand last saw under the pen, so the next one can re-solidify the batch. */
@@ -2139,7 +2142,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         cancelFadeTimer()
         val r = Runnable { startFade() }
         fadeTimer = r
-        fadeHandler.postDelayed(r, InteractionController.WAND_HOLD_MS)
+        fadeHandler.postDelayed(r, wandHoldMs)
     }
 
     private fun cancelFadeTimer() {
@@ -2159,8 +2162,10 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
     private fun stepFade(frameTimeNanos: Long) {
         if (!fading) return
         val now = frameTimeNanos / 1_000_000L
-        val t = ((now - fadeStartMs) / InteractionController.WAND_FADE_MS).coerceIn(0.0, 1.0)
-        fadeAlpha = (1.0 - t) * (1.0 - t) // ease-out, so the batch melts rather than blinking off
+        val t = ((now - fadeStartMs) / wandFadeMs.coerceAtLeast(1.0)).coerceIn(0.0, 1.0)
+        fadeAlpha = if (wandFadeStyle == "blink") {
+            if (((now - fadeStartMs) / 320L) % 2L == 0L) 1.0 else 0.22
+        } else (1.0 - t) * (1.0 - t) // ease-out, so the batch melts rather than blinking off
         if (t >= 1.0) {
             for (f in fadingStrokes) scene.remove(f.stroke)
             fadingStrokes.clear()
