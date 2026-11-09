@@ -1253,6 +1253,9 @@ class DocumentCodec(
         var dashGap: Double? = null
         var highlighterAlpha: Double? = null
         var highlighterInverse: Boolean? = null
+        var stampGlyph: String? = null
+        var stampSize: Double? = null
+        var stampSpacing: Double? = null
     }
 
     private fun parseItem(p: JsonPull, items: MutableList<CanvasItem>, pending: MutableList<Pending>, glue: GlueRead) {
