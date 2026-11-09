@@ -429,11 +429,11 @@ private fun ToolButton(
     Box {
         ToolbarIcon(
             icon,
-            stringResource(tool.labelRes),
+            stringResource(displayTool.labelRes),
             active = armed,
-            glideKey = tool,
+            glideKey = displayTool,
             hint = if (armed && configurable) stringResource(R.string.tip_tap_for_settings) else null,
-            shortcut = PAGED_TOOL_KEYS[tool],
+            shortcut = PAGED_TOOL_KEYS[displayTool],
             image = image,
             nibMask = nibMask,
             nibColor = nibColor,
