@@ -110,7 +110,7 @@ class MeshedItem(
  */
 object ItemMesher {
 
-    fun mesh(item: CanvasItem, measurer: TextMeasurer? = null, tolerance: Double = StrokeTessellator.DEFAULT_TOLERANCE): MeshedItem? =
+    fun mesh(item: CanvasItem, tolerance: Double = StrokeTessellator.DEFAULT_TOLERANCE, measurer: TextMeasurer? = null): MeshedItem? =
         when (item) {
             is Stroke -> meshStroke(item, measurer, tolerance)
             is ShapeItem -> meshShape(item, tolerance)
