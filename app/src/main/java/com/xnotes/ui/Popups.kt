@@ -744,19 +744,41 @@ private fun ToolModeButton(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        val lift by animateDpAsState(if (selected) (-5).dp else 0.dp, animationSpec = tween(160), label = "penSelectedLift")
-    Box(Modifier.size(32.dp, 56.dp).offset(y = lift), contentAlignment = Alignment.Center) {
+        val lift by animateDpAsState(
+            targetValue = if (selected) (-5).dp else 0.dp,
+            animationSpec = tween(160),
+            label = "penSelectedLift",
+        )
+        Box(
+            Modifier.size(32.dp, 56.dp).offset(y = lift),
+            contentAlignment = Alignment.Center,
+        ) {
             if (art != 0) {
-                Image(painterResource(art), contentDescription = label, contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxWidth().height(56.dp))
+                Image(
+                    painterResource(art),
+                    contentDescription = label,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                )
                 if (nibMask != 0) {
-                    Image(painterResource(nibMask), contentDescription = null, contentScale = ContentScale.Fit,
-                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(nibColor, androidx.compose.ui.graphics.BlendMode.SrcIn),
-                        modifier = Modifier.fillMaxWidth().height(56.dp))
+                    Image(
+                        painterResource(nibMask),
+                        contentDescription = null,
+                        contentScale = ContentScale.Fit,
+                        colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
+                            nibColor,
+                            androidx.compose.ui.graphics.BlendMode.SrcIn,
+                        ),
+                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                    )
                 }
             }
             if (tool == Tool.STAMP && !stampGlyph.isNullOrBlank()) {
-                Text(stampGlyph, fontSize = 12.sp, modifier = Modifier.align(Alignment.TopCenter).offset(y = 1.dp))
+                Text(
+                    stampGlyph,
+                    fontSize = 12.sp,
+                    modifier = Modifier.align(Alignment.TopCenter).offset(y = 1.dp),
+                )
             }
         }
         Text(label, color = if (selected) palette.selectionForeground.toComposeColor() else palette.text.toComposeColor(), fontSize = 8.sp, maxLines = 1, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 38.dp))
