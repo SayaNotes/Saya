@@ -1029,7 +1029,7 @@ class InteractionController(
         // a hold-then-drag still sizes a box, and a markup drag held still is just a slow drag; room
         // held still under the pen is just room opened slowly.
         if (mode != PointerMode.FLOW_TEXT && mode != PointerMode.TEXT_DRAG && mode != PointerMode.PDF_TEXT &&
-            mode != PointerMode.POLYGON && mode != PointerMode.ROOM
+            mode != PointerMode.POLYGON && mode != PointerMode.ROOM && temporaryEraserRunnable == null
         ) {
             armLongPress(Pt(vx, vy), content, isFinger, free)
         }
@@ -4066,6 +4066,7 @@ class InteractionController(
             snapCurrentEdge = null
             snapPenViewport = null
             tapCandidate = false
+            cancelLongPress()
             erasingWithFinger = fingerHold
             beginErase(temporaryEraserDown.x, temporaryEraserDown.y)
         }
