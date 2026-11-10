@@ -176,7 +176,7 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                             // Horizontal swipes and the arrows both switch the lightweight page state.
                             var horizontalDrag by remember { mutableStateOf(0f) }
                             Box(
-                                Modifier.fillMaxWidth().height(194.dp).pointerInput(page, shapePages.size) {
+                                Modifier.fillMaxWidth().height(226.dp).pointerInput(page, shapePages.size) {
                                     detectHorizontalDragGestures(
                                         onDragEnd = {
                                             if (horizontalDrag < -48f) changeShapePage(page + 1)
@@ -191,7 +191,7 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                                 },
                             ) {
                                 Column(
-                                    modifier = Modifier.width(244.dp).align(Alignment.TopCenter),
+                                    modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter),
                                     verticalArrangement = Arrangement.spacedBy(6.dp),
                                 ) {
                                     shapePages[page].chunked(5).forEach { gridRow ->
@@ -202,7 +202,7 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                                         ) {
                                             gridRow.forEach { preset ->
                                                 Box(
-                                                    modifier = Modifier.width(48.dp).height(44.dp),
+                                                    modifier = Modifier.weight(1f).height(52.dp),
                                                     contentAlignment = Alignment.Center,
                                                 ) {
                                                     KindChip(
@@ -210,7 +210,7 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                                                         chipLabel(preset),
                                                         selected = preset.key == config.preset,
                                                         latex = chipLatex(preset),
-                                                        iconSize = 27.dp,
+                                                        iconSize = 31.dp,
                                                     ) { emit(config.choose(preset)) }
                                                 }
                                             }
