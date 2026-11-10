@@ -538,7 +538,7 @@ class InfiniteInteraction(
         when {
             effective.isStroke -> {
                 beginDraw(vx, vy, effective, e)
-                if (tool.isPenPanelStyle && !buttonHeld && tool == effective &&
+                if (isHoldErasePen(tool) && !buttonHeld && tool == effective &&
                     (drawingIsStylus || (toolType == MotionEvent.TOOL_TYPE_FINGER && penButtonTool == Tool.ERASER))
                 ) armTemporaryEraser(Pt(vx, vy))
             }
@@ -553,7 +553,7 @@ class InfiniteInteraction(
             effective == Tool.TAPE -> beginTape(vx, vy)
             else -> {
                 beginPan(vx, vy, fromPenButton = buttonHeld && penButtonTool == Tool.PAN)
-                if (tool.isPenPanelStyle && toolType == MotionEvent.TOOL_TYPE_FINGER && !buttonHeld && penButtonTool == Tool.ERASER) {
+                if (isHoldErasePen(tool) && toolType == MotionEvent.TOOL_TYPE_FINGER && !buttonHeld && penButtonTool == Tool.ERASER) {
                     armTemporaryEraser(Pt(vx, vy))
                 }
             }
@@ -797,6 +797,9 @@ class InfiniteInteraction(
         requestRender()
     }
 
+    private fun isHoldErasePen(candidate: Tool): Boolean =
+        candidate == Tool.PEN || candidate == Tool.CALLIGRAPHY || candidate == Tool.TAPER
+
     // A configured hold temporarily erases on a finger as well as a real stylus. Homemade
     // capacitive styluses are reported by Android as fingers, so do not require a hardware button.
     private fun armTemporaryEraser(down: Pt) {
@@ -804,7 +807,7 @@ class InfiniteInteraction(
         temporaryEraserDown = down
         val task = Runnable {
             temporaryEraserRunnable = null
-            if (penButtonTool != Tool.ERASER || !tool.isPenPanelStyle ||
+            if (penButtonTool != Tool.ERASER || !isHoldErasePen(tool) ||
                 (mode != CanvasPointerMode.PAN && mode != CanvasPointerMode.DRAW)
             ) return@Runnable
             cancelLongPress()
