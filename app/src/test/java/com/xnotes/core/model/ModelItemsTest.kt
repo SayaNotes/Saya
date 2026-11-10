@@ -119,7 +119,9 @@ class ModelItemsTest {
     @Test fun shapePaintDispatch() {
         val r = FakeRenderer()
         ShapeItem(ShapeKind.RECTANGLE, Pt(0.0, 0.0), Pt(10.0, 10.0), Rgba(0, 0, 0), 3.0, fillRgba = Rgba(0, 0, 0, 64)).paint(r)
-        assertEquals(listOf("fillPath", "strokePath"), r.ops)
+        assertEquals(listOf("fillPath", "strokePath"), r.ops.take(2))
+        assertEquals(4, r.ops.count { it == "strokePolyline" })
+        assertEquals(4, r.ops.count { it == "drawText" })
     }
 
     @Test fun shapeHandleRoundTrip() {
