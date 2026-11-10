@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- On Android 12+, theme the system splash to the loader's dark stage and
+         show the Saya brand mark during system launch. -->
+    <style name="Theme.Saya.Splash" parent="Theme.Saya">
+        <item name="android:windowBackground">@drawable/splash_window</item>
+        <item name="android:windowSplashScreenBackground">@color/loader_bg</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@drawable/saya_mark</item>
+    </style>
+</resources>
