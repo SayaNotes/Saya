@@ -5270,6 +5270,7 @@ class InteractionController(
         cancelDwell()
         clearFading()
         clearLaserTrails()
+        clearAlignmentGuides()
         crossedSegments.clear() // they belong to the outgoing document, whose history is gone
         dwellEligible = false
         mode = PointerMode.IDLE
