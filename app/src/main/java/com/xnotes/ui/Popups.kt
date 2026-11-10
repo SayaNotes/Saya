@@ -294,7 +294,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                             .background(LocalPalette.current.surface.toComposeColor())
                             .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(16.dp))
                             .horizontalScroll(rememberScrollState())
-                            .padding(horizontal = 6.dp, vertical = 7.dp),
+                            .padding(start = 6.dp, end = 6.dp, top = 7.dp, bottom = 0.dp),
                         horizontalArrangement = Arrangement.spacedBy(0.dp),
                         verticalAlignment = Alignment.Bottom,
                     ) {
