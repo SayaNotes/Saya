@@ -777,9 +777,9 @@ internal fun ToolbarIcon(
                     Icon(
                         toolbarNib,
                         contentDescription = contentDescription,
-                        // The active pen shows its actual ink colour; inactive tools retain
-                        // Saya's normal foreground contrast against the dark toolbar surface.
-                        tint = if (active) nibColor else tint,
+                        // Toolbar glyphs follow the theme foreground in both light and
+                        // dark mode; the selected ink colour remains a pen-setting, not UI tint.
+                        tint = tint,
                         modifier = Modifier.size(bar.icon * 1.18f),
                     )
                 } else if (image == null && nibMask != null) {
