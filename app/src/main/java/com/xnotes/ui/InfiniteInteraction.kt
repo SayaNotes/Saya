@@ -804,12 +804,13 @@ class InfiniteInteraction(
         temporaryEraserDown = down
         val task = Runnable {
             temporaryEraserRunnable = null
-            if (drawingIsStylus || penButtonTool != Tool.ERASER || !tool.isPenPanelStyle ||
+            if (penButtonTool != Tool.ERASER || !tool.isPenPanelStyle ||
                 (mode != CanvasPointerMode.PAN && mode != CanvasPointerMode.DRAW)
             ) return@Runnable
             cancelLongPress()
+            val session = onEraseBegin() ?: return@Runnable
             if (mode == CanvasPointerMode.DRAW) abandonStroke()
-            eraseSession = onEraseBegin() ?: return@Runnable
+            eraseSession = session
             mode = CanvasPointerMode.ERASE
             eraseAt(down.x, down.y)
         }
