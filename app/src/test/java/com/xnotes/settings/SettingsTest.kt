@@ -539,6 +539,18 @@ class SettingsTest {
     }
 
 
+    @Test fun laserTrailDurationPersistsAndClamps() {
+        val configured = com.xnotes.core.tools.ToolConfig(laserDurationMs = 4200L)
+        val restored = Settings.fromJson(Settings(tools = mapOf(Tool.LASER to configured)).toJson())
+        assertEquals(4200L, restored.configFor(Tool.LASER).laserDurationMs)
+
+        val legacy = JSONObject().put("tools", JSONObject().put("laser", JSONObject().put("laser_duration_ms", 250L)))
+        assertEquals(
+            com.xnotes.core.tools.ToolConfig.MIN_LASER_DURATION_MS,
+            Settings.fromJson(legacy).configFor(Tool.LASER).laserDurationMs,
+        )
+    }
+
     @Test fun theShapeToolsChipFillAndHeadsRoundTrip() {
         val shape = com.xnotes.core.tools.ShapeConfig(
             preset = "arrow", fill = true, fillColor = com.xnotes.core.model.Rgba(1, 2, 3),
