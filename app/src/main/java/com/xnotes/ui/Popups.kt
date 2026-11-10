@@ -924,7 +924,7 @@ private fun ToolModeButton(
                             androidx.compose.ui.graphics.BlendMode.SrcIn,
                         ),
                         modifier = Modifier.fillMaxSize().padding(top = 10.dp)
-                            .align(Alignment.BottomCenter),
+                            .align(Alignment.BottomCenter).offset(y = 8.dp),
                     )
                 }
             }
