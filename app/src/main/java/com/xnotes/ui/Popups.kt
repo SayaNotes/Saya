@@ -295,7 +295,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 }
 
                 Column(
-                    modifier = Modifier.width(176.dp)
+                    modifier = Modifier.width(144.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(10.dp))
                         .padding(6.dp),
@@ -311,7 +311,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                             val swatchColor = swatch.toComposeColor()
                             val selected = colorOverride == swatch
                             Box(
-                                Modifier.size(44.dp).clip(RoundedCornerShape(7.dp))
+                                Modifier.size(38.dp).clip(RoundedCornerShape(7.dp))
                                     .background(swatchColor)
 .border(
                                         if (selected) 2.5.dp else 1.dp,
@@ -914,7 +914,8 @@ private fun ToolModeButton(
                 Text(
                     stampGlyph,
                     fontSize = 21.sp,
-                    modifier = Modifier.align(Alignment.TopCenter).offset(y = 18.dp),
+                    modifier = Modifier.align(Alignment.TopCenter).offset(y = 18.dp)
+                        .background(Color.White.copy(alpha = 0.88f), CircleShape).padding(2.dp),
                 )
             }
         }
