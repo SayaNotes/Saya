@@ -1391,7 +1391,7 @@ class InteractionController(
         mode = PointerMode.DRAW
         // Hand-drawn shape recognition is deferred until pen-up, so no part of a live stroke
         // is replaced while the user is still drawing.
-        dwellEligible = detectShapes && drawTool.isStroke && drawTool != Tool.HIGHLIGHTER && !straight &&
+        dwellEligible = detectShapes && drawTool.isStroke && drawTool != Tool.LASER && drawTool != Tool.HIGHLIGHTER && !straight &&
             !ruler.visible && !wandMode
         frontInk?.wet(stroke, pageIndex)
         requestRender()
@@ -1547,7 +1547,7 @@ class InteractionController(
             stroke.finished = true
             val recognized = if (
                 recognizeOnLift && stroke.samples.size >= SHAPE_MIN_SAMPLES &&
-                stroke.tool.isStroke && stroke.tool != Tool.HIGHLIGHTER && !stroke.straight &&
+                stroke.tool.isStroke && stroke.tool != Tool.LASER && stroke.tool != Tool.HIGHLIGHTER && !stroke.straight &&
                 !ruler.visible && !wandMode
             ) ShapeRecognizer.recognize(stroke.samples) else null
             if (recognized != null) commitRecognizedShape(stroke, pi, recognized)
@@ -5234,10 +5234,10 @@ class InteractionController(
     /** Keep a laser stroke out of the document model and fade it on its own expiry clock. */
     private fun holdLaserTrail(stroke: Stroke, pageIndex: Int) {
         val now = System.nanoTime() / 1_000_000L
-        val duration = stroke.config.laserDurationMs.coerceIn(
-            com.xnotes.core.tools.ToolConfig.MIN_LASER_DURATION_MS,
-            com.xnotes.core.tools.ToolConfig.MAX_LASER_DURATION_MS,
-        )
+        val duration = when (stroke.config.laserDurationMs) {
+            3000L, 5000L, 15000L -> stroke.config.laserDurationMs
+            else -> com.xnotes.core.tools.ToolConfig.DEFAULT_LASER_DURATION_MS
+        }
         laserTrails.add(LaserTrail(stroke, pageIndex, now + duration, LASER_FADE_MS))
         frontInk?.holdFading(stroke)
         scheduleLaserTimer()
