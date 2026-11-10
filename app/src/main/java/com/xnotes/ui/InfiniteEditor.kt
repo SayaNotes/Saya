@@ -821,6 +821,8 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
 
     override fun selectionFills(): List<Rgba> = selection.items.mapNotNull { (it as? ShapeItem)?.fillRgba }
 
+    override fun selectionCanFill(): Boolean = selection.items.any { (it as? ShapeItem)?.shape?.isClosed == true }
+
     override fun refillSelection(color: Rgba?, preview: Boolean) {
         val shapes = selection.items.mapNotNull { (it as? ShapeItem)?.takeIf { s -> s.fillRgba != null } }
         if (shapes.isEmpty()) return
