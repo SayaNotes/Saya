@@ -229,7 +229,7 @@ class ShapeItem(
      * separate document objects. Smooth outlines (circles/curves) have no discrete angles.
      */
     fun paintAngleAnnotations(r: Renderer) {
-        if (!shape.isClosed || shape == ShapeKind.GLYPHS) return
+        if (!shape.isClosed || shape == ShapeKind.GLYPHS || shape == ShapeKind.FILL) return
         val corners = localGeometry().corners.takeIf { it.size >= 3 }
             ?: vertices()?.takeIf { it.size >= 3 }
             ?: return
