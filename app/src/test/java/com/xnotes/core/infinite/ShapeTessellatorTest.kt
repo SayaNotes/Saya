@@ -109,6 +109,16 @@ class ShapeTessellatorTest {
         }
     }
 
+    @Test fun angleAnnotationsAreMeshedForTheInfiniteCanvas() {
+        val s = shape(ShapeKind.RECTANGLE)
+        val ink = s.strokeRgba
+        val annotations = ShapeTessellator.angleParts(s, FakeTextMeasurer())
+        assertEquals(8, annotations.size) // one square marker and one degree label per corner
+        assertTrue(annotations.all { it.color == ink && it.pass == InkPass.OPAQUE })
+        val complete = ItemMesher.mesh(s, measurer = FakeTextMeasurer())!!
+        assertTrue(complete.parts.size >= 10) // fill/outline plus four markers and four labels
+    }
+
     // --- fills ---
 
     @Test fun aRectangleFillCoversItsInterior() {
