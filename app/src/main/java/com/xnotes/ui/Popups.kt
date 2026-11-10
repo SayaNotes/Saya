@@ -23,7 +23,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -282,19 +281,28 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
 
                     // Light, inset pen tray echoes the original X Notes illustrated selector.
                     // On a narrow phone, wrap to two rows rather than clipping the six tools.
-                    BoxWithConstraints(Modifier.fillMaxWidth()) {
-                        val buttons: @Composable () -> Unit = {
-                            penTools.forEach { candidate ->
-                                ToolModeButton(
-                                    candidate,
-                                    selected = candidate == tool,
-                                    stampGlyph = if (candidate == Tool.STAMP) editor.toolConfig(Tool.STAMP).stampGlyph else null,
-                                    nibColor = editor.toolConfig(candidate).colorOverride?.toComposeColor()
-                                        ?: (editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor() ?: Color.Black),
-                                ) { onSelectTool(candidate) }
-                            }
+                    // Do not put BoxWithConstraints inside DropdownMenu: the menu asks
+                    // its content for intrinsic dimensions, while BoxWithConstraints is a
+                    // SubcomposeLayout and cannot answer intrinsic measurements. FlowRow
+                    // wraps the pen choices using the constraints it is actually given.
+                    FlowRow(
+                        modifier = Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(LocalPalette.current.surface.toComposeColor())
+                            .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(16.dp))
+                            .padding(horizontal = 6.dp, vertical = 7.dp),
+                        horizontalArrangement = Arrangement.SpaceEvenly,
+                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        penTools.forEach { candidate ->
+                            ToolModeButton(
+                                candidate,
+                                selected = candidate == tool,
+                                stampGlyph = if (candidate == Tool.STAMP) editor.toolConfig(Tool.STAMP).stampGlyph else null,
+                                nibColor = editor.toolConfig(candidate).colorOverride?.toComposeColor()
+                                    ?: (editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor() ?: Color.Black),
+                            ) { onSelectTool(candidate) }
                         }
-                        ColumnOrRowPenTray(maxWidth, buttons)
                     }
                 }
 
@@ -843,30 +851,6 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                 ),
             )
         }
-    }
-}
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-private fun ColumnOrRowPenTray(maxWidth: Dp, buttons: @Composable () -> Unit) {
-    val trayModifier = Modifier.fillMaxWidth()
-        .clip(RoundedCornerShape(16.dp))
-        .background(LocalPalette.current.surface.toComposeColor())
-        .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(16.dp))
-        .padding(horizontal = 6.dp).padding(top = 7.dp, bottom = 0.dp)
-    if (maxWidth < 300.dp) {
-        FlowRow(
-            modifier = trayModifier,
-            maxItemsInEachRow = 3,
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalArrangement = Arrangement.spacedBy(6.dp),
-        ) { buttons() }
-    } else {
-        Row(
-            modifier = trayModifier,
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically,
-        ) { buttons() }
     }
 }
 
