@@ -1661,7 +1661,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         var bounds: Rect? = null
         // A shape or connector being drawn sits under the chrome, in the same buffer.
         pendingItem?.let { item ->
-            ItemMesher.mesh(item)?.let { m ->
+            ItemMesher.mesh(item, measurer = textMeasurer)?.let { m ->
                 parts += m.parts
                 bounds = m.bounds
             }
