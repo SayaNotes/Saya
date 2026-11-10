@@ -409,6 +409,10 @@ class InteractionController(
     private var bandRect: Rect? = null
     private var moveOrigin = Pt.ZERO
     private var moveOffset = Pt.ZERO
+    private var moveStartBounds: Rect? = null
+    private var moveGuidePageIndex: Int? = null
+    private var alignmentGuides: List<ShapeAlignment.Guide> = emptyList()
+    private var alignmentGuidePageIndex: Int? = null
 
     // SCREENSHOT (drag a rectangle; on release it stays frozen and offers "copy as image")
     /** The capture rectangle in content space: live while dragging (mode == SHOT), then frozen
@@ -2278,6 +2282,13 @@ class InteractionController(
         mode = PointerMode.MOVE
         moveOrigin = content
         moveOffset = Pt.ZERO
+        val selectedPages = selection.map { it.pageIndex }.distinct()
+        moveGuidePageIndex = selectedPages.singleOrNull()
+        moveStartBounds = if (moveGuidePageIndex != null) {
+            selection.map { it.item.bounds() }.reduceOrNull { a, b -> a.union(b) }
+        } else null
+        alignmentGuides = emptyList()
+        alignmentGuidePageIndex = null
         // A lone connector dragged by its line lets go of what it joined; anything else keeps it.
         val lone = loneConnector()
         looseBefore = lone?.item?.snapshotGeometry()
@@ -2286,7 +2297,7 @@ class InteractionController(
     }
 
     private fun extendMove(content: Pt) {
-        moveOffset = content - moveOrigin
+        moveOffset = snappedMoveOffset(content)
         if (follows.isNotEmpty()) {
             val local = state.vectorToPageSpace(moveOffset)
             val shift = Affine.translateBy(local.x, local.y)
@@ -2295,8 +2306,49 @@ class InteractionController(
         requestRender()
     }
 
+    /** Apply alignment to a whole moving selection as a translation, never a resize. */
+    private fun snappedMoveOffset(content: Pt): Pt {
+        val raw = content - moveOrigin
+        val pageIndex = moveGuidePageIndex
+        val original = moveStartBounds
+        val page = pageIndex?.let { state.document.pages.getOrNull(it) }
+        if (pageIndex == null || original == null || page == null) {
+            alignmentGuides = emptyList()
+            alignmentGuidePageIndex = null
+            return raw
+        }
+        val selected = selection.map { it.item }.toSet()
+        val targets = page.items.filterIsInstance<ShapeItem>()
+            .filterNot { it in selected }
+            .map { it.bounds() }
+        val local = state.vectorToPageSpace(raw)
+        val candidate = original.translate(local.x, local.y)
+        val result = ShapeAlignment.snapTranslation(candidate, targets, alignmentTolerance())
+        alignmentGuides = result.guides
+        alignmentGuidePageIndex = pageIndex.takeIf { result.guides.isNotEmpty() }
+        return pageVectorToContent(Pt(local.x + result.delta.x, local.y + result.delta.y))
+    }
+
+    private fun alignmentTolerance(): Double =
+        ALIGNMENT_SNAP_DP * state.devicePxPerDp / state.zoom.coerceAtLeast(1e-6)
+
+    /** Inverse of CanvasState.vectorToPageSpace, for turning a snapped page delta back to touch space. */
+    private fun pageVectorToContent(v: Pt): Pt = when (state.rotationDeg) {
+        90 -> Pt(-v.y, v.x)
+        180 -> Pt(-v.x, -v.y)
+        270 -> Pt(v.y, -v.x)
+        else -> v
+    }
+
+    private fun clearAlignmentGuides() {
+        alignmentGuides = emptyList()
+        alignmentGuidePageIndex = null
+        moveStartBounds = null
+        moveGuidePageIndex = null
+    }
+
     private fun endMove(content: Pt) {
-        moveOffset = content - moveOrigin
+        moveOffset = snappedMoveOffset(content)
         val moved = abs(moveOffset.x) > MOVE_EPS || abs(moveOffset.y) > MOVE_EPS
         if (moved) {
             val items = selection.map { it.item }
@@ -2331,6 +2383,10 @@ class InteractionController(
         moveOffset = Pt.ZERO
         looseBefore = null
         endFollow()
+        moveStartBounds = null
+        moveGuidePageIndex = null
+        alignmentGuides = emptyList()
+        alignmentGuidePageIndex = null
         mode = PointerMode.IDLE
         refreshSelectionMenu()
         requestRender()
@@ -2918,6 +2974,8 @@ class InteractionController(
 
     private fun beginShape(content: Pt) {
         val pageIndex = state.pageIndexAtContent(content) ?: return
+        alignmentGuides = emptyList()
+        alignmentGuidePageIndex = null
         // A draft this press finished left its polygon selected; the new shape takes over from it.
         clearSelection()
         val startLocal = state.toPageSpace(pageIndex, content)
@@ -2947,6 +3005,17 @@ class InteractionController(
             // A function graph keeps equal x and y scales while drawn; its handles stretch it later.
             shape.end = shapeAspect?.let { ResizeMath.aspectCorner(shape.start, raw, it) } ?: ResizeMath.drawnEnd(shape, raw, shapeConfig.perfect)
         }
+        if (!shape.shape.keepsAspect && shapeAspect == null) {
+            val page = state.document.pages.getOrNull(pi)
+            val targets = page?.items?.filterIsInstance<ShapeItem>()?.map { it.bounds() }.orEmpty()
+            val result = ShapeAlignment.snapDrag(shape.start, shape.end, targets, alignmentTolerance())
+            shape.end = result.end
+            alignmentGuides = result.guides
+            alignmentGuidePageIndex = pi.takeIf { result.guides.isNotEmpty() }
+        } else {
+            alignmentGuides = emptyList()
+            alignmentGuidePageIndex = null
+        }
         shapeConfig.followDrag(shape)
         requestRender()
     }
@@ -2956,6 +3025,8 @@ class InteractionController(
         val pi = shapePageIndex
         pendingShape = null
         shapePageIndex = null
+        alignmentGuides = emptyList()
+        alignmentGuidePageIndex = null
         mode = PointerMode.IDLE
         if (shape != null && pi != null && shape.start.distanceTo(shape.end) > SHAPE_MIN_DRAG) {
             val page = state.document.pages[pi]
@@ -5351,6 +5422,7 @@ class InteractionController(
         if (mode == PointerMode.ROOM) insertSpace.abort()
         roomButton = null
         if (mode == PointerMode.MOVE) moveOffset = Pt.ZERO
+        clearAlignmentGuides()
         if (mode == PointerMode.MOVE || mode == PointerMode.TRANSFORM || mode == PointerMode.VERTEX || mode == PointerMode.JOINT) {
             for ((_, f) in follows) f.restore()
         }
@@ -5433,6 +5505,21 @@ class InteractionController(
                 liveStroke?.let { stroke -> paintClippedToPage(r, strokePageIndex) { state.paintLiveStroke(r, stroke) } }
             }
             pendingShape?.let { shape -> paintClippedToPage(r, shapePageIndex) { shape.paint(r) } }
+            if (alignmentGuides.isNotEmpty()) {
+                alignmentGuidePageIndex?.let { pageIndex ->
+                    paintClippedToPage(r, pageIndex) {
+                        val guidePen = chromePen(1.2)
+                        for (guide in alignmentGuides) {
+                            val line = if (guide.vertical) {
+                                listOf(Pt(guide.coordinate, guide.from), Pt(guide.coordinate, guide.to))
+                            } else {
+                                listOf(Pt(guide.from, guide.coordinate), Pt(guide.to, guide.coordinate))
+                            }
+                            r.strokePolyline(line, guidePen)
+                        }
+                    }
+                }
+            }
             pendingTape?.let { tape -> paintClippedToPage(r, tapePageIndex) { tape.paint(r) } }
             connectorDraft?.let { d -> paintClippedToPage(r, connectorPage) { d.connector.paint(r) } }
             pendingTable?.let { table -> paintClippedToPage(r, tableDrawPageIndex) { table.paint(r) } }
@@ -5879,6 +5966,8 @@ class InteractionController(
         /** Gap (viewport px) from the selection's top edge up to the rotate grip. */
         const val ROTATE_ARM = 44.0
         const val SHAPE_MIN_DRAG = 3.0
+        /** Alignment magnet radius in device-independent screen pixels. */
+        const val ALIGNMENT_SNAP_DP = 8.0
 
         /** How far a drawn connector's route keeps clear of what it goes round, in dp. */
         const val ROUTE_MARGIN_DP = 12.0
