@@ -78,7 +78,6 @@ import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.painterResource
 import android.graphics.BitmapFactory
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
@@ -434,7 +433,7 @@ private fun ToolButton(
         Tool.TAPER -> R.drawable.taper_nib_mask
         else -> null
     }
-    val image = imageRes?.let { painterResource(it) }
+    val image = imageRes?.let { bitmapPainterResource(it) }
     // Decode the small nib mask as a Bitmap directly. Compose's painterResource path
     // assumes the resolved drawable is a BitmapDrawable; on some Android builds this
     // resource can resolve to another drawable type and crash the entire editor toolbar.
