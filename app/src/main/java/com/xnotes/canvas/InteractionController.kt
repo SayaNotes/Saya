@@ -394,12 +394,14 @@ class InteractionController(
     private class LaserTrail(
         val stroke: Stroke,
         val pageIndex: Int,
-        val fadeAtMs: Long,
+        var fadeAtMs: Long,
         val fadeDurationMs: Long,
     )
     private val laserTrails = mutableListOf<LaserTrail>()
     private var laserFrameRunning = false
     private var laserTimerRunnable: Runnable? = null
+    /** Existing trails pause while the laser is actively being drawn, then resume on pen-up. */
+    private var laserPausedAtMs: Long? = null
     private val laserFrame = Choreographer.FrameCallback { t -> stepLaserTrails(t) }
 
     // SELECTION
@@ -1334,6 +1336,7 @@ class InteractionController(
 
     private fun beginDraw(content: Pt, pressure: Double, drawTool: Tool, timeMs: Long, downViewport: Pt) {
         val pageIndex = state.pageIndexAtContent(content) ?: return
+        if (drawTool == Tool.LASER) pauseLaserTrails()
         // Reaching here with a live selection means the press landed off it (on it the stylus would
         // have grabbed it): dismiss it. A bare tap that only dismissed is dropped in endDraw.
         strokeDismissedSelection = hasSelection
@@ -1386,15 +1389,10 @@ class InteractionController(
         liveStroke = stroke
         strokePageIndex = pageIndex
         mode = PointerMode.DRAW
-        // Shape snap: only solid ink pens (not the highlighter or its straight-line mode) arm the
-        // "hold still → shape" timer — and never while the ruler is up (you're drawing straight lines),
-        // nor under the wand, whose strokes are ephemeral and must never commit a shape to the page.
+        // Hand-drawn shape recognition is deferred until pen-up, so no part of a live stroke
+        // is replaced while the user is still drawing.
         dwellEligible = detectShapes && drawTool.isStroke && drawTool != Tool.HIGHLIGHTER && !straight &&
             !ruler.visible && !wandMode
-        if (dwellEligible) {
-            dwellAnchor = downViewport
-            armDwell()
-        }
         frontInk?.wet(stroke, pageIndex)
         requestRender()
     }
@@ -1453,13 +1451,7 @@ class InteractionController(
         if (force || last == null || Pt(last.x, last.y).manhattanTo(local) >= gate) {
             stroke.addSample(Sample(local.x, local.y, pressure.coerceIn(0.0, 1.0), (timeMs - strokeStartTimeMs).toDouble()))
         }
-        // Real movement restarts the hold-to-snap clock; staying within the slop lets it mature,
-        // so the snap fires only once the pen has actually come to rest. (Sub-slop jitter is ignored
-        // even when a sample is decimated out above, so a trembling-but-still pen still triggers.)
-        if (dwellEligible && Pt(vx, vy).distanceTo(dwellAnchor) > SHAPE_DWELL_SLOP) {
-            dwellAnchor = Pt(vx, vy)
-            armDwell()
-        }
+        // Shape recognition is deferred until endDraw, after the user lifts the pen.
     }
 
     /**
@@ -1539,7 +1531,7 @@ class InteractionController(
     }
 
     private fun endDraw(e: MotionEvent) {
-        // Drop the dwell timer before the final sample so the lift can't re-arm or fire a snap.
+        val recognizeOnLift = dwellEligible
         cancelDwell()
         dwellEligible = false
         val idx = e.findPointerIndex(drawingPointerId).coerceAtLeast(0)
@@ -1547,15 +1539,19 @@ class InteractionController(
             e.getX(idx).toDouble(), e.getY(idx).toDouble(),
             if (drawingIsStylus) e.getPressure(idx).toDouble() else 1.0, e.eventTime, force = true,
         )
-        // A mid-stroke snap already committed a shape and cleared liveStroke, so this block is
-        // skipped and the freehand stroke is intentionally not also committed.
+        // Resume older laser trails before starting this stroke's own post-lift timer.
+        resumeLaserTrails()
         val stroke = liveStroke
         val pi = strokePageIndex
         if (stroke != null && pi != null && !stroke.isEmpty) {
-            // The pen is up: rebuild with lift-time rules on (a dot-sized calligraphy stroke
-            // takes the nib's broad face) before the stroke is committed or held for fading.
             stroke.finished = true
-            when {
+            val recognized = if (
+                recognizeOnLift && stroke.samples.size >= SHAPE_MIN_SAMPLES &&
+                stroke.tool.isStroke && stroke.tool != Tool.HIGHLIGHTER && !stroke.straight &&
+                !ruler.visible && !wandMode
+            ) ShapeRecognizer.recognize(stroke.samples) else null
+            if (recognized != null) commitRecognizedShape(stroke, pi, recognized)
+            if (liveStroke === stroke) when {
                 // A bare tap whose only job was to dismiss the selection: drop the dot it would leave.
                 strokeDismissedSelection && tapCandidate -> Unit
                 // A bare tap on tape peels it back or covers it again, and leaves no dot.
@@ -5216,6 +5212,25 @@ class InteractionController(
         fadeTimerRunnable = null
     }
 
+    /** Pause older laser marks for the time spent actively drawing a new laser gesture. */
+    private fun pauseLaserTrails() {
+        if (laserPausedAtMs != null || laserTrails.isEmpty()) return
+        laserPausedAtMs = System.nanoTime() / 1_000_000L
+        laserTimerRunnable?.let { handler.removeCallbacks(it) }
+        laserTimerRunnable = null
+        if (laserFrameRunning) choreographer.removeFrameCallback(laserFrame)
+        laserFrameRunning = false
+    }
+
+    /** Restore drawing time to each older trail's remaining lifetime. */
+    private fun resumeLaserTrails() {
+        val pausedAt = laserPausedAtMs ?: return
+        val elapsed = (System.nanoTime() / 1_000_000L - pausedAt).coerceAtLeast(0L)
+        laserTrails.forEach { it.fadeAtMs += elapsed }
+        laserPausedAtMs = null
+        scheduleLaserTimer()
+    }
+
     /** Keep a laser stroke out of the document model and fade it on its own expiry clock. */
     private fun holdLaserTrail(stroke: Stroke, pageIndex: Int) {
         val now = System.nanoTime() / 1_000_000L
@@ -5276,6 +5291,7 @@ class InteractionController(
         if (laserFrameRunning) choreographer.removeFrameCallback(laserFrame)
         laserFrameRunning = false
         laserTrails.clear()
+        laserPausedAtMs = null
     }
 
     private fun startFade() {
@@ -5392,6 +5408,7 @@ class InteractionController(
     // --- PINCH ---
 
     private fun beginPinch(e: MotionEvent) {
+        resumeLaserTrails()
         liveStroke = null
         strokePageIndex = null
         dropTapeDraft()
@@ -5493,6 +5510,7 @@ class InteractionController(
     }
 
     private fun abortGesture() {
+        resumeLaserTrails()
         cancelTemporaryEraser()
         cancelLongPress()
         cancelDwell()
