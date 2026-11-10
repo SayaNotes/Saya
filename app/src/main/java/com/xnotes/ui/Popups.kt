@@ -871,7 +871,7 @@ private fun ToolModeButton(
     val palette = LocalPalette.current
     val label = stringResource(tool.labelRes)
     val art = when (tool) {
-        Tool.PEN -> R.drawable.pen_tool_pen
+        Tool.PEN -> R.drawable.pen_tool_pen_reference
         Tool.CALLIGRAPHY -> R.drawable.pen_tool_calligraphy
         Tool.HIGHLIGHTER -> R.drawable.pen_tool_highlighter
         Tool.TAPER -> R.drawable.pen_tool_taper
@@ -880,7 +880,7 @@ private fun ToolModeButton(
         else -> 0
     }
     val nibMask = when (tool) {
-        Tool.PEN -> R.drawable.pen_nib_mask
+        Tool.PEN -> 0
         Tool.CALLIGRAPHY -> R.drawable.calligraphy_nib_mask
         Tool.HIGHLIGHTER -> R.drawable.highlighter_nib_mask
         Tool.TAPER -> R.drawable.taper_nib_mask
