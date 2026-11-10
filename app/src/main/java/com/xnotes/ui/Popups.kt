@@ -69,7 +69,11 @@ import androidx.compose.ui.layout.MeasurePolicy
 import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import android.graphics.BitmapFactory
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -439,6 +443,23 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
 }
 
 
+/**
+ * Decode toolbar artwork through Android's bitmap decoder rather than painterResource.
+ * The latter assumes a BitmapDrawable for raster resources; these nodpi PNG/WebP assets can
+ * resolve to another drawable implementation on some Android versions and crash popup composition.
+ * A missing decorative asset simply leaves the control's native fallback visible.
+ */
+@Composable
+private fun bitmapPainterResource(resId: Int): BitmapPainter? {
+    val context = LocalContext.current
+    val bitmap = remember(context, resId) {
+        runCatching {
+            BitmapFactory.decodeResource(context.resources, resId)?.asImageBitmap()
+        }.getOrNull()
+    }
+    return bitmap?.let { BitmapPainter(it) }
+}
+
 /** The supplied metallic size control, with its thumb kept live and draggable. */
 @Composable
 internal fun DesignedSizeSlider(
@@ -447,13 +468,18 @@ internal fun DesignedSizeSlider(
     onValueChange: (Float) -> Unit,
 ) {
     val fraction = ((value - valueRange.start) / (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
+    val trackPainter = bitmapPainterResource(R.drawable.pen_size_track)
+    val thumbPainter = bitmapPainterResource(R.drawable.pen_size_thumb)
     BoxWithConstraints(Modifier.fillMaxWidth().height(36.dp), contentAlignment = Alignment.CenterStart) {
-        Image(painterResource(R.drawable.pen_size_track), null, contentScale = ContentScale.FillBounds,
-            modifier = Modifier.fillMaxWidth().height(8.dp))
+        trackPainter?.let {
+            Image(it, null, contentScale = ContentScale.FillBounds,
+                modifier = Modifier.fillMaxWidth().height(8.dp))
+        }
         Box(Modifier.width(15.dp + (maxWidth - 30.dp) * fraction).height(8.dp)
             .clip(RoundedCornerShape(8.dp)).background(Color(0xFF414345)))
-        Image(painterResource(R.drawable.pen_size_thumb), null,
-            modifier = Modifier.offset(x = (maxWidth - 30.dp) * fraction).size(30.dp))
+        thumbPainter?.let {
+            Image(it, null, modifier = Modifier.offset(x = (maxWidth - 30.dp) * fraction).size(30.dp))
+        }
         Slider(value = value, onValueChange = onValueChange, valueRange = valueRange,
             modifier = Modifier.fillMaxWidth(),
             colors = SliderDefaults.colors(thumbColor = Color.Transparent, activeTrackColor = Color.Transparent,
@@ -735,6 +761,8 @@ private fun ToolModeButton(
         Tool.TAPER -> R.drawable.taper_nib_mask
         else -> 0
     }
+    val artPainter = if (art != 0) bitmapPainterResource(art) else null
+    val nibPainter = if (nibMask != 0) bitmapPainterResource(nibMask) else null
     Column(
         modifier = Modifier.clip(RoundedCornerShape(9.dp))
             .background(if (selected) palette.selectionBackground.toComposeColor() else Color.Transparent)
@@ -753,16 +781,16 @@ private fun ToolModeButton(
             Modifier.size(32.dp, 56.dp).offset(y = lift),
             contentAlignment = Alignment.Center,
         ) {
-            if (art != 0) {
+            if (artPainter != null) {
                 Image(
-                    painterResource(art),
+                    artPainter,
                     contentDescription = label,
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxWidth().height(56.dp),
                 )
-                if (nibMask != 0) {
+                if (nibPainter != null) {
                     Image(
-                        painterResource(nibMask),
+                        nibPainter,
                         contentDescription = null,
                         contentScale = ContentScale.Fit,
                         colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
