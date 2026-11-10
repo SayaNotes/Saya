@@ -912,7 +912,7 @@ private fun ToolModeButton(
                     contentDescription = label,
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxSize().padding(top = 10.dp)
-                        .align(Alignment.BottomCenter).offset(y = 8.dp),
+                        .align(Alignment.BottomCenter),
                 )
                 if (nibPainter != null) {
                     Image(
@@ -924,7 +924,7 @@ private fun ToolModeButton(
                             androidx.compose.ui.graphics.BlendMode.SrcIn,
                         ),
                         modifier = Modifier.fillMaxSize().padding(top = 10.dp)
-                            .align(Alignment.BottomCenter).offset(y = 8.dp),
+                            .align(Alignment.BottomCenter),
                     )
                 }
             }
