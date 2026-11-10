@@ -48,6 +48,10 @@ import com.xnotes.core.model.GeoHandle
 import com.xnotes.core.model.AudioItem
 import com.xnotes.core.model.ImageItem
 import com.xnotes.core.model.Page
+import com.xnotes.core.model.PagePattern
+import com.xnotes.core.model.PageStyle
+import com.xnotes.core.model.resolvedTemplate
+import com.xnotes.core.model.resolvedSpacing
 import com.xnotes.core.model.RectHandle
 import com.xnotes.core.model.Resizable
 import com.xnotes.core.model.Rgba
@@ -2357,9 +2361,16 @@ class InteractionController(
             val result = ShapeAlignment.snapDrag(
                 anchor, moving, resizeTargets, alignmentTolerance(), matchDimensions = matchDimensions,
             )
-            alignmentGuides = result.guides
-            alignmentGuidePageIndex = resizePageIndex.takeIf { result.guides.isNotEmpty() }
-            return result.end
+            val gridSpacing = resizePage?.takeIf {
+                it.resolvedTemplate(state.document) == PagePattern.GRID.id
+            }?.resolvedSpacing(state.document) ?: if (resizePage?.resolvedTemplate(state.document) == PagePattern.GRID.id) PageStyle.DEFAULT_SPACING else null
+            val gridResult = gridSpacing?.let {
+                ShapeAlignment.snapGrid(anchor, result.end, it, alignmentTolerance(), matchDimensions)
+            }
+            val finalEnd = gridResult?.end ?: result.end
+            alignmentGuides = (result.guides + gridResult?.guides.orEmpty()).distinct()
+            alignmentGuidePageIndex = resizePageIndex.takeIf { alignmentGuides.isNotEmpty() }
+            return finalEnd
         }
         when (item) {
             is ImageItem -> {
