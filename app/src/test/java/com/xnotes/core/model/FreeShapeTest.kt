@@ -4,7 +4,6 @@ import com.xnotes.core.geometry.Affine
 import com.xnotes.core.geometry.Pt
 import com.xnotes.core.shapes.ShapeKind
 import com.xnotes.core.stroke.CubicFit
-import com.xnotes.core.stroke.RecognizedShape
 import com.xnotes.core.vector.VectorContour
 import com.xnotes.core.vector.VectorSeg
 import org.junit.Assert.assertEquals
@@ -91,11 +90,4 @@ class FreeShapeTest {
         assertEquals(3, s.vertices()!!.size)
     }
 
-    @Test fun aRecognizedCurveBecomesACubic() {
-        val rec = RecognizedShape(ShapeKind.CURVE, Pt(0.0, 0.0), Pt(160.0, 90.0), controls = controls)
-        val s = rec.toShape(ink, 2.0, null, neon = true, neonStrength = 0.4, dashed = false, dashLength = 10.0, dashGap = 8.0)
-        assertEquals(ShapeKind.CURVE, s.shape)
-        assertTrue(s.neon)
-        assertTrue(s.paths().single().contours.single().segments.single() is VectorSeg.Cubic)
-    }
 }

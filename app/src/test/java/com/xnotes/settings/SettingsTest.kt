@@ -249,14 +249,14 @@ class SettingsTest {
             JSONObject().put("accent", org.json.JSONArray().put(org.json.JSONArray().put(9).put(9).put(9).put(255))),
         )
         val accent = Settings.fromJson(o).swatchesFor(SwatchRole.ACCENT)
-        assertEquals(SwatchRole.COUNT, accent.size)
+        assertEquals(SwatchRole.ACCENT.defaults.size, accent.size)
         assertEquals(Rgba(9, 9, 9), accent[0])
         assertEquals(SwatchRole.ACCENT.defaults[4], accent[4])
     }
 
     @Test fun recolouringAMissingSwatchChangesNothing() {
         val s = Settings()
-        assertEquals(s, s.withSwatch(SwatchRole.PAPER, SwatchRole.COUNT, Rgba(1, 1, 1)))
+        assertEquals(s, s.withSwatch(SwatchRole.PAPER, SwatchRole.PAPER.defaults.size, Rgba(1, 1, 1)))
     }
 
     @Test fun pageColorNullByDefault() {
