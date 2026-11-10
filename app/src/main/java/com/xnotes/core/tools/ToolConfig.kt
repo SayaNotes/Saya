@@ -127,9 +127,9 @@ data class ToolConfig(
 ) {
     companion object {
         const val DEFAULT_MARKUP_INTENSITY = 0.9
-        const val DEFAULT_LASER_DURATION_MS = 1800L
-        const val MIN_LASER_DURATION_MS = 500L
-        const val MAX_LASER_DURATION_MS = 10000L
+        const val DEFAULT_LASER_DURATION_MS = 5000L
+        const val MIN_LASER_DURATION_MS = 3000L
+        const val MAX_LASER_DURATION_MS = 15000L
         const val MARKUP_INTENSITY_MIN = 0.1
     }
 }
