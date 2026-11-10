@@ -928,14 +928,6 @@ private fun ToolModeButton(
                     )
                 }
             }
-            if (tool == Tool.STAMP && !stampGlyph.isNullOrBlank()) {
-                Text(
-                    stampGlyph,
-                    fontSize = 21.sp,
-                    modifier = Modifier.align(Alignment.BottomCenter).offset(y = (-8).dp)
-                        .background(Color.White.copy(alpha = 0.92f), CircleShape).padding(2.dp),
-                )
-            }
         }
     }
 }/**
