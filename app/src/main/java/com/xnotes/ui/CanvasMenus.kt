@@ -848,13 +848,14 @@ private fun SelectionStylePopup(host: SelectionMenuHost, onDismiss: () -> Unit) 
                 val fillOpacity = host.selectionFillOpacity()
                 if (fillOpacity != null) {
                     var opacity by remember { mutableStateOf(fillOpacity) }
+                    val latestOpacity by rememberUpdatedState(opacity)
                     StyleCaption("Fill opacity · " + opacity.roundToInt() + "%")
                     SliderRow("Fill opacity", opacity, 0f..100f) { value ->
                         opacity = value
                         host.setSelectionFillOpacity(value, preview = true)
                     }
                     androidx.compose.runtime.DisposableEffect(Unit) {
-                        onDispose { host.setSelectionFillOpacity(opacity, preview = false) }
+                        onDispose { host.setSelectionFillOpacity(latestOpacity, preview = false) }
                     }
                 }
             }
