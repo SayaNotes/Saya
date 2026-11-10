@@ -75,6 +75,17 @@ class SelectionMathTest {
         assertTrue(members.any { it.pageIndex == 0 } && members.any { it.pageIndex == 1 })
     }
 
+    @Test fun freeformLassoUsesItsActualLoopNotItsBoundingRectangle() {
+        val inside = dot(10.0, 10.0)
+        val insideBoundingBoxButOutsideTriangle = dot(80.0, 80.0)
+        val triangle = listOf(Pt(0.0, 0.0), Pt(100.0, 0.0), Pt(0.0, 100.0))
+        val members = SelectionMath.lassoMembers(
+            listOf(inside, insideBoundingBoxButOutsideTriangle),
+            triangle,
+        )
+        assertEquals(listOf<CanvasItem>(inside), members)
+    }
+
     @Test fun degenerateLassoSelectsNothing() {
         pages[0].items.add(dot(50.0, 50.0))
         assertTrue(SelectionMath.lassoMembers(pages, rects, listOf(Pt(0.0, 0.0), Pt(1.0, 1.0))).isEmpty())
