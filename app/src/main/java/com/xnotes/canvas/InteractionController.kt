@@ -2152,6 +2152,16 @@ class InteractionController(
         if (beginTableChrome(content)) return
         if (tryGrabSelectionHandle(content)) return
         if (trySlideLabel(content)) return
+        // The completed lasso boundary is the actual draggable hit area. Its interior can
+        // extend beyond the selected objects' oriented bounding box, so do not require a hit
+        // on an individual stroke or on the selection chrome to move the whole group.
+        val lassoInterior = selectedLassoBoundary
+        if (lassoInterior != null && lassoInterior.size >= 3 &&
+            com.xnotes.core.geometry.Geometry.pointInPolygon(lassoInterior, content)
+        ) {
+            beginMove(content)
+            return
+        }
         if (selectionChromeBox()?.contains(content) == true) {
             beginMove(content)
             return
