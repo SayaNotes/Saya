@@ -44,14 +44,17 @@ class ShapeAlignmentTest {
     @Test fun nearbyFixedAnchorDoesNotBlockSnappingTheDraggedEdge() {
         val result = ShapeAlignment.snapDrag(
             Pt(99.0, 0.0),
-            Pt(94.0, 40.0),
-            listOf(Rect(100.0, -10.0, 20.0, 100.0)),
+            Pt(194.0, 40.0),
+            listOf(
+                Rect(100.0, -10.0, 20.0, 100.0),
+                Rect(200.0, -10.0, 20.0, 100.0),
+            ),
             6.0,
         )
 
         // The fixed x anchor is already within tolerance of x=100, but the moving x edge
-        // should still snap to x=100 rather than choosing a zero correction at the anchor.
-        assertEquals(100.0, result.end.x, 0.0)
+        // should still snap to x=200 rather than choosing a zero correction at the anchor.
+        assertEquals(200.0, result.end.x, 0.0)
     }
 
     @Test fun centreAlignmentSnapsTheCentreRatherThanTheAnchor() {
