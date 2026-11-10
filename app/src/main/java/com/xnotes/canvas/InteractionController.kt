@@ -6030,7 +6030,7 @@ class InteractionController(
         const val SHAPE_PEN_PARITY = 0.675
 
         /** A line/arrow drawn with the shape tool snaps flat when within this angle (deg) of an axis.
-         *  Half the broader angle used by the retired recognizer; a live drag is steadier, so it needs less help. */
+         *  A live drag is steadier than a freehand trace, so it uses a tighter angle. */
         const val SHAPE_AXIS_SNAP_DEG = 4.0
 
         /** With the Perfect switch on, a line/arrow keeps its angle to whole steps of this (deg). */
