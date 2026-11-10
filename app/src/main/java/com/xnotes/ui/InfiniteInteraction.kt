@@ -35,7 +35,6 @@ import com.xnotes.core.model.TapeMode
 import com.xnotes.core.shapes.ShapeKind
 import com.xnotes.core.stroke.Sample
 import com.xnotes.core.stroke.Scribble
-import com.xnotes.core.stroke.ShapeRecognizer
 import com.xnotes.core.stroke.StrokeSimplify
 import com.xnotes.core.tape.TapeGeometry
 import com.xnotes.core.tools.EraseMode
@@ -90,8 +89,6 @@ class InfiniteInteraction(
     /** The shape tool's style, and the active ink colour it draws in. */
     private val shapeConfig: () -> ShapeConfig = { ShapeConfig() },
     private val inkColor: () -> Rgba = { InkPalette.DEFAULT },
-    /** Whether a held pen stroke may snap to a recognized shape. */
-    private val detectShapes: () -> Boolean = { true },
     /** The selection, owned by the host so the chrome can read it. */
     private val selection: () -> CanvasSelection? = { null },
     /** Items the selection may be drawn from, culled to a rect. */
@@ -288,11 +285,7 @@ class InfiniteInteraction(
     /** Whether a long-press grab is borrowing the selection tool, which it hands back by itself. */
     val grabbing: Boolean get() = longPressPrevTool != null
 
-    // Hold-still-to-snap: a freehand stroke that stops moving becomes the shape it looks like.
     private val handler = Handler(Looper.getMainLooper())
-    private var dwellRunnable: Runnable? = null
-    private var dwellEligible = false
-    private var dwellAnchor = Pt.ZERO
 
     var mode = CanvasPointerMode.IDLE
         private set
@@ -822,10 +815,6 @@ class InfiniteInteraction(
         stroke.addSample(Sample(p.x, p.y, pressureOf(e, 0)))
         liveStroke = stroke
         mode = CanvasPointerMode.DRAW
-        // Only solid pens arm the snap: a highlighter or a straight-line drag never becomes a shape.
-        dwellEligible = detectShapes() && drawTool.isStroke && drawTool != Tool.HIGHLIGHTER &&
-            !straight && !wandEnabled
-        if (dwellEligible) armDwell(Pt(vx, vy))
         onWetStroke(stroke)
         requestRender()
     }
@@ -849,12 +838,6 @@ class InfiniteInteraction(
             pressureOf(e, idx), e.eventTime, force = false,
         )
         onWetStroke(liveStroke)
-        // Real movement restarts the clock; holding within the slop lets it mature, so the snap
-        // fires only once the pen has actually come to rest.
-        if (dwellEligible) {
-            val here = Pt(e.getX(idx).toDouble(), e.getY(idx).toDouble())
-            if (here.distanceTo(dwellAnchor) > InteractionController.SHAPE_DWELL_SLOP) armDwell(here)
-        }
         requestRender()
     }
 
@@ -877,8 +860,6 @@ class InfiniteInteraction(
     }
 
     private fun endDraw(e: MotionEvent) {
-        cancelDwell()
-        dwellEligible = false
         val idx = e.findPointerIndex(drawingPointerId).coerceAtLeast(0)
         addStrokePoint(
             e.getX(idx).toDouble(), e.getY(idx).toDouble(),
@@ -1843,50 +1824,6 @@ class InfiniteInteraction(
         connectHot = emptyList()
         onPendingShape(null)
         onSelectionChanged()
-    }
-
-    // --- hold still to snap a freehand stroke into a shape ---
-
-    private fun armDwell(at: Pt) {
-        cancelDwell()
-        dwellAnchor = at
-        val r = Runnable { onDwellElapsed() }
-        dwellRunnable = r
-        handler.postDelayed(r, InteractionController.SHAPE_DWELL_MS)
-    }
-
-    private fun cancelDwell() {
-        dwellRunnable?.let { handler.removeCallbacks(it) }
-        dwellRunnable = null
-    }
-
-    /** The pen has held still: if what it drew reads as a shape, swap the stroke for that shape. */
-    private fun onDwellElapsed() {
-        dwellRunnable = null
-        if (!dwellEligible) return
-        val stroke = liveStroke ?: return
-        if (stroke.samples.size < InteractionController.SHAPE_MIN_SAMPLES) return
-        val rec = ShapeRecognizer.recognize(stroke.samples) ?: return
-        val width = stroke.config.baseWidth * InteractionController.SHAPE_PEN_PARITY
-        val color = stroke.config.rgba // the as-drawn colour, not the alpha-scaled render one
-        val dashed = stroke.tool == Tool.DASHED // a dashed pen snaps to a dashed shape
-        val shape = rec.toShape(
-            color, width, shapeConfig().fillFor(rec.kind, color), stroke.config.neon, stroke.config.neonStrength,
-            dashed, stroke.config.dashLength, stroke.config.dashGap,
-        )
-        // The stroke was never committed, so dropping it makes the wet ink vanish the moment it
-        // snaps; the eventual pen up then commits nothing.
-        liveStroke = null
-        onWetStroke(null)
-        dwellEligible = false
-        cancelDwell()
-        onCommitShape(shape)
-        mode = CanvasPointerMode.IDLE
-        // Leave the new shape selected, as a note does, so it can be resized or turned straight
-        // away. The chrome only shows over a settled selection, so the handles arrive at pen up.
-        selection()?.select(listOf(shape))
-        onSelectionChanged()
-        requestRender()
     }
 
     // --- erasing ---
