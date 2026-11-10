@@ -122,9 +122,14 @@ data class ToolConfig(
     val stampSize: Double = 24.0,
     /** Stamp Pen: centre-to-centre spacing in page pixels. */
     val stampSpacing: Double = 55.0,
+    /** Laser trail's fully visible time after pen-up, before its fade begins. */
+    val laserDurationMs: Long = DEFAULT_LASER_DURATION_MS,
 ) {
     companion object {
         const val DEFAULT_MARKUP_INTENSITY = 0.9
+        const val DEFAULT_LASER_DURATION_MS = 1800L
+        const val MIN_LASER_DURATION_MS = 500L
+        const val MAX_LASER_DURATION_MS = 10000L
         const val MARKUP_INTENSITY_MIN = 0.1
     }
 }
