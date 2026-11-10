@@ -466,7 +466,7 @@ private fun ToolButton(
         Tool.TAPER -> R.drawable.taper_nib_mask
         else -> null
     }
-    val image = imageRes?.let { bitmapPainterResource(it) }
+    val image = imageRes?.takeUnless { displayTool == Tool.PEN }?.let { bitmapPainterResource(it) }
     // Use the same safe mask decoder as the pen panel. It also normalizes the taper PNG
     // into an alpha silhouette, keeping the toolbar nib preview in sync with the selected ink.
     val nibMask = nibMaskRes?.let { bitmapPainterResource(it) }
@@ -768,7 +768,17 @@ internal fun ToolbarIcon(
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                if (image == null) {
+                if (image == null && nibMask != null) {
+                    // The regular pen uses the nib silhouette alone in the toolbar; do not show
+                    // the full pen artwork or its neck/body in the circular button.
+                    Image(
+                        nibMask,
+                        contentDescription = contentDescription,
+                        contentScale = ContentScale.Fit,
+                        colorFilter = ColorFilter.tint(nibColor, BlendMode.SrcIn),
+                        modifier = Modifier.size(bar.icon * 1.12f),
+                    )
+                } else if (image == null) {
                     Icon(icon, contentDescription = contentDescription, tint = tint, modifier = Modifier.size(bar.icon * 1.12f))
                 } else {
                     // The toolbar gets its own close crop of the selected pen artwork: show the
