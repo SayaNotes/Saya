@@ -153,23 +153,6 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                     Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Row(
-                        Modifier.fillMaxWidth()
-                            .clip(RoundedCornerShape(10.dp))
-                            .background(LocalPalette.current.surface.toComposeColor().copy(alpha = 0.55f))
-                            .padding(horizontal = 9.dp, vertical = 6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-                            Text("Hand-drawn shape", color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
-                            Text("Recognize after pen-up", color = LocalPalette.current.textDim.toComposeColor(), fontSize = 10.sp)
-                        }
-                        Switch(
-                            checked = editor.snapHeldToShapes,
-                            onCheckedChange = { editor.snapHeldToShapes = it },
-                        )
-                    }
-
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween) {
@@ -188,6 +171,31 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                             .padding(horizontal = 9.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(7.dp),
                     ) {
+                        Row(
+                            Modifier.fillMaxWidth()
+                                .clip(RoundedCornerShape(10.dp))
+                                .background(LocalPalette.current.selectionBackground.toComposeColor().copy(alpha = 0.45f))
+                                .padding(horizontal = 8.dp, vertical = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Box(
+                                Modifier.size(30.dp)
+                                    .clip(RoundedCornerShape(8.dp))
+                                    .background(LocalPalette.current.surface.toComposeColor()),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                Text("✧", color = LocalPalette.current.accent.toComposeColor(), fontSize = 20.sp)
+                            }
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                                Text("Hand-drawn shape", color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
+                                Text("Recognize after pen-up", color = LocalPalette.current.textDim.toComposeColor(), fontSize = 10.sp)
+                            }
+                            Switch(
+                                checked = editor.snapHeldToShapes,
+                                onCheckedChange = { editor.snapHeldToShapes = it },
+                            )
+                        }
                         if (shapePages.isNotEmpty()) {
                             // Compose one 5 × 4 grid at a time. Avoids nested pager measurement
                             // inside Material's dropdown popup, a known source of layout crashes.
