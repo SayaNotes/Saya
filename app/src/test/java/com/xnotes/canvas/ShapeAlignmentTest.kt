@@ -116,4 +116,19 @@ class ShapeAlignmentTest {
 
         assertEquals(Pt(100.0, 100.0), result.end)
     }
+
+    @Test fun gridSnapMovesDraggedEdgeToNearestGridLine() {
+        val result = ShapeAlignment.snapGrid(Pt(10.0, 10.0), Pt(63.0, 126.0), 64.0, 5.0)
+        assertEquals(Pt(64.0, 128.0), result.end)
+        assertTrue(result.guides.any { it.vertical })
+        assertTrue(result.guides.any { !it.vertical })
+    }
+
+    @Test fun gridSnapLeavesCoordinatesOutsideToleranceUntouched() {
+        val end = Pt(59.0, 123.0)
+        val result = ShapeAlignment.snapGrid(Pt.ZERO, end, 64.0, 4.0)
+        assertEquals(end, result.end)
+        assertTrue(result.guides.isEmpty())
+    }
+
 }
