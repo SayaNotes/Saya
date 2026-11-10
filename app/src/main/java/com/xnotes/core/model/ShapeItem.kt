@@ -6,6 +6,10 @@ import com.xnotes.core.geometry.Obb
 import com.xnotes.core.geometry.Pt
 import com.xnotes.core.geometry.Rect
 import com.xnotes.core.pal.Mark
+import com.xnotes.core.pal.FontFace
+import com.xnotes.core.pal.FontSpec
+import com.xnotes.core.pal.HAlign
+import com.xnotes.core.pal.TextFlags
 import com.xnotes.core.pal.Pen
 import com.xnotes.core.pal.Renderer
 import com.xnotes.core.shapes.ConnectionPoint
@@ -26,6 +30,7 @@ import com.xnotes.core.vector.PathFlattener
 import com.xnotes.core.vector.VectorContour
 import com.xnotes.core.vector.VectorSeg
 import kotlin.math.PI
+import kotlin.math.acos
 import kotlin.math.abs
 import kotlin.math.atan2
 import kotlin.math.ceil
@@ -208,6 +213,48 @@ class ShapeItem(
     override fun paint(r: Renderer) {
         paintBody(r)
         paintLabel(r)
+    }
+
+    /**
+     * Temporary interior-angle readouts for a selected closed polygon. The editor calls this
+     * from its selection overlay only, so measurements follow live edits without becoming
+     * permanent marks in the document or cluttering an unselected page.
+     */
+    fun paintAngleMeasurements(r: Renderer) {
+        if (!shape.isClosed) return
+        val points = (if (isFree) vertices().orEmpty() else localGeometry().corners.map(::toPage))
+            .let { pts ->
+                if (pts.size > 1 && pts.first().distanceTo(pts.last()) < 1e-6) pts.dropLast(1) else pts
+            }
+        if (points.size < 3) return
+        val font = FontSpec(8.0, FontFace.SANS, bold = true)
+        val flags = TextFlags(wordWrap = false, alignLeft = false, alignTop = false, hAlign = HAlign.CENTER)
+        for (i in points.indices) {
+            val vertex = points[i]
+            val previous = points[(i - 1 + points.size) % points.size]
+            val next = points[(i + 1) % points.size]
+            val ax = previous.x - vertex.x
+            val ay = previous.y - vertex.y
+            val bx = next.x - vertex.x
+            val by = next.y - vertex.y
+            val al = kotlin.math.hypot(ax, ay)
+            val bl = kotlin.math.hypot(bx, by)
+            if (al < 1e-6 || bl < 1e-6) continue
+            val cosine = ((ax * bx + ay * by) / (al * bl)).coerceIn(-1.0, 1.0)
+            val degrees = Math.toDegrees(acos(cosine)).toInt()
+            var ux = ax / al + bx / bl
+            var uy = ay / al + by / bl
+            val length = kotlin.math.hypot(ux, uy)
+            if (length < 1e-6) {
+                ux = -ax / al
+                uy = -ay / al
+            }
+            val directionLength = kotlin.math.hypot(ux, uy).coerceAtLeast(1e-6)
+            val labelCentre = Pt(vertex.x + ux / directionLength * 18.0, vertex.y + uy / directionLength * 18.0)
+            val rect = Rect(labelCentre.x - 13.0, labelCentre.y - 7.0, 26.0, 14.0)
+            r.fillCircle(labelCentre, 9.0, Rgba(255, 255, 255, 224))
+            r.drawText("$degrees°", rect, font, Rgba(25, 30, 38), flags)
+        }
     }
 
     /** Everything but the label: fills, then the outline, glowing when neon. */
