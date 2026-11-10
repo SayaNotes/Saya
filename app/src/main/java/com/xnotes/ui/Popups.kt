@@ -256,8 +256,10 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     modifier = Modifier.clip(CircleShape).clickable { onDismiss() }.padding(horizontal = 5.dp))
             }
 
-            // Reference layout: size control and illustrated pen tray occupy the broad left
-            // column; the compact square colour palette sits in its own right-hand column.
+            // Compact side-by-side layout: the size control sits above the complete
+            // six-pen tray, while the colour palette stays attached at the tray's right.
+            // Keep the tray as one measured Row so all six illustrations retain their shared
+            // bottom baseline, exact slot order and equal widths when the group is repositioned.
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -267,21 +269,49 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.fillMaxWidth(),
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
                     ) {
-                        StyleCaption("Size")
-                        Text("%.1f".format(width), color = LocalPalette.current.text.toComposeColor(), fontSize = 11.sp)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            StyleCaption("Size")
+                            Text("%.1f".format(width), color = LocalPalette.current.text.toComposeColor(), fontSize = 11.sp)
+                        }
+                        DesignedSizeSlider(
+                            value = width,
+                            valueRange = ToolConversions.widthRange(tool).let { it.start.toFloat()..it.endInclusive.toFloat() },
+                            onValueChange = { width = it; emit() },
+                        )
+    
+    
                     }
-                    DesignedSizeSlider(
-                        value = width,
-                        valueRange = ToolConversions.widthRange(tool).let { it.start.toFloat()..it.endInclusive.toFloat() },
-                        onValueChange = { width = it; emit() },
-                    )
 
-
+                // Full-width six-tool tray: every tool gets an equal slot and shares one
+                // measured bottom baseline. This avoids horizontal scrolling or clipped tools.
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(LocalPalette.current.surface.toComposeColor())
+                        .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(16.dp))
+                        .padding(start = 6.dp, end = 6.dp, top = 7.dp, bottom = 0.dp)
+                        .height(154.dp),
+                    horizontalArrangement = Arrangement.spacedBy(0.dp),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    penTools.forEach { candidate ->
+                        ToolModeButton(
+                            candidate,
+                            selected = candidate == tool,
+                            modifier = Modifier.weight(1f),
+                            nibColor = editor.toolConfig(candidate).colorOverride?.toComposeColor()
+                                ?: (editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor() ?: Color.Black),
+                        ) { onSelectTool(candidate) }
+                    }
+                }
                 }
 
                 Column(
@@ -373,29 +403,6 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     }
                 }
             }
-
-
-            // Full-width six-tool tray: every tool gets an equal slot and shares one
-            // measured bottom baseline. This avoids horizontal scrolling or clipped tools.
-            Row(
-                modifier = Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(LocalPalette.current.surface.toComposeColor())
-                    .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(16.dp))
-                    .padding(start = 6.dp, end = 6.dp, top = 7.dp, bottom = 0.dp)
-                    .height(154.dp),
-                horizontalArrangement = Arrangement.spacedBy(0.dp),
-                verticalAlignment = Alignment.Bottom,
-            ) {
-                penTools.forEach { candidate ->
-                    ToolModeButton(
-                        candidate,
-                        selected = candidate == tool,
-                        modifier = Modifier.weight(1f),
-                        nibColor = editor.toolConfig(candidate).colorOverride?.toComposeColor()
-                            ?: (editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor() ?: Color.Black),
-                    ) { onSelectTool(candidate) }
-                }
             }
 
             HorizontalDivider(color = LocalPalette.current.border.toComposeColor())
