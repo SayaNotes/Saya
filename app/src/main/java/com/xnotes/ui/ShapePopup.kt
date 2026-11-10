@@ -411,6 +411,23 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
             if (advancedExpanded) {
                 Box(Modifier.fillMaxWidth().height(1.dp).background(LocalPalette.current.border.toComposeColor()))
                 ToggleRow("Dashed line", config.dashed) { emit(config.copy(dashed = it)) }
+                ToggleRow("Snap to Align", config.snapToAlign) { emit(config.copy(snapToAlign = it)) }
+                Text(
+                    "Aligns edges, centres, matching dimensions and grid lines while drawing, moving or resizing shapes.",
+                    color = LocalPalette.current.textDim.toComposeColor(),
+                    fontSize = 10.sp,
+                )
+                Text("Rotation snapping", color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf(15, 45, 90).forEach { degrees ->
+                        KindChip(
+                            ShapeIcons.of(ShapePresets.byKey("line") ?: ShapePresets.forKind(com.xnotes.core.shapes.ShapeKind.LINE)),
+                            "$degrees°",
+                            selected = config.angleSnapDegrees == degrees,
+                            iconSize = 16.dp,
+                        ) { emit(config.copy(angleSnapDegrees = degrees)) }
+                    }
+                }
             }
         }
     }
