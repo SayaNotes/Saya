@@ -901,7 +901,9 @@ private fun ToolModeButton(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            Modifier.fillMaxWidth().height(142.dp).clip(RoundedCornerShape(8.dp)),
+            // Fill the remaining inner height: the previous fixed 142dp left a small
+            // unused strip below the artwork on taller trays. The tray itself is unchanged.
+            Modifier.fillMaxWidth().weight(1f).clip(RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.BottomCenter,
         ) {
             if (artPainter != null) {
