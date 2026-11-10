@@ -774,8 +774,14 @@ internal fun ToolbarIcon(
             ) {
                 if (toolbarNib != null) {
                     // Toolbar-specific upright nibs follow the selected pen's ink colour.
-                    Icon(toolbarNib, contentDescription = contentDescription, tint = nibColor,
-                        modifier = Modifier.size(bar.icon * 1.18f))
+                    Icon(
+                        toolbarNib,
+                        contentDescription = contentDescription,
+                        // The active pen shows its actual ink colour; inactive tools retain
+                        // Saya's normal foreground contrast against the dark toolbar surface.
+                        tint = if (active) nibColor else tint,
+                        modifier = Modifier.size(bar.icon * 1.18f),
+                    )
                 } else if (image == null && nibMask != null) {
                     // The regular pen uses the nib silhouette alone in the toolbar; do not show
                     // the full pen artwork or its neck/body in the circular button.
