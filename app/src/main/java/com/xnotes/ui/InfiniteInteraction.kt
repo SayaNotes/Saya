@@ -530,7 +530,9 @@ class InfiniteInteraction(
             }
         }
 
-        armLongPress(Pt(vx, vy), onSelection, toolType == MotionEvent.TOOL_TYPE_FINGER)
+        val holdErasePending = !onSelection && isHoldErasePen(tool) && !buttonHeld &&
+            (drawingIsStylus || (toolType == MotionEvent.TOOL_TYPE_FINGER && penButtonTool == Tool.ERASER))
+        if (!holdErasePending) armLongPress(Pt(vx, vy), onSelection, toolType == MotionEvent.TOOL_TYPE_FINGER)
 
         // A draft only lives through Free polygon presses; anything else that draws or edits ends it.
         val placing = effective == Tool.SHAPE && shapeConfig().placesCorners
