@@ -820,6 +820,24 @@ private fun SelectionStylePopup(host: SelectionMenuHost, onDismiss: () -> Unit) 
                             }
                         }
                     }
+                    // Keep fill colour independently editable, including an existing custom colour
+                    // that is not one of the toolbar swatches.
+                    ColorPickerDot(
+                        fill ?: outline,
+                        custom = fill != null && fill !in host.shownSwatches,
+                        onPick = { picked ->
+                            fill = picked
+                            host.refillSelection(picked)
+                        },
+                        dismissOnPick = false,
+                    ) { dismiss, pick ->
+                        ColorPickerPopup(
+                            initial = fill ?: outline,
+                            recents = host.hostRecentColors,
+                            onDismiss = dismiss,
+                            onPick = pick,
+                        )
+                    }
                 }
             }
             host.selectionCount()?.let { sc ->
