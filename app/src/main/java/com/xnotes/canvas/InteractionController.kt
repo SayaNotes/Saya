@@ -273,6 +273,9 @@ class InteractionController(
     private var sideButtonEraseActive = false
     private var sideButtonResumeTool: Tool? = null
     private var sideButtonHeldOnLastMove = false
+    // For a finger-reported capacitive stylus, a second finger acts as the momentary
+    // eraser button while the primary contact stays down on the canvas.
+    private var fingerHoldErasePointerId: Int? = null
 
     /** When true, the side-button tool also runs off the hover stream (no contact needed); eraser/pan only. */
     var penButtonHover: Boolean = false
@@ -1079,6 +1082,29 @@ class InteractionController(
 
     private fun handlePointerDown(e: MotionEvent) {
         cancelLongPress()
+        // A second finger is the momentary eraser modifier for capacitive styluses that Android
+        // reports as fingers. The drawing contact stays down: lifting the modifier ends erasing
+        // and immediately resumes the same pen, rather than starting a pinch or switching tools.
+        if (mode == PointerMode.DRAW && !drawingIsStylus && e.pointerCount == 2 &&
+            penButtonTool == Tool.ERASER && isHoldErasePen(tool) && fingerHoldErasePointerId == null
+        ) {
+            val primaryIndex = e.findPointerIndex(drawingPointerId)
+            val modifierIndex = e.actionIndex
+            if (primaryIndex >= 0 && modifierIndex in 0 until e.pointerCount &&
+                e.getPointerId(modifierIndex) != drawingPointerId
+            ) {
+                cancelTemporaryEraser()
+                val vx = e.getX(primaryIndex).toDouble()
+                val vy = e.getY(primaryIndex).toDouble()
+                tapCandidate = false
+                endDraw(e)
+                clearSelection()
+                fingerHoldErasePointerId = e.getPointerId(modifierIndex)
+                erasingWithFinger = true
+                beginErase(vx, vy)
+                return
+            }
+        }
         // A second finger turns a PDF text drag into a pinch; the selection stays, a mark in the making goes.
         if (mode == PointerMode.PDF_TEXT) {
             pdfText?.interrupt()
@@ -1200,6 +1226,35 @@ class InteractionController(
     }
 
     private fun handlePointerUp(e: MotionEvent) {
+        val liftedPointerId = e.getPointerId(e.actionIndex)
+        val eraseModifierId = fingerHoldErasePointerId
+        if (eraseModifierId != null) {
+            when (liftedPointerId) {
+                eraseModifierId -> {
+                    fingerHoldErasePointerId = null
+                    if (mode == PointerMode.ERASE) endErase()
+                    val primaryIndex = e.findPointerIndex(drawingPointerId)
+                    if (primaryIndex >= 0 && tool.isStroke && isHoldErasePen(tool)) {
+                        val vx = e.getX(primaryIndex).toDouble()
+                        val vy = e.getY(primaryIndex).toDouble()
+                        val content = state.viewportToContent(Pt(vx, vy))
+                        val pointerTool = e.getToolType(primaryIndex)
+                        beginDraw(content, resolvePressure(e, primaryIndex, pointerTool), tool, e.eventTime, Pt(vx, vy))
+                    } else {
+                        mode = PointerMode.IDLE
+                    }
+                    requestRender()
+                    return
+                }
+                drawingPointerId -> {
+                    // The drawing contact lifted first: commit the erase, but do not resurrect ink.
+                    fingerHoldErasePointerId = null
+                    if (mode == PointerMode.ERASE) endErase()
+                    mode = PointerMode.IDLE
+                    return
+                }
+            }
+        }
         if (mode == PointerMode.RULER_TRANSFORM) {
             // One finger lifted: fall back to a single-finger move with whichever finger remains.
             val up = e.actionIndex
@@ -5435,6 +5490,7 @@ class InteractionController(
         sideButtonEraseActive = false
         sideButtonResumeTool = null
         sideButtonHeldOnLastMove = false
+        fingerHoldErasePointerId = null
         stopFling()
         clearFlipPull()
         clearOverscroll()
