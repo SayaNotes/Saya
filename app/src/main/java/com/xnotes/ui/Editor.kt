@@ -856,7 +856,6 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
             it.onMessage = { m, action -> say(m, action) }
             for (t in ToolDefaults.persistedTools) it.setToolConfig(t, settings.configFor(t))
             it.armShapeConfig(settings.shapeConfig)
-            it.onDetectShapesChanged = { v -> snapHeldToShapes = v }
             it.toolbarColors = toolbarColors
             it.recentColors = recentColors
             it.toolbarColorCount = toolbarColorCount
@@ -7143,15 +7142,8 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
     override fun toolConfig(tool: Tool): com.xnotes.core.tools.ToolConfig = controller.configFor(tool)
 
     override var snapHeldToShapes: Boolean
-        get() = settings.prefs.detectShapes
-        set(v) {
-            // The canvas reports its own switch back here; once the prefs agree there is nothing left to do.
-            if (v == settings.prefs.detectShapes) return
-            settings = settings.copy(prefs = settings.prefs.copy(detectShapes = v))
-            controller.detectShapes = v
-            infiniteOrNull?.snapHeldToShapes = v
-            settingsRepo.save(settings)
-        }
+        get() = false
+        set(v) { /* Hand-drawn shape recognition has been removed. */ }
 
     override val hostShapeConfig: ShapeConfig get() = shapeConfig
     override val hostToolbarColors: List<Rgba> get() = toolbarColors
