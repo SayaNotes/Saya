@@ -256,7 +256,6 @@ class InteractionController(
     /** Panning allowed while zoom is locked: "single" (default) | "double" | "none". */
     var zoomLockPan: String = "single"
 
-    /** Whether holding a freehand ink stroke still snaps it to a recognized shape (spec: "hold to snap"). */
 
     /** Whether rotating a selection snaps to the nearest 90 degrees. */
     var snapRotation90: Boolean = false
