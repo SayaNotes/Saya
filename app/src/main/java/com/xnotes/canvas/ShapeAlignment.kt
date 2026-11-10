@@ -173,14 +173,6 @@ internal object ShapeAlignment {
         return best
     }
 
-    /** Prefer the closest snap; on an exact tie, retain the edge/centre alignment match. */
-    private fun closerMatch(first: Match?, second: Match?): Match? = when {
-        first == null -> second
-        second == null -> first
-        second.distance < first.distance -> second
-        else -> first
-    }
-
     /** Return every edge/centre guide that is aligned after the chosen snap is applied. */
     private fun guidesFor(candidate: Rect, targets: List<Rect>): List<Guide> {
         val guides = mutableListOf<Guide>()
