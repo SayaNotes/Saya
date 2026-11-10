@@ -5595,6 +5595,7 @@ class InteractionController(
                     r.translate(pr.left + moveOffset.x, pr.top + moveOffset.y)
                     state.applyPageTransform(r, state.document.pages[sel.pageIndex])
                     state.paintItem(sel.item, r)
+                    (sel.item as? ShapeItem)?.paintAngleMeasurements(r)
                 }
             }
 
