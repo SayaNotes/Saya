@@ -881,7 +881,11 @@ private fun ToolModeButton(
         else -> 0
     }
     val artPainter = if (art != 0) bitmapPainterResource(art) else null
-    val nibPainter = if (nibMask != 0) bitmapPainterResource(nibMask) ?: painterResource(nibMask) else null
+    // Nib artwork is decorative: never fall back to painterResource here. On some Android
+    // resource configurations painterResource throws while resolving the PNG (rather than
+    // returning a missing painter), which crashes the entire Pen Panel. A failed decode should
+    // only omit the preview mask; the tool button itself must remain usable.
+    val nibPainter = if (nibMask != 0) bitmapPainterResource(nibMask) else null
     Column(
         modifier = Modifier
             .shadow(if (selected) 8.dp else 0.dp, RoundedCornerShape(9.dp))
