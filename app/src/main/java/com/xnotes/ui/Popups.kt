@@ -303,7 +303,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     ) {
                         paletteColors.forEachIndexed { paletteIndex, swatch ->
                             val swatchColor = swatch.toComposeColor()
-                            val selected = editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex) == swatch
+                            val selected = colorOverride == swatch
                             Box(
                                 Modifier.size(28.dp).clip(RoundedCornerShape(5.dp))
                                     .background(swatchColor)
@@ -316,7 +316,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                                         RoundedCornerShape(5.dp),
                                     )
                                     .combinedClickable(
-                                        onClick = { editor.setSwatchColor(editor.hostActiveColorIndex, swatch) },
+                                        onClick = { colorOverride = swatch; emit() },
                                         onLongClick = { editingPaletteColor = paletteIndex },
                                     ),
                             ) {}
@@ -330,8 +330,9 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                             onDismiss = { editingPaletteColor = null },
                             onPick = { picked ->
                                 editor.setSwatch(SwatchRole.PEN, paletteIndex, picked)
-                                if (editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex) == seed) {
-                                    editor.setSwatchColor(editor.hostActiveColorIndex, picked)
+                                if (colorOverride == seed) {
+                                    colorOverride = picked
+                                    emit()
                                 }
                                 editingPaletteColor = null
                             },
