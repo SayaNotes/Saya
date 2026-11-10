@@ -18,6 +18,16 @@ class ShapeAlignmentTest {
         assertTrue(result.guides.any { it.vertical })
     }
 
+    @Test fun equalSizeRectanglesShowBothEdgeAndCentreGuides() {
+        val candidate = Rect(10.0, 10.0, 20.0, 20.0)
+        val target = Rect(15.0, 15.0, 20.0, 20.0)
+        val result = ShapeAlignment.snapTranslation(candidate, listOf(target), 6.0)
+
+        assertEquals(Pt(5.0, 5.0), result.delta)
+        assertEquals(3, result.guides.count { it.vertical })
+        assertEquals(3, result.guides.count { !it.vertical })
+    }
+
     @Test fun dragSnapsTheMovingEdgesAndKeepsTheAnchorFixed() {
         val result = ShapeAlignment.snapDrag(
             Pt(0.0, 0.0),
