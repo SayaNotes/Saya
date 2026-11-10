@@ -205,13 +205,10 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
                 ),
                 ToolbarSection(
                     listOf(
-                        // The visible everyday tools lead in the exact requested order.
-                        ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.STAMP, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER, ToolbarItem.SHAPE,
-                        // Wand is hidden by default, but Tape is kept immediately after it in the
-                        // persisted order so older/custom layouts migrate consistently.
-                        ToolbarItem.WAND, ToolbarItem.TAPE, ToolbarItem.PAN, ToolbarItem.SELECT,
-                        // Remaining tools stay available in the customizer, but start hidden.
-                        ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY,
+                        ToolbarItem.SELECT, ToolbarItem.PEN, ToolbarItem.ERASER, ToolbarItem.SHAPE,
+                        ToolbarItem.PAN, ToolbarItem.UNDO, ToolbarItem.REDO,
+                        ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.STAMP, ToolbarItem.HIGHLIGHTER,
+                        ToolbarItem.WAND, ToolbarItem.TAPE, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY,
                         ToolbarItem.READER, ToolbarItem.INSERT_SPACE, ToolbarItem.SCREENSHOT,
                         ToolbarItem.RULER, ToolbarItem.TEXT, ToolbarItem.TEXT_BOX, ToolbarItem.MARKUP,
                         ToolbarItem.IMAGE, ToolbarItem.TABLE,
@@ -219,16 +216,15 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
                         ToolbarEntry(
                             it,
                             it in setOf(
-                                ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.STAMP, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER,
-                                ToolbarItem.SHAPE, ToolbarItem.TAPE, ToolbarItem.PAN,
-                                ToolbarItem.SELECT,
+                                ToolbarItem.SELECT, ToolbarItem.PEN, ToolbarItem.ERASER,
+                                ToolbarItem.SHAPE, ToolbarItem.PAN, ToolbarItem.UNDO, ToolbarItem.REDO,
                             ),
                         )
                     },
                 ),
                 ToolbarSection(
                     listOf(
-                        ToolbarItem.COLORS, ToolbarItem.UNDO, ToolbarItem.REDO, ToolbarItem.PAGE_NAV,
+                        ToolbarItem.COLORS, ToolbarItem.PAGE_NAV,
                         ToolbarItem.SEARCH, ToolbarItem.STYLES, ToolbarItem.MARGINS, ToolbarItem.VIEW,
                         ToolbarItem.ZOOM, ToolbarItem.FIT, ToolbarItem.ZOOM_LOCK, ToolbarItem.FULLSCREEN,
                     ).map { ToolbarEntry(it, it == ToolbarItem.PAGE_NAV) },
