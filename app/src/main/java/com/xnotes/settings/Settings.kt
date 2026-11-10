@@ -437,6 +437,8 @@ data class Settings(
             .put("dashed", c.dashed).put("dash_length", c.dashLength).put("dash_gap", c.dashGap)
             .put("n", c.n).put("head_start", c.headStart.id).put("head_end", c.headEnd.id)
             .put("perfect", c.perfect)
+            .put("snap_to_align", c.snapToAlign)
+            .put("angle_snap_degrees", c.angleSnapDegrees)
             .put("shape_page", c.shapePage)
             .put("connector_page", c.connectorPage)
 
@@ -459,6 +461,8 @@ data class Settings(
                 dashGap = o.optDouble("dash_gap", 8.0),
                 n = o.optInt("n", 0),
                 perfect = o.optBoolean("perfect", false),
+                snapToAlign = o.optBoolean("snap_to_align", true),
+                angleSnapDegrees = o.optInt("angle_snap_degrees", 15).let { if (it in listOf(15, 45, 90)) it else 15 },
                 headStart = com.xnotes.core.shapes.Head.fromId(o.optString("head_start", chip.headStart.id)),
                 headEnd = com.xnotes.core.shapes.Head.fromId(o.optString("head_end", chip.headEnd.id)),
                 shapePage = o.optInt("shape_page", com.xnotes.core.shapes.ShapePresets.pageOf(chip)),
