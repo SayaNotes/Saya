@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - feature/sameer-notes-shape-branding
+      - fix/final-polish-nov-2026
 
 permissions:
   contents: read
@@ -41,6 +41,9 @@ jobs:
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
+
+      - name: Run unit tests
+        run: ./gradlew --no-daemon :app:testDebugUnitTest
 
       - name: Build debug APK
         run: |
