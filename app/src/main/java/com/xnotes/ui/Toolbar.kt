@@ -731,11 +731,25 @@ internal fun ToolbarIcon(
                 if (image == null) {
                     Icon(icon, contentDescription = contentDescription, tint = tint, modifier = Modifier.size(bar.icon))
                 } else {
+                    // The toolbar gets its own close crop of the selected pen artwork: show the
+                    // nib and a little neck/body instead of shrinking the entire pen-panel drawing.
                     Box(Modifier.size(bar.icon), contentAlignment = Alignment.Center) {
-                        Image(image, contentDescription = contentDescription, contentScale = ContentScale.Fit, modifier = Modifier.fillMaxSize())
+                        Image(
+                            image,
+                            contentDescription = contentDescription,
+                            contentScale = ContentScale.Crop,
+                            alignment = Alignment.TopCenter,
+                            modifier = Modifier.fillMaxSize(),
+                        )
                         if (nibMask != null) {
-                            Image(nibMask, contentDescription = null, contentScale = ContentScale.Fit,
-                                colorFilter = ColorFilter.tint(nibColor, BlendMode.SrcIn), modifier = Modifier.fillMaxSize())
+                            Image(
+                                nibMask,
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop,
+                                alignment = Alignment.TopCenter,
+                                colorFilter = ColorFilter.tint(nibColor, BlendMode.SrcIn),
+                                modifier = Modifier.fillMaxSize(),
+                            )
                         }
                         if (!stampGlyph.isNullOrBlank()) Text(stampGlyph, fontSize = 9.sp, modifier = Modifier.align(Alignment.TopCenter).offset(y = 1.dp))
                     }
