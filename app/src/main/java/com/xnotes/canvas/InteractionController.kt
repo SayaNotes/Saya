@@ -4658,6 +4658,39 @@ class InteractionController(
     /** The fills of the selected shapes that have one. */
     fun selectionFills(): List<Rgba> = selection.mapNotNull { (it.item as? ShapeItem)?.fillRgba }
 
+    /** Mean opacity of selected existing fills, in percent. */
+    fun selectionFillOpacity(): Float? {
+        val alphas = selection.mapNotNull { (it.item as? ShapeItem)?.fillRgba?.a }
+        return alphas.takeIf { it.isNotEmpty() }?.average()?.div(255.0)?.times(100.0)?.toFloat()
+    }
+
+    /** Set selected fills' opacity, live-previewed and committed as one undoable command. */
+    fun setSelectionFillOpacity(percent: Float, preview: Boolean = false) {
+        val shapes = selection.mapNotNull { (it.item as? ShapeItem)?.takeIf { s -> s.shape.isClosed && !s.isFill && s.fillRgba != null } }
+        if (shapes.isEmpty()) return
+        val baseline = fillOpacityBaseline ?: shapes.associateWith { it.fillRgba }
+        fillOpacityBaseline = if (preview) baseline else null
+        val alpha = (percent.coerceIn(0f, 100f) / 100f * 255f).roundToInt().coerceIn(0, 255)
+        val entries = shapes.mapNotNull { shape ->
+            val before = shape.fillRgba
+            val after = before?.copy(a = alpha)
+            if (before == after) null else com.xnotes.core.history.RefillShapes.Entry(shape, before, after)
+        }
+        if (entries.isEmpty()) return
+        com.xnotes.core.history.RefillShapes(entries).redo()
+        if (!preview) {
+            val committed = baseline.mapNotNull { (shape, before) ->
+                shape.fillRgba.takeIf { it != before }?.let { com.xnotes.core.history.RefillShapes.Entry(shape, before, it) }
+            }
+            if (committed.isNotEmpty()) history.push(com.xnotes.core.history.RefillShapes(committed))
+        }
+        state.document.dirty = true
+        onContentChanged()
+        requestRender()
+    }
+
+    private var fillOpacityBaseline: Map<ShapeItem, Rgba?>? = null
+
     /** Whether any selected closed shape can accept a fill, including shapes not filled yet. */
     fun selectionCanFill(): Boolean = selection.any { selected ->
         (selected.item as? ShapeItem)?.let { it.shape.isClosed && !it.isFill } == true

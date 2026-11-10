@@ -169,6 +169,12 @@ interface SelectionMenuHost : SwatchHost {
     /** The fills of selected shapes that already have one, for the restyle popup to open on. */
     fun selectionFills(): List<Rgba>
 
+    /** Current opacity of the selected fills as a percentage (null when none are filled). */
+    fun selectionFillOpacity(): Float?
+
+    /** Set selected fill opacity live; preview updates are committed together on the final call. */
+    fun setSelectionFillOpacity(percent: Float, preview: Boolean = false)
+
     /** True when the selection contains a closed shape that can be filled, even if it is empty. */
     fun selectionCanFill(): Boolean
 
@@ -837,6 +843,18 @@ private fun SelectionStylePopup(host: SelectionMenuHost, onDismiss: () -> Unit) 
                             onDismiss = dismiss,
                             onPick = pick,
                         )
+                    }
+                }
+                val fillOpacity = host.selectionFillOpacity()
+                if (fillOpacity != null) {
+                    var opacity by remember { mutableStateOf(fillOpacity) }
+                    StyleCaption("Fill opacity · " + opacity.roundToInt() + "%")
+                    SliderRow("Fill opacity", opacity, 0f..100f) { value ->
+                        opacity = value
+                        host.setSelectionFillOpacity(value, preview = true)
+                    }
+                    androidx.compose.runtime.DisposableEffect(Unit) {
+                        onDispose { host.setSelectionFillOpacity(opacity, preview = false) }
                     }
                 }
             }

@@ -821,6 +821,38 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
 
     override fun selectionFills(): List<Rgba> = selection.items.mapNotNull { (it as? ShapeItem)?.fillRgba }
 
+    override fun selectionFillOpacity(): Float? {
+        val alphas = selection.items.mapNotNull { (it as? ShapeItem)?.fillRgba?.a }
+        return alphas.takeIf { it.isNotEmpty() }?.average()?.div(255.0)?.times(100.0)?.toFloat()
+    }
+
+    override fun setSelectionFillOpacity(percent: Float, preview: Boolean) {
+        val shapes = selection.items.mapNotNull { (it as? ShapeItem)?.takeIf { s -> s.fillRgba != null && s.shape.isClosed && !s.isFill } }
+        if (shapes.isEmpty()) return
+        val baseline = fillOpacityBaseline ?: shapes.associateWith { it.fillRgba }
+        fillOpacityBaseline = if (preview) baseline else null
+        val alpha = (percent.coerceIn(0f, 100f) / 100f * 255f).roundToInt().coerceIn(0, 255)
+        val entries = shapes.mapNotNull { shape ->
+            val before = shape.fillRgba
+            val after = before?.copy(a = alpha)
+            if (before == after) null else com.xnotes.core.history.RefillShapes.Entry(shape, before, after)
+        }
+        if (entries.isEmpty()) return
+        com.xnotes.core.history.RefillShapes(entries).redo()
+        document.itemsChanged(shapes)
+        if (!preview) {
+            val committed = baseline.mapNotNull { (shape, before) ->
+                shape.fillRgba.takeIf { it != before }?.let { com.xnotes.core.history.RefillShapes.Entry(shape, before, it) }
+            }
+            if (committed.isNotEmpty()) history.push(OnCanvas(document, com.xnotes.core.history.RefillShapes(committed), committed.map { it.shape }))
+        }
+        markDirty()
+        refresh()
+        publishOverlay()
+    }
+
+    private var fillOpacityBaseline: Map<ShapeItem, Rgba?>? = null
+
     override fun selectionCanFill(): Boolean = selection.items.any { (it as? ShapeItem)?.shape?.isClosed == true }
 
     override fun refillSelection(color: Rgba?, preview: Boolean) {

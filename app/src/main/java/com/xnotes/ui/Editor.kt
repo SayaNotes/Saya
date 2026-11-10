@@ -8118,6 +8118,11 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
 
     override fun selectionFills() = controller.selectionFills()
 
+    override fun selectionFillOpacity() = controller.selectionFillOpacity()
+
+    override fun setSelectionFillOpacity(percent: Float, preview: Boolean) =
+        controller.setSelectionFillOpacity(percent, preview)
+
     override fun selectionCanFill() = controller.selectionCanFill()
 
     override fun selectionTapePattern() = controller.selectionTapePattern()
