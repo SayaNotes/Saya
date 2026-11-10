@@ -175,6 +175,9 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
     var width by remember(tool) { mutableStateOf(base.baseWidth.toFloat()) }
     var stampGlyph by remember(tool) { mutableStateOf(base.stampGlyph) }
     var stampSpacing by remember(tool) { mutableStateOf(base.stampSpacing.toFloat()) }
+    var laserDuration by remember(tool) {
+        mutableStateOf(base.laserDurationMs.takeIf { it in setOf(3000L, 5000L, 15000L) }?.toFloat() ?: 5000f)
+    }
     var glow by remember(tool) { mutableStateOf(base.neon) }
     var glowIntensity by remember(tool) { mutableStateOf(ToolConversions.neonStrengthToIntensity(base.neonStrength).toFloat()) }
     var dashLen by remember(tool) { mutableStateOf(base.dashLength.toFloat()) }
@@ -212,6 +215,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 colorOverride = if (tool == Tool.LASER) Rgba(255, 0, 0, 255) else colorOverride,
                 stampGlyph = if (tool == Tool.STAMP) normalizeStampGlyph(stampGlyph) else base.stampGlyph,
                 stampSpacing = if (tool == Tool.STAMP) stampSpacing.toDouble() else base.stampSpacing,
+                laserDurationMs = if (tool == Tool.LASER) laserDuration.toLong() else base.laserDurationMs,
             ),
         )
     }
@@ -435,6 +439,24 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 }
                 if (tool == Tool.CALLIGRAPHY) SliderRow(stringResource(R.string.caption_multiplier), multiplier, 1f..5f) { multiplier = it; emit() }
                 if (tool == Tool.TAPER) SliderRow(stringResource(R.string.caption_tip_width), taperTip, 0f..100f) { taperTip = it; emit() }
+                if (tool == Tool.LASER) {
+                    StyleCaption("Visible duration")
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        listOf(3000L, 5000L, 15000L).forEach { milliseconds ->
+                            ModeChip(
+                                "${milliseconds / 1000L} sec",
+                                selected = laserDuration.toLong() == milliseconds,
+                            ) {
+                                laserDuration = milliseconds.toFloat()
+                                emit()
+                            }
+                        }
+                    }
+                }
                 if (tool != Tool.LASER) ToggleRow(stringResource(R.string.caption_scale), scale) { scale = it; emit() }
                 if (tool == Tool.DASHED) {
                     SliderRow(stringResource(R.string.caption_dash), dashLen, 2f..40f) { dashLen = it; emit() }

@@ -216,7 +216,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
                 ),
                 ToolbarSection(
                     listOf(
-                        ToolbarItem.SELECT, ToolbarItem.PEN, ToolbarItem.ERASER, ToolbarItem.SHAPE,
+                        ToolbarItem.LASSO, ToolbarItem.SELECT, ToolbarItem.PEN, ToolbarItem.ERASER, ToolbarItem.SHAPE,
                         ToolbarItem.PAN, ToolbarItem.UNDO, ToolbarItem.REDO,
                         ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.STAMP, ToolbarItem.HIGHLIGHTER,
                         ToolbarItem.WAND, ToolbarItem.TAPE, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY,
