@@ -55,8 +55,11 @@ internal object ShapeAlignment {
         val yEdge = bestDragMatch(start.y, end.y, targets, tolerance, vertical = false)
         val xSize = if (matchDimensions) bestDimensionMatch(start.x, end.x, targets, tolerance, vertical = true) else null
         val ySize = if (matchDimensions) bestDimensionMatch(start.y, end.y, targets, tolerance, vertical = false) else null
-        val x = closerMatch(xEdge, xSize)
-        val y = closerMatch(yEdge, ySize)
+        // While resizing, matching the opposite rectangle's extent is the primary intent.
+        // Prefer a width/height match over a coincident edge/centre so the box can truly be
+        // resized to the same dimensions, even when the two rectangles are offset.
+        val x = if (matchDimensions && xSize != null) xSize else xEdge
+        val y = if (matchDimensions && ySize != null) ySize else yEdge
         val snappedEnd = Pt(end.x + (x?.delta ?: 0.0), end.y + (y?.delta ?: 0.0))
         val placed = Rect.fromPoints(start, snappedEnd)
         val guides = guidesFor(placed, targets).toMutableList()
