@@ -56,6 +56,30 @@ class HistoryTest {
         assertEquals(Rgba(1, 2, 3, 42), shape.fillRgba)
     }
 
+    @Test fun repeatedFillColourEditsRemainIndependentAndUndoInOrder() {
+        val outline = Rgba(20, 30, 40, 255)
+        val originalFill = Rgba(1, 2, 3, 48)
+        val shape = ShapeItem(
+            ShapeKind.RECTANGLE, Pt(0.0, 0.0), Pt(20.0, 20.0),
+            outline, 3.0, originalFill,
+        )
+        val first = RefillShapes(RefillShapes.of(listOf(shape), Rgba(200, 20, 30, 255)))
+        first.redo()
+        assertEquals(Rgba(200, 20, 30, 48), shape.fillRgba)
+        assertEquals(outline, shape.strokeRgba)
+
+        val second = RefillShapes(RefillShapes.of(listOf(shape), Rgba(20, 180, 80, 255)))
+        second.redo()
+        assertEquals(Rgba(20, 180, 80, 48), shape.fillRgba)
+        assertEquals(outline, shape.strokeRgba)
+
+        second.undo()
+        assertEquals(Rgba(200, 20, 30, 48), shape.fillRgba)
+        first.undo()
+        assertEquals(originalFill, shape.fillRgba)
+        assertEquals(outline, shape.strokeRgba)
+    }
+
     @Test fun addItemUndoRedo() {
         val page = Page(100.0, 100.0)
         val s = strokeAt(1.0)
