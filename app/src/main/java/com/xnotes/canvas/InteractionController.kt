@@ -1152,7 +1152,7 @@ class InteractionController(
         val heldNow = stylusButtons.heldFor(e)
         val vx = e.getX(idx).toDouble()
         val vy = e.getY(idx).toDouble()
-        if (heldNow && !sideButtonEraseActive && mode == PointerMode.DRAW && tool.isStroke) {
+        if (heldNow && !sideButtonEraseActive && mode == PointerMode.DRAW && isHoldErasePen(tool)) {
             sideButtonEraseActive = true
             sideButtonResumeTool = tool
             tapCandidate = false
