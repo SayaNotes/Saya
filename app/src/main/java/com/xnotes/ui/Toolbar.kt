@@ -75,6 +75,7 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
@@ -433,7 +434,7 @@ private fun ToolButton(
     val image = imageRes?.let { bitmapPainterResource(it) }
     // Use the same safe mask decoder as the pen panel. It also normalizes the taper PNG
     // into an alpha silhouette, keeping the toolbar nib preview in sync with the selected ink.
-    val nibMask = nibMaskRes?.let { bitmapPainterResource(it) }
+    val nibMask = nibMaskRes?.let { bitmapPainterResource(it) ?: painterResource(it) }
     val nibColor = editor.toolConfig(displayTool).colorOverride?.toComposeColor()
         ?: editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor()
         ?: androidx.compose.ui.graphics.Color.Black
