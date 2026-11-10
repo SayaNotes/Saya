@@ -63,6 +63,10 @@ fun InfiniteToolbar(
     val laserIcon = ImageVector.vectorResource(R.drawable.ic_laser_pen)
     val stampIcon = ImageVector.vectorResource(R.drawable.ic_stamp_pen)
     val highlighterIcon = ImageVector.vectorResource(R.drawable.ic_stroke_highlighter)
+    val ballpointToolbarNib = ImageVector.vectorResource(R.drawable.ic_toolbar_ballpoint_up)
+    val calligraphyToolbarNib = ImageVector.vectorResource(R.drawable.ic_toolbar_calligraphy_up)
+    val taperToolbarNib = ImageVector.vectorResource(R.drawable.ic_toolbar_taper_up)
+    val highlighterToolbarNib = ImageVector.vectorResource(R.drawable.ic_toolbar_highlighter_up)
     val toolIcons: Map<Tool, ImageVector> = remember(
         penIcon, dashedIcon, calligraphyIcon, taperIcon, laserIcon, stampIcon, highlighterIcon,
     ) {
@@ -115,22 +119,21 @@ fun InfiniteToolbar(
                                 val selectionModeActive = tool == Tool.SELECT && editor.tool == Tool.LASSO
                                 val armed = if (editor.tool.isPenPanelStyle && tool.isStroke) tool == Tool.TAPER else editor.tool == tool || selectionModeActive
                                 val configurable = tool.isStroke || tool == Tool.ERASER || tool == Tool.SHAPE || tool == Tool.SELECT || tool == Tool.TAPE
+                                // Match the supplied toolbar reference: the toolbar shows the
+                                // compact tool glyphs, not the full pen illustrations used in settings.
+                                val toolbarNib = when (displayTool) {
+                                    Tool.PEN -> ballpointToolbarNib
+                                    Tool.CALLIGRAPHY -> calligraphyToolbarNib
+                                    Tool.TAPER -> taperToolbarNib
+                                    Tool.HIGHLIGHTER -> highlighterToolbarNib
+                                    else -> null
+                                }
                                 val imageRes = when (displayTool) {
-                                    Tool.PEN -> R.drawable.pen_tool_pen
-                                    Tool.CALLIGRAPHY -> R.drawable.pen_tool_calligraphy
-                                    Tool.HIGHLIGHTER -> R.drawable.pen_tool_highlighter
-                                    Tool.TAPER -> R.drawable.pen_tool_taper
                                     Tool.LASER -> R.drawable.pen_tool_laser
                                     Tool.STAMP -> R.drawable.pen_tool_stamp
                                     else -> null
                                 }
-                                val nibMaskRes = when (displayTool) {
-                                    Tool.PEN -> R.drawable.pen_nib_mask
-                                    Tool.CALLIGRAPHY -> R.drawable.calligraphy_nib_mask
-                                    Tool.HIGHLIGHTER -> R.drawable.highlighter_nib_mask
-                                    Tool.TAPER -> R.drawable.taper_nib_mask
-                                    else -> null
-                                }
+                                val nibMaskRes = null
                                 val image = imageRes?.let { painterResource(it) }
                                 val nibMask = nibMaskRes?.let { bitmapPainterResource(it) ?: painterResource(it) }
                                 val nibColor = editor.toolConfig(displayTool).colorOverride?.toComposeColor()
@@ -146,6 +149,7 @@ fun InfiniteToolbar(
                                     image = image,
                                     nibMask = nibMask,
                                     nibColor = nibColor,
+                                    toolbarNib = toolbarNib,
                                     stampGlyph = stampGlyph,
                                 ) {
                                     when {
