@@ -2962,7 +2962,16 @@ class InteractionController(
                     val gridSnap = gridSpacing?.let {
                         ShapeAlignment.snapGrid(anchor, objectSnap.end, it, tolerance, matchDimensions = true)
                     }
-                    val snapped = gridSnap?.end ?: objectSnap.end
+                    // Side handles move on one axis only. Ignore orthogonal matches from the
+                    // zero-length axis so a guide cannot appear without a corresponding resize.
+                    val horizontalSide = handle == HandleId.L || handle == HandleId.R
+                    val verticalSide = handle == HandleId.T || handle == HandleId.B
+                    val rawSnapped = gridSnap?.end ?: objectSnap.end
+                    val snapped = when {
+                        horizontalSide -> Pt(rawSnapped.x, moving.y)
+                        verticalSide -> Pt(moving.x, rawSnapped.y)
+                        else -> rawSnapped
+                    }
                     if (snapped != moving) {
                         val (start, end) = when (handle) {
                             HandleId.L -> Pt(snapped.x, bounds.top) to Pt(bounds.right, bounds.bottom)
@@ -2977,7 +2986,12 @@ class InteractionController(
                         }
                         shape.setGeometry(ShapeHandle(start, end))
                     }
-                    alignmentGuides = (objectSnap.guides + gridSnap?.guides.orEmpty()).distinct()
+                    val guides = objectSnap.guides + gridSnap?.guides.orEmpty()
+                    alignmentGuides = when {
+                        horizontalSide -> guides.filter { it.vertical }
+                        verticalSide -> guides.filterNot { it.vertical }
+                        else -> guides
+                    }.distinct()
                     alignmentGuidePageIndex = selected.pageIndex.takeIf { alignmentGuides.isNotEmpty() }
                 }
             }
