@@ -794,7 +794,7 @@ private fun ColumnOrRowPenTray(maxWidth: Dp, buttons: @Composable () -> Unit) {
         .clip(RoundedCornerShape(16.dp))
         .background(LocalPalette.current.surface.toComposeColor())
         .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(16.dp))
-        .padding(horizontal = 6.dp, vertical = 7.dp)
+        .padding(horizontal = 6.dp).padding(top = 7.dp, bottom = 0.dp)
     if (maxWidth < 300.dp) {
         FlowRow(
             modifier = trayModifier,
@@ -846,16 +846,11 @@ private fun ToolModeButton(
             .background(if (selected) palette.selectionBackground.toComposeColor() else Color.Transparent)
             .border(1.dp, if (selected) palette.accent.toComposeColor() else Color.Transparent, RoundedCornerShape(9.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 2.dp, vertical = 5.dp),
+            .padding(start = 2.dp, end = 2.dp, top = 5.dp, bottom = 0.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        val lift by animateDpAsState(
-            targetValue = if (selected) (-5).dp else 0.dp,
-            animationSpec = tween(160),
-            label = "penSelectedLift",
-        )
         Box(
-            Modifier.size(40.dp, 66.dp).offset(y = lift),
+            Modifier.size(40.dp, 66.dp),
             contentAlignment = Alignment.Center,
         ) {
             if (artPainter != null) {
