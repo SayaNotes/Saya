@@ -127,7 +127,6 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         onCommitShape = { commitItem(it) },
         shapeConfig = { shapeConfig },
         inkColor = { inkColor },
-        detectShapes = { false },
         selection = { selection },
         itemsIn = { rect -> document.itemsIn(rect) },
         onSelectionChanged = { publishOverlay() },
@@ -165,7 +164,6 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         private set
 
     /** Whether a held freehand stroke may snap to the shape it looks like. */
-    // Hand-drawn shape recognition was removed; keep restored preference data inert.
 
     /** Live zoom, mirrored into Compose so a readout can follow a pinch frame by frame. */
     var zoomPercent by mutableStateOf(100)
