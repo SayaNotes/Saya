@@ -181,7 +181,6 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
     var inverse by remember(tool) { mutableStateOf(base.highlighterInverse) }
     var colorOverride by remember(tool) { mutableStateOf(base.colorOverride) }
     var editingPaletteColor by remember(tool) { mutableStateOf<Int?>(null) }
-    var snapShapes by remember(tool) { mutableStateOf(editor.snapHeldToShapes) }
     var advancedExpanded by remember(tool) { mutableStateOf(false) }
 
     fun emit() {
@@ -430,9 +429,6 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 if (tool == Tool.CALLIGRAPHY) SliderRow(stringResource(R.string.caption_multiplier), multiplier, 1f..5f) { multiplier = it; emit() }
                 if (tool == Tool.TAPER) SliderRow(stringResource(R.string.caption_tip_width), taperTip, 0f..100f) { taperTip = it; emit() }
                 if (tool != Tool.LASER) ToggleRow(stringResource(R.string.caption_scale), scale) { scale = it; emit() }
-                if (tool.isStroke && tool != Tool.HIGHLIGHTER && tool != Tool.LASER) {
-                    ToggleRow(stringResource(R.string.caption_snap_to_shapes), snapShapes) { snapShapes = it; editor.snapHeldToShapes = it }
-                }
                 if (tool == Tool.DASHED) {
                     SliderRow(stringResource(R.string.caption_dash), dashLen, 2f..40f) { dashLen = it; emit() }
                     SliderRow(stringResource(R.string.caption_gap), gapLen, 2f..40f) { gapLen = it; emit() }
