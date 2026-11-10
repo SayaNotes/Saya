@@ -1005,7 +1005,7 @@ class InteractionController(
             effectiveTool.isStroke -> {
                 beginDraw(content, resolvePressure(e, 0, toolType), effectiveTool, e.eventTime, Pt(vx, vy))
                 // Hold the stylus still briefly to erase without changing the selected pen.
-                if (drawingIsStylus && !buttonHeld && effectiveTool == tool && tool.isStroke && liveStroke != null) {
+                if (drawingIsStylus && !buttonHeld && effectiveTool == tool && isHoldErasePen(tool) && liveStroke != null) {
                     armTemporaryEraser(Pt(vx, vy))
                 }
             }
@@ -4134,12 +4134,15 @@ class InteractionController(
      * The unfinished stroke is only a preview, so discard it before beginning the erase;
      * the erase then follows the same pointer gesture and commits as one undo step on lift.
      */
+    private fun isHoldErasePen(candidate: Tool): Boolean =
+        candidate == Tool.PEN || candidate == Tool.CALLIGRAPHY || candidate == Tool.TAPER
+
     private fun armTemporaryEraser(down: Pt) {
         cancelTemporaryEraser()
         temporaryEraserDown = down
         val task = Runnable {
             temporaryEraserRunnable = null
-            if (mode != PointerMode.DRAW || !drawingIsStylus || liveStroke == null || !tool.isStroke) return@Runnable
+            if (mode != PointerMode.DRAW || !drawingIsStylus || liveStroke == null || !isHoldErasePen(tool)) return@Runnable
             cancelDwell()
             dwellEligible = false
             liveStroke = null
