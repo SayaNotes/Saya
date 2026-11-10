@@ -341,13 +341,21 @@ object ItemMesher {
     }
 
     private fun meshShape(shape: ShapeItem, tolerance: Double, measurer: TextMeasurer?): MeshedItem? {
+        val angleParts = ShapeTessellator.angleParts(shape, measurer, tolerance)
         val parts = ShapeTessellator.tessellate(shape, tolerance) +
-            listOfNotNull(ShapeTessellator.labelPart(shape)) +
-            ShapeTessellator.angleParts(shape, measurer, tolerance)
+            listOfNotNull(ShapeTessellator.labelPart(shape)) + angleParts
         if (parts.isEmpty()) return null
+        // Degree glyphs at reflex corners can sit just outside the outline's own bounds. Include
+        // their actual mesh extents so spatial culling never drops a visible annotation.
+        val annotationBounds = angleParts.flatMap { part ->
+            part.mesh.positions.asList().chunked(2).mapNotNull { xy ->
+                if (xy.size < 2) null else Pt(xy[0], xy[1])
+            }
+        }.takeIf { it.isNotEmpty() }?.let(Rect::bounding)
+        val bounds = annotationBounds?.let { shape.paintBounds().union(it) } ?: shape.paintBounds()
         // Drawn text has no line to fade when it thins out on screen.
         val half = if (shape.shape == com.xnotes.core.shapes.ShapeKind.GLYPHS) 0.0 else shape.strokeWidth / 2.0
-        return MeshedItem(parts, shape.paintBounds(), half)
+        return MeshedItem(parts, bounds, half)
     }
 
     private fun meshConnector(connector: ConnectorItem, tolerance: Double): MeshedItem? {
