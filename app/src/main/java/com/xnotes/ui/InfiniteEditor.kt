@@ -1156,11 +1156,8 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
     }
 
     override var snapHeldToShapes: Boolean
-        get() = detectShapes
+        get() = false
         set(v) { /* Removed feature: no-op for restored legacy settings. */ }
-
-    /** Fired when the snap-to-shapes toggle changed here, so the host can persist it. */
-    var onDetectShapesChanged: ((Boolean) -> Unit)? = null
 
     override val hostShapeConfig: ShapeConfig get() = shapeConfig
 
