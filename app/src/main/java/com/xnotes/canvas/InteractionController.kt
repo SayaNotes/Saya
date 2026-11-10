@@ -2425,25 +2425,52 @@ class InteractionController(
         val handle = resizeHandle ?: return
         if (state.pageRects.getOrNull(resizePageIndex) == null) return
         val local = state.toPageSpace(resizePageIndex, content)
+        val resizePage = state.document.pages.getOrNull(resizePageIndex)
+        val resizeTargets = resizePage?.items?.filterIsInstance<ShapeItem>()
+            ?.filterNot { it === item }?.map { it.bounds() }.orEmpty()
+        fun snappedPoint(anchor: Pt, moving: Pt): Pt {
+            val result = ShapeAlignment.snapDrag(anchor, moving, resizeTargets, alignmentTolerance())
+            alignmentGuides = result.guides
+            alignmentGuidePageIndex = resizePageIndex.takeIf { result.guides.isNotEmpty() }
+            return result.end
+        }
         when (item) {
-            is ImageItem -> item.setGeometry(RectHandle(ResizeMath.resizeImage(item.rect, handle, local)))
+            is ImageItem -> {
+                alignmentGuides = emptyList()
+                alignmentGuidePageIndex = null
+                item.setGeometry(RectHandle(ResizeMath.resizeImage(item.rect, handle, local)))
+            }
             is TextItem -> {
+                alignmentGuides = emptyList()
+                alignmentGuidePageIndex = null
                 // Resize against the displayed bounds (grown-to-fit height) so handles track the box.
                 val (pos, w, h) = ResizeMath.resizeText(item.pos, item.width, item.bounds().h, handle, local)
                 item.setGeometry(TextHandle(pos, w, h))
             }
             is TapeItem -> {
                 val s = item.shape
-                val (a, b) = ResizeMath.resizeOpenShape(s.points[0], s.points[1], handle, local)
+                val fixed = if (handle == HandleId.START) s.points[1] else s.points[0]
+                val moving = snappedPoint(fixed, local)
+                val (a, b) = ResizeMath.resizeOpenShape(s.points[0], s.points[1], handle, moving)
                 // The end being dragged snaps level or upright against the one held still, as when laid.
                 val ends = if (handle == HandleId.START) listOf(TapeGeometry.snap(b, a), b) else listOf(a, TapeGeometry.snap(a, b))
                 item.setGeometry(TapeHandle(s.copy(points = ends)))
             }
             is ShapeItem -> {
+                val bounds = Rect.fromPoints(item.start, item.end)
+                val anchor = if (item.shape.isEndpointShape) {
+                    if (handle == HandleId.START) item.end else item.start
+                } else when (handle) {
+                    HandleId.TL -> Pt(bounds.right, bounds.bottom)
+                    HandleId.TR -> Pt(bounds.left, bounds.bottom)
+                    HandleId.BL -> Pt(bounds.right, bounds.top)
+                    else -> Pt(bounds.left, bounds.top)
+                }
+                val snapped = snappedPoint(anchor, local)
                 val (s, en) = when {
-                    item.shape.isEndpointShape -> ResizeMath.resizeOpenShape(item.start, item.end, handle, local)
-                    item.shape.keepsAspect -> ResizeMath.resizeSquareShape(item.start, item.end, handle, local)
-                    else -> ResizeMath.resizeClosedShape(item.start, item.end, handle, local)
+                    item.shape.isEndpointShape -> ResizeMath.resizeOpenShape(item.start, item.end, handle, snapped)
+                    item.shape.keepsAspect -> ResizeMath.resizeSquareShape(item.start, item.end, handle, snapped)
+                    else -> ResizeMath.resizeClosedShape(item.start, item.end, handle, snapped)
                 }
                 item.setGeometry(ShapeHandle(s, en))
             }
