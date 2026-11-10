@@ -69,6 +69,7 @@ import com.xnotes.core.vector.VectorMesher
 import com.xnotes.gl.CanvasScene
 import com.xnotes.gl.InfiniteCanvasView
 import com.xnotes.ui.theme.Palette
+import kotlin.math.roundToInt
 
 /**
  * The infinite canvas's orchestrator, mirroring [Editor]'s role for the paged notebook: it owns the
