@@ -1,5 +1,7 @@
 package com.xnotes.ui
 
+import androidx.compose.animation.Crossfade
+
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
@@ -152,11 +154,13 @@ fun SidePanel(
             SegIcon(XnotesIcons.search, stringResource(R.string.search), tab == SidePanelTab.SEARCH, shortcut = Keys.SEARCH) { editor.sidePanelTab = SidePanelTab.SEARCH }
         }
         Box(Modifier.fillMaxWidth().weight(1f)) {
-            when (tab) {
-                SidePanelTab.PAGES -> PagesTab(editor, onSharePages, onSavePagesAsPdf, onSavePagesAsImages, onInsertPages) { pickingCover = true }
-                SidePanelTab.CONTENTS -> ContentsTab(editor)
-                SidePanelTab.BOOKMARKS -> BookmarksTab(editor)
-                SidePanelTab.SEARCH -> SearchTab(editor)
+            Crossfade(targetState = tab, animationSpec = tween(140), label = "side-panel-tab") { targetTab ->
+                when (targetTab) {
+                    SidePanelTab.PAGES -> PagesTab(editor, onSharePages, onSavePagesAsPdf, onSavePagesAsImages, onInsertPages) { pickingCover = true }
+                    SidePanelTab.CONTENTS -> ContentsTab(editor)
+                    SidePanelTab.BOOKMARKS -> BookmarksTab(editor)
+                    SidePanelTab.SEARCH -> SearchTab(editor)
+                }
             }
         }
         if (tab == SidePanelTab.PAGES && editor.inPageSelectionMode) {
