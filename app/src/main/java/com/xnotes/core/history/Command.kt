@@ -322,10 +322,13 @@ class RefillShapes(private val entries: List<Entry>) : Command {
     companion object {
         /** The entries that recolour [shapes]' fills in [color] (null: each in its outline's, which a dropped colour has none of), unchanged ones left out. */
         fun of(shapes: List<ShapeItem>, color: Rgba?): List<Entry> = shapes.mapNotNull { s ->
-            val f = s.fillRgba ?: return@mapNotNull null
-            if (color == null && s.isFill) return@mapNotNull null
-            val next = (color ?: s.strokeRgba).copy(a = f.a)
-            if (next == f) null else Entry(s, f, next)
+            if (!s.shape.isClosed || s.isFill) return@mapNotNull null
+            val before = s.fillRgba
+            // An unfilled shape starts with the same subtle 25% opacity as a newly drawn fill.
+            // Existing fills retain their individual alpha when only their colour is changed.
+            val alpha = before?.a ?: (((color?.a ?: 255) * 0.25).toInt().coerceIn(1, 255))
+            val next = (color ?: s.strokeRgba).copy(a = alpha)
+            if (next == before) null else Entry(s, before, next)
         }
     }
 }
