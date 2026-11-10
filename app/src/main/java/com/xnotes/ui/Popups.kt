@@ -270,9 +270,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
 
                     // Light, inset pen tray echoes the original X Notes illustrated selector.
                     // On a narrow phone, wrap to two rows rather than clipping the six tools.
-                    var penTrayWidth by remember { mutableStateOf(0.dp) }
-                    val trayDensity = LocalDensity.current
-                    Box(Modifier.fillMaxWidth().onSizeChanged { penTrayWidth = with(trayDensity) { it.width.toDp() } }) {
+                    BoxWithConstraints(Modifier.fillMaxWidth()) {
                         val buttons: @Composable () -> Unit = {
                             penTools.forEach { candidate ->
                                 ToolModeButton(
@@ -284,7 +282,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                                 ) { onSelectTool(candidate) }
                             }
                         }
-                        ColumnOrRowPenTray(penTrayWidth, buttons)
+                        ColumnOrRowPenTray(maxWidth, buttons)
                     }
                 }
 
