@@ -4514,6 +4514,11 @@ class InteractionController(
     /** The fills of the selected shapes that have one. */
     fun selectionFills(): List<Rgba> = selection.mapNotNull { (it.item as? ShapeItem)?.fillRgba }
 
+    /** Whether any selected closed shape can accept a fill, including shapes not filled yet. */
+    fun selectionCanFill(): Boolean = selection.any { selected ->
+        (selected.item as? ShapeItem)?.let { it.shape.isClosed && !it.isFill } == true
+    }
+
     /** The first selected tape's pattern, or null when no tape is selected. */
     fun selectionTapePattern(): TapePattern? = selection.firstNotNullOfOrNull { (it.item as? TapeItem)?.pattern }
 
@@ -4531,7 +4536,7 @@ class InteractionController(
 
     /** Recolour the selected shapes' fills in [color], each keeping its opacity; null matches each outline. */
     fun refillSelection(color: Rgba?, preview: Boolean = false) {
-        val shapes = selection.mapNotNull { (it.item as? ShapeItem)?.takeIf { s -> s.fillRgba != null } }
+        val shapes = selection.mapNotNull { (it.item as? ShapeItem)?.takeIf { s -> s.shape.isClosed && !s.isFill } }
         if (shapes.isEmpty()) return
         val baseline = refillBaseline ?: shapes.associateWith { it.fillRgba }
         refillBaseline = if (preview) baseline else null
