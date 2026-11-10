@@ -298,10 +298,11 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                         horizontalArrangement = Arrangement.spacedBy(0.dp),
                         verticalAlignment = Alignment.Bottom,
                     ) {
-                        penTools.forEach { candidate ->
+                        penTools.forEachIndexed { index, candidate ->
                             ToolModeButton(
                                 candidate,
                                 selected = candidate == tool,
+                                modifier = if (index == 0) Modifier.offset(x = (-4).dp) else Modifier,
                                 stampGlyph = if (candidate == Tool.STAMP) editor.toolConfig(Tool.STAMP).stampGlyph else null,
                                 nibColor = editor.toolConfig(candidate).colorOverride?.toComposeColor()
                                     ?: (editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor() ?: Color.Black),
@@ -864,6 +865,7 @@ private fun ToolModeButton(
     selected: Boolean,
     stampGlyph: String? = null,
     nibColor: Color = Color.Black,
+    modifier: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     val palette = LocalPalette.current
@@ -891,7 +893,7 @@ private fun ToolModeButton(
     // only omit the preview mask; the tool button itself must remain usable.
     val nibPainter = if (nibMask != 0) bitmapPainterResource(nibMask) else null
     Column(
-        modifier = Modifier
+        modifier = modifier
             .shadow(if (selected) 8.dp else 0.dp, RoundedCornerShape(9.dp))
             .clip(RoundedCornerShape(9.dp))
             .background(if (selected) palette.selectionBackground.toComposeColor() else Color.Transparent)
