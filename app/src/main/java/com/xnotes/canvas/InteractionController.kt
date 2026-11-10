@@ -5518,7 +5518,7 @@ class InteractionController(
             if (alignmentGuides.isNotEmpty()) {
                 alignmentGuidePageIndex?.let { pageIndex ->
                     paintClippedToPage(r, pageIndex) {
-                        val guidePen = chromePen(1.2)
+                        val guidePen = chromePen(1.2).copy(dashed = true, dashOn = 6.0, dashGap = 4.0)
                         for (guide in alignmentGuides) {
                             val line = if (guide.vertical) {
                                 listOf(Pt(guide.coordinate, guide.from), Pt(guide.coordinate, guide.to))
