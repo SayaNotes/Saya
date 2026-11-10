@@ -59,6 +59,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -770,13 +771,14 @@ private fun ToolModeButton(
     val artPainter = if (art != 0) bitmapPainterResource(art) else null
     val nibPainter = if (nibMask != 0) bitmapPainterResource(nibMask) else null
     Column(
-        modifier = Modifier.clip(RoundedCornerShape(9.dp))
+        modifier = Modifier
+            .shadow(if (selected) 8.dp else 0.dp, RoundedCornerShape(9.dp))
+            .clip(RoundedCornerShape(9.dp))
             .background(if (selected) palette.selectionBackground.toComposeColor() else Color.Transparent)
             .border(1.dp, if (selected) palette.accent.toComposeColor() else Color.Transparent, RoundedCornerShape(9.dp))
             .clickable(onClick = onClick)
-            .padding(horizontal = 2.dp, vertical = 6.dp),
+            .padding(horizontal = 2.dp, vertical = 5.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(3.dp),
     ) {
         val lift by animateDpAsState(
             targetValue = if (selected) (-5).dp else 0.dp,
@@ -784,7 +786,7 @@ private fun ToolModeButton(
             label = "penSelectedLift",
         )
         Box(
-            Modifier.size(32.dp, 56.dp).offset(y = lift),
+            Modifier.size(40.dp, 66.dp).offset(y = lift),
             contentAlignment = Alignment.Center,
         ) {
             if (artPainter != null) {
@@ -792,7 +794,7 @@ private fun ToolModeButton(
                     artPainter,
                     contentDescription = label,
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxWidth().height(56.dp),
+                    modifier = Modifier.fillMaxSize(),
                 )
                 if (nibPainter != null) {
                     Image(
@@ -803,7 +805,7 @@ private fun ToolModeButton(
                             nibColor,
                             androidx.compose.ui.graphics.BlendMode.SrcIn,
                         ),
-                        modifier = Modifier.fillMaxWidth().height(56.dp),
+                        modifier = Modifier.fillMaxSize(),
                     )
                 }
             }
@@ -815,7 +817,6 @@ private fun ToolModeButton(
                 )
             }
         }
-        Text(label, color = if (selected) palette.selectionForeground.toComposeColor() else palette.text.toComposeColor(), fontSize = 8.sp, maxLines = 1, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis, modifier = Modifier.widthIn(max = 38.dp))
     }
 }/**
  * Page-styles popup (spec 10): two tabs, "All Pages" (the document-wide override) and "Current
