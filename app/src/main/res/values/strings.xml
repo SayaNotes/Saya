@@ -79,7 +79,6 @@
     <string name="caption_tip_width">Tip width percentage</string>
     <string name="caption_width">Width</string>
     <string name="caption_scale">Scale</string>
-    <string name="caption_snap_to_shapes">Snap to shapes</string>
     <string name="caption_select_whole_items">Only fully enclosed items</string>
     <string name="caption_dash">Dash</string>
     <string name="caption_gap">Gap</string>
@@ -405,7 +404,6 @@
     <string name="pan_single">Single-finger pan</string>
     <string name="pan_two">Two-finger pan</string>
     <string name="pan_none">No pan</string>
-    <string name="pref_detect_shapes">Snap held strokes to shapes (hold the pen still)</string>
     <string name="pref_pen_button_hold">Stylus/Pen side button (hold)</string>
     <string name="pref_pen_button_hover">Activate during hover (no need to touch the screen)</string>
     <string name="pref_two_finger_tap">Two-finger tap</string>
