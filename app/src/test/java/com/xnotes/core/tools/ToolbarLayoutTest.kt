@@ -25,7 +25,7 @@ class ToolbarLayoutTest {
         )
         assertEquals(
             listOf(
-                ToolbarItem.SELECT, ToolbarItem.PEN, ToolbarItem.ERASER, ToolbarItem.SHAPE,
+                ToolbarItem.LASSO, ToolbarItem.PEN, ToolbarItem.ERASER, ToolbarItem.SHAPE,
                 ToolbarItem.PAN, ToolbarItem.UNDO, ToolbarItem.REDO,
             ),
             d.sections[1].visibleEntries.map { it.item },
@@ -240,6 +240,7 @@ class ToolbarLayoutTest {
             ToolbarLayout.CANVAS_DEFAULT,
         )
         assertEquals(ToolbarLayout.CANVAS_ITEMS, back.items().toSet())
+        assertTrue(back.sections.flatMap { it.entries }.single { it.item == ToolbarItem.SELECT }.visible)
     }
 
     @Test fun aCanvasLayoutStoredBeforeAnItemExistedGrowsIt() {
@@ -275,17 +276,23 @@ class ToolbarLayoutTest {
         assertTrue(ToolbarItem.TAPE in ToolbarLayout.CANVAS_ITEMS)
     }
 
-    @Test fun insertSpaceSlotsAfterSelectAndLegacyLassoIsDropped() {
-        val note = ToolbarLayout.fromRaw(listOf(listOf("pan" to true, "select" to true, "screenshot" to true)))
-        val items = note.items()
-        assertEquals(items.indexOf(ToolbarItem.SELECT) + 1, items.indexOf(ToolbarItem.INSERT_SPACE))
-        val legacy = ToolbarLayout.fromRaw(listOf(listOf("pan" to true, "lasso" to true, "screenshot" to true)))
-        assertTrue(ToolbarItem.LASSO !in legacy.items())
-        assertTrue(ToolbarItem.LASSO !in ToolbarLayout.NOTE_ITEMS)
+    @Test fun lassoIsTheNoteSelectionSlotAndOldSelectLayoutsMigrate() {
+        val oldNote = ToolbarLayout.fromRaw(listOf(listOf("pan" to true, "select" to true, "screenshot" to true)))
+        val noteItems = oldNote.items()
+        assertEquals(noteItems.indexOf(ToolbarItem.LASSO) + 1, noteItems.indexOf(ToolbarItem.INSERT_SPACE))
+        assertTrue(oldNote.sections.flatMap { it.entries }.single { it.item == ToolbarItem.LASSO }.visible)
+        assertFalse(oldNote.sections.flatMap { it.entries }.single { it.item == ToolbarItem.SELECT }.visible)
+        assertTrue(ToolbarItem.LASSO in ToolbarLayout.NOTE_ITEMS)
+
+        val noteWithLasso = ToolbarLayout.fromRaw(listOf(listOf("pan" to true, "lasso" to true, "screenshot" to true)))
+        assertTrue(ToolbarItem.LASSO in noteWithLasso.items())
+        assertFalse(noteWithLasso.sections.flatMap { it.entries }.single { it.item == ToolbarItem.SELECT }.visible)
+
         assertTrue(ToolbarItem.INSERT_SPACE !in ToolbarLayout.CANVAS_ITEMS)
         assertTrue(ToolbarItem.INSERT_SPACE !in ToolbarLayout.CANVAS_DEFAULT.items())
         val canvas = ToolbarLayout.fromRaw(listOf(listOf("lasso" to true, "insert_space" to true)), ToolbarLayout.CANVAS_ITEMS, ToolbarLayout.CANVAS_DEFAULT)
         assertTrue(ToolbarItem.LASSO !in canvas.items())
+        assertTrue(ToolbarItem.SELECT in canvas.items())
         assertTrue(ToolbarItem.INSERT_SPACE !in canvas.items())
     }
 }

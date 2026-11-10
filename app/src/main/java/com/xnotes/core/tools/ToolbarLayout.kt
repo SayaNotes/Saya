@@ -136,24 +136,35 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
         for (item in ToolbarItem.entries) {
             if (item !in among) continue
             if (layout.sections.any { s -> s.entries.any { it.item == item } }) continue
-            layout = layout.insertMissing(item)
+            layout = layout.insertMissing(item, among)
         }
         return layout
     }
 
-    private fun insertMissing(item: ToolbarItem): ToolbarLayout {
+    private fun insertMissing(item: ToolbarItem, among: Set<ToolbarItem>): ToolbarLayout {
         val anchor = INSERT_AFTER[item]
         if (anchor != null) {
             sections.forEachIndexed { si, sec ->
                 val i = sec.entries.indexOfFirst { it.item == anchor }
                 if (i >= 0) {
-                    val entries = sec.entries.toMutableList().also { it.add(i + 1, ToolbarEntry(item)) }
+                    val visible = !(item == ToolbarItem.SELECT && ToolbarItem.LASSO in among)
+                    val entries = sec.entries.toMutableList().also { it.add(i + 1, ToolbarEntry(item, visible)) }
+                    return copy(sections = sections.toMutableList().also { it[si] = sec.copy(entries = entries) })
+                }
+            }
+        }
+        if (item == ToolbarItem.LASSO) {
+            sections.forEachIndexed { si, sec ->
+                val penIndex = sec.entries.indexOfFirst { it.item == ToolbarItem.PEN }
+                if (penIndex >= 0) {
+                    val entries = sec.entries.toMutableList().also { it.add(penIndex, ToolbarEntry(item)) }
                     return copy(sections = sections.toMutableList().also { it[si] = sec.copy(entries = entries) })
                 }
             }
         }
         val last = sections.last()
-        return copy(sections = sections.dropLast(1) + last.copy(entries = last.entries + ToolbarEntry(item)))
+        val visible = !(item == ToolbarItem.SELECT && ToolbarItem.LASSO in among)
+        return copy(sections = sections.dropLast(1) + last.copy(entries = last.entries + ToolbarEntry(item, visible)))
     }
 
     companion object {
@@ -166,7 +177,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
             ToolbarItem.TABLE to ToolbarItem.IMAGE,
             ToolbarItem.SEARCH to ToolbarItem.PAGE_NAV,
             ToolbarItem.TAPE to ToolbarItem.WAND,
-            ToolbarItem.INSERT_SPACE to ToolbarItem.SELECT,
+            ToolbarItem.INSERT_SPACE to ToolbarItem.LASSO,
             ToolbarItem.MARKUP to ToolbarItem.TEXT_BOX,
             ToolbarItem.READER to ToolbarItem.PAN,
         )
@@ -190,10 +201,10 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
 
         /** Everything the paged bar can hold: the whole enum bar the two canvas-only additions. Insert space is the note bar's alone. */
         val NOTE_ITEMS: Set<ToolbarItem> =
-            ToolbarItem.entries.toSet() - setOf(ToolbarItem.WAYPOINTS, ToolbarItem.MINIMAP, ToolbarItem.LASSO, ToolbarItem.SPEED)
+            ToolbarItem.entries.toSet() - setOf(ToolbarItem.WAYPOINTS, ToolbarItem.MINIMAP, ToolbarItem.SPEED)
 
         /**
-         * Three deliberate zones: document/page overview on the left, the nine everyday tools
+         * Three deliberate zones: document/page overview on the left, the seven everyday tools
          * in the centre, and page navigation on the right. Other tools remain available but start
          * hidden in the customizer, so the default bar stays clean and balanced.
          */
@@ -216,7 +227,7 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
                         ToolbarEntry(
                             it,
                             it in setOf(
-                                ToolbarItem.SELECT, ToolbarItem.PEN, ToolbarItem.ERASER,
+                                ToolbarItem.LASSO, ToolbarItem.PEN, ToolbarItem.ERASER,
                                 ToolbarItem.SHAPE, ToolbarItem.PAN, ToolbarItem.UNDO, ToolbarItem.REDO,
                             ),
                         )
@@ -264,8 +275,38 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
             fallback: ToolbarLayout = DEFAULT,
         ): ToolbarLayout {
             if (rawSections.isEmpty()) return fallback
+
+            // The note toolbar's old rectangular Select slot becomes the combined Lasso control:
+            // tap selects a rectangle, hold selects freehand. When a note layout is reused by the
+            // infinite canvas, convert that combined slot back to the canvas's rectangular Select.
+            val hasVisibleSelect = rawSections.any { section -> section.any { it.first == ToolbarItem.SELECT.id && it.second } }
+            val hasVisibleLasso = rawSections.any { section -> section.any { it.first == ToolbarItem.LASSO.id && it.second } }
+            val normalizedRaw = when {
+                ToolbarItem.LASSO in among && !hasVisibleLasso && hasVisibleSelect ->
+                    rawSections.map { section ->
+                        section.mapNotNull { (id, visible) ->
+                            when (id) {
+                                ToolbarItem.SELECT.id -> ToolbarItem.LASSO.id to visible
+                                ToolbarItem.LASSO.id -> null
+                                else -> id to visible
+                            }
+                        }
+                    }
+                ToolbarItem.LASSO !in among && !hasVisibleSelect && hasVisibleLasso ->
+                    rawSections.map { section ->
+                        section.mapNotNull { (id, visible) ->
+                            when (id) {
+                                ToolbarItem.LASSO.id -> ToolbarItem.SELECT.id to visible
+                                ToolbarItem.SELECT.id -> null
+                                else -> id to visible
+                            }
+                        }
+                    }
+                else -> rawSections
+            }
+
             val seen = LinkedHashSet<ToolbarItem>()
-            val sections = rawSections.map { raw ->
+            val sections = normalizedRaw.map { raw ->
                 ToolbarSection(
                     raw.mapNotNull { (id, visible) ->
                         val item = ToolbarItem.fromId(id) ?: return@mapNotNull null

@@ -20,6 +20,7 @@
     <string name="tool_pan">Pan</string>
     <string name="tool_select">Select</string>
     <string name="tool_lasso">Lasso</string>
+    <string name="hint_lasso_tap_hold">Tap for rectangular selection; hold for freehand lasso.</string>
     <string name="tool_screenshot">Screenshot</string>
     <string name="tool_wand">Disappearing ink</string>
     <string name="tool_tape">Tape</string>

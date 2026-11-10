@@ -197,7 +197,7 @@ fun Toolbar(
     } else {
         // Pinned outside the scrolling strip so closing a split pane is always one tap away.
         ToolbarFrame(
-            armed = if (editor.tool == Tool.LASSO) Tool.SELECT else editor.tool,
+            armed = if (editor.tool == Tool.SELECT || editor.tool == Tool.LASSO) Tool.LASSO else editor.tool,
             trailing = onClosePane?.let { { ClosePaneButton(it) } },
             separateSections = true,
         ) {
@@ -277,7 +277,7 @@ private fun ToolbarItemView(
 ) {
     when (item) {
         // Canvas-only items; a stored paged layout can never hold one, so nothing is drawn.
-        ToolbarItem.WAYPOINTS, ToolbarItem.MINIMAP, ToolbarItem.LASSO -> Unit
+        ToolbarItem.WAYPOINTS, ToolbarItem.MINIMAP -> Unit
 
         ToolbarItem.HOME -> ToolbarIcon(XnotesIcons.home, stringResource(R.string.toolbar_home)) { onOpenBackstage() }
         // A name has no room down a side rail.
@@ -309,7 +309,7 @@ private fun ToolbarItemView(
 
         ToolbarItem.PEN, ToolbarItem.DASHED, ToolbarItem.CALLIGRAPHY,
         ToolbarItem.TAPER, ToolbarItem.LASER, ToolbarItem.STAMP, ToolbarItem.HIGHLIGHTER, ToolbarItem.ERASER, ToolbarItem.PAN,
-        ToolbarItem.SELECT, ToolbarItem.SCREENSHOT, ToolbarItem.SHAPE,
+        ToolbarItem.SELECT, ToolbarItem.LASSO, ToolbarItem.SCREENSHOT, ToolbarItem.SHAPE,
         ToolbarItem.TEXT, ToolbarItem.TEXT_BOX, ToolbarItem.TABLE, ToolbarItem.TAPE, ToolbarItem.INSERT_SPACE -> {
             val tool = Tool.fromId(item.id)
             if (tool != null) ToolButton(editor, tool, toolIcons[tool], configForTool, setConfigForTool)
@@ -408,6 +408,36 @@ private fun ToolButton(
     setConfigForTool: (Tool?) -> Unit,
 ) {
     if (icon == null) return
+    if (tool == Tool.LASSO) {
+        val selectionActive = editor.tool == Tool.SELECT || editor.tool == Tool.LASSO
+        ToolbarIcon(
+            icon = icon,
+            contentDescription = stringResource(R.string.tool_lasso),
+            active = selectionActive,
+            glideKey = Tool.LASSO,
+            hint = stringResource(R.string.hint_lasso_tap_hold),
+            shortcut = PAGED_TOOL_KEYS[Tool.LASSO],
+            onLongClick = {
+                editor.selectTool(Tool.LASSO)
+                setConfigForTool(null)
+            },
+        ) {
+            if (editor.tool == Tool.SELECT) {
+                setConfigForTool(Tool.SELECT)
+            } else {
+                editor.selectTool(Tool.SELECT)
+                setConfigForTool(null)
+            }
+        }
+        if (configForTool == Tool.SELECT || configForTool == Tool.LASSO) {
+            SelectConfigPopup(
+                editor,
+                configForTool ?: Tool.SELECT,
+                onSelectTool = { next -> editor.selectTool(next); setConfigForTool(null) },
+            ) { setConfigForTool(null) }
+        }
+        return
+    }
     // The pen family is one settings panel. Whichever pen-family slot is present in a
     // customized toolbar must open that same panel while a pen style is active; otherwise
     // a toolbar containing PEN (but not the legacy TAPER slot) cannot reopen its settings.
@@ -641,6 +671,7 @@ private const val GLIDE_MAX_MS = 300
  * bar's tools and its selection is the bar's gliding circle; otherwise [active] fades in a circle
  * of its own.
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun ToolbarIcon(
     icon: ImageVector,
@@ -654,6 +685,7 @@ internal fun ToolbarIcon(
     nibMask: androidx.compose.ui.graphics.painter.Painter? = null,
     nibColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Black,
     stampGlyph: String? = null,
+    onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     val palette = LocalPalette.current
@@ -681,7 +713,20 @@ internal fun ToolbarIcon(
     val glassBase = palette.surface.toComposeColor().copy(alpha = if (palette.isDark) 0.30f else 0.22f)
     Tooltip(contentDescription, hint = hint, shortcut = shortcut) {
         Box(
-            Modifier.size(bar.button).clickable(interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick),
+            Modifier.size(bar.button).then(
+                if (onLongClick == null) {
+                    Modifier.clickable(interaction, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
+                } else {
+                    Modifier.combinedClickable(
+                        interactionSource = interaction,
+                        indication = null,
+                        enabled = enabled,
+                        role = Role.Button,
+                        onClick = onClick,
+                        onLongClick = onLongClick,
+                    )
+                },
+            ),
             contentAlignment = Alignment.Center,
         ) {
             Box(
