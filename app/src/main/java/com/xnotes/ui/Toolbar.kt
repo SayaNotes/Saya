@@ -412,7 +412,8 @@ private fun ToolButton(
     val displayTool = if (tool == Tool.TAPER && editor.tool.isPenPanelStyle) editor.tool else tool
     val popupTool = displayTool
     val selectionModeActive = tool == Tool.SELECT && editor.tool == Tool.LASSO
-    val armed = if (editor.tool.isPenPanelStyle && tool.isStroke) tool == Tool.TAPER else editor.tool == tool || selectionModeActive
+    // Let the selected pen button reopen its settings; Taper remains the shared active-pen shortcut.
+    val armed = editor.tool == tool || (editor.tool.isPenPanelStyle && tool == Tool.TAPER) || selectionModeActive
     val configurable = tool.isStroke || tool == Tool.SHAPE || tool == Tool.ERASER || tool == Tool.SELECT || tool == Tool.LASSO || tool == Tool.TEXT || tool == Tool.TABLE || tool == Tool.MARKUP || tool == Tool.TAPE
     val imageRes = when (displayTool) {
         Tool.PEN -> R.drawable.pen_tool_pen
