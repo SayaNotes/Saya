@@ -1,10 +1,6 @@
 package com.xnotes.ui
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.tween
 
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
@@ -226,10 +222,6 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
         modifier = Modifier.clip(RoundedCornerShape(26.dp)),
         frameless = true,
     ) {
-        AnimatedVisibility(
-            visible = true,
-            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(tween(200)),
-        ) {
         Column(
             Modifier.widthIn(max = 820.dp).fillMaxWidth()
                 .liquidGlassSurface(
@@ -451,7 +443,6 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     if (glow) SliderRow(stringResource(R.string.caption_glow_intensity), glowIntensity, 0f..100f) { glowIntensity = it; emit() }
                 }
             }
-        }
         }
     }
 }
