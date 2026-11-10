@@ -32,8 +32,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -282,34 +280,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                         onValueChange = { width = it; emit() },
                     )
 
-                    // Light, inset pen tray echoes the original X Notes illustrated selector.
-                    // On a narrow phone, wrap to two rows rather than clipping the six tools.
-                    // Do not put BoxWithConstraints inside DropdownMenu: the menu asks
-                    // its content for intrinsic dimensions, while BoxWithConstraints is a
-                    // SubcomposeLayout and cannot answer intrinsic measurements. FlowRow
-                    // wraps the pen choices using the constraints it is actually given.
-                    Row(
-                        modifier = Modifier.fillMaxWidth()
-                            .clip(RoundedCornerShape(16.dp))
-                            .background(LocalPalette.current.surface.toComposeColor())
-                            .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(16.dp))
-                            .horizontalScroll(rememberScrollState())
-                            // Fixed tray height gives every pen slot the same bottom baseline.
-                            .padding(start = 6.dp, end = 6.dp, top = 7.dp, bottom = 0.dp)
-                            .height(154.dp),
-                        horizontalArrangement = Arrangement.spacedBy(0.dp),
-                        verticalAlignment = Alignment.Bottom,
-                    ) {
-                        penTools.forEachIndexed { index, candidate ->
-                            ToolModeButton(
-                                candidate,
-                                selected = candidate == tool,
-                                modifier = if (index == 0) Modifier.offset(x = (-4).dp) else Modifier,
-                                nibColor = editor.toolConfig(candidate).colorOverride?.toComposeColor()
-                                    ?: (editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor() ?: Color.Black),
-                            ) { onSelectTool(candidate) }
-                        }
-                    }
+
                 }
 
                 Column(
@@ -399,6 +370,30 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                             )
                         }
                     }
+                }
+            }
+
+
+            // Full-width six-tool tray: every tool gets an equal slot and shares one
+            // measured bottom baseline. This avoids horizontal scrolling or clipped tools.
+            Row(
+                modifier = Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(16.dp))
+                    .background(LocalPalette.current.surface.toComposeColor())
+                    .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(16.dp))
+                    .padding(start = 6.dp, end = 6.dp, top = 7.dp, bottom = 0.dp)
+                    .height(154.dp),
+                horizontalArrangement = Arrangement.spacedBy(0.dp),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                penTools.forEach { candidate ->
+                    ToolModeButton(
+                        candidate,
+                        selected = candidate == tool,
+                        modifier = Modifier.weight(1f),
+                        nibColor = editor.toolConfig(candidate).colorOverride?.toComposeColor()
+                            ?: (editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor() ?: Color.Black),
+                    ) { onSelectTool(candidate) }
                 }
             }
 
@@ -901,11 +896,11 @@ private fun ToolModeButton(
             .background(if (selected) palette.selectionBackground.toComposeColor() else Color.Transparent)
             .border(1.dp, if (selected) palette.accent.toComposeColor() else Color.Transparent, RoundedCornerShape(9.dp))
             .clickable(onClick = onClick)
-            .padding(start = 3.dp, end = 3.dp, top = 5.dp, bottom = 0.dp),
+            .padding(start = 2.dp, end = 2.dp, top = 5.dp, bottom = 0.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            Modifier.size(52.dp, 142.dp).clip(RoundedCornerShape(8.dp)),
+            Modifier.fillMaxWidth().height(142.dp).clip(RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.BottomCenter,
         ) {
             if (artPainter != null) {
