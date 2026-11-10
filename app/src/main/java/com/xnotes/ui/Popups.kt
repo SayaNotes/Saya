@@ -503,6 +503,7 @@ internal fun DesignedSizeSlider(
 fun LaserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
     val base = remember(editor) { editor.toolConfig(Tool.LASER) }
     var width by remember { mutableStateOf(base.baseWidth.toFloat().coerceIn(1f, 20f)) }
+    var duration by remember { mutableStateOf(base.laserDurationMs.toFloat()) }
     val laserRed = Rgba(255, 0, 0, 255)
 
     fun emit() {
@@ -510,6 +511,7 @@ fun LaserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
             Tool.LASER,
             base.copy(
                 baseWidth = width.toDouble(),
+                laserDurationMs = duration.toLong().coerceIn(ToolConfig.MIN_LASER_DURATION_MS, ToolConfig.MAX_LASER_DURATION_MS),
                 rgba = laserRed,
                 colorOverride = laserRed,
                 pressureEnabled = true,
@@ -575,8 +577,26 @@ fun LaserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                     inactiveTrackColor = LocalPalette.current.border.toComposeColor(),
                 ),
             )
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                StyleCaption("Visible duration")
+                Text("%.1f s".format(duration / 1000f), color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
+            }
+            Slider(
+                value = duration,
+                onValueChange = { duration = it; emit() },
+                valueRange = ToolConfig.MIN_LASER_DURATION_MS.toFloat()..ToolConfig.MAX_LASER_DURATION_MS.toFloat(),
+                colors = SliderDefaults.colors(
+                    thumbColor = LocalPalette.current.accent.toComposeColor(),
+                    activeTrackColor = LocalPalette.current.accent.toComposeColor(),
+                    inactiveTrackColor = LocalPalette.current.border.toComposeColor(),
+                ),
+            )
             Text(
-                "Red • Neon Glow • 100% opacity • Taper",
+                "Red • Neon Glow • 100% opacity • Taper • fades after the selected duration",
                 color = LocalPalette.current.textDim.toComposeColor(),
                 fontSize = 11.sp,
             )
