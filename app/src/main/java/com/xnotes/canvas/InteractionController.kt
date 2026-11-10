@@ -241,6 +241,9 @@ class InteractionController(
     var noteIcons: NoteIcons? = null
     val document: Document get() = state.document
 
+    @Deprecated("Hand-drawn shape recognition was removed")
+    var detectShapes: Boolean = false
+
     var tool: Tool = Tool.DEFAULT
         private set
 
