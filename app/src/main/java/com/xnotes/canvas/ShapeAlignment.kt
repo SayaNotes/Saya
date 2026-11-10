@@ -41,10 +41,7 @@ internal object ShapeAlignment {
         val dx = x?.delta ?: 0.0
         val dy = y?.delta ?: 0.0
         val placed = candidate.translate(dx, dy)
-        return MoveResult(
-            Pt(dx, dy),
-            listOfNotNull(x?.guide(placed), y?.guide(placed)),
-        )
+        return MoveResult(Pt(dx, dy), guidesFor(placed, targets))
     }
 
     /**
@@ -54,14 +51,11 @@ internal object ShapeAlignment {
     fun snapDrag(start: Pt, end: Pt, targets: List<Rect>, tolerance: Double): DragResult {
         if (targets.isEmpty() || tolerance <= 0.0) return DragResult(end, emptyList())
         val box = Rect.fromPoints(start, end)
-        val x = bestDragMatch(start.x, end.x, box, targets, tolerance, vertical = true)
-        val y = bestDragMatch(start.y, end.y, box, targets, tolerance, vertical = false)
+        val x = bestDragMatch(start.x, end.x, targets, tolerance, vertical = true)
+        val y = bestDragMatch(start.y, end.y, targets, tolerance, vertical = false)
         val snappedEnd = Pt(end.x + (x?.delta ?: 0.0), end.y + (y?.delta ?: 0.0))
         val placed = Rect.fromPoints(start, snappedEnd)
-        return DragResult(
-            snappedEnd,
-            listOfNotNull(x?.guide(placed), y?.guide(placed)),
-        )
+        return DragResult(snappedEnd, guidesFor(placed, targets))
     }
 
     private fun bestMoveMatch(candidate: Rect, targets: List<Rect>, tolerance: Double, vertical: Boolean): Match? {
@@ -93,7 +87,6 @@ internal object ShapeAlignment {
     private fun bestDragMatch(
         fixed: Double,
         moving: Double,
-        candidate: Rect,
         targets: List<Rect>,
         tolerance: Double,
         vertical: Boolean,
@@ -127,9 +120,41 @@ internal object ShapeAlignment {
         return best
     }
 
-    private fun Match.guide(candidate: Rect): Guide = if (vertical) {
-        Guide(true, coordinate, min(candidate.top, target.top), max(candidate.bottom, target.bottom))
-    } else {
-        Guide(false, coordinate, min(candidate.left, target.left), max(candidate.right, target.right))
+    /** Return every edge/centre guide that is aligned after the chosen snap is applied. */
+    private fun guidesFor(candidate: Rect, targets: List<Rect>): List<Guide> {
+        val guides = mutableListOf<Guide>()
+        fun collect(vertical: Boolean) {
+            val candidateValues = if (vertical) {
+                listOf(candidate.left, candidate.centerX, candidate.right)
+            } else {
+                listOf(candidate.top, candidate.centerY, candidate.bottom)
+            }
+            for (target in targets) {
+                val targetValues = if (vertical) {
+                    listOf(target.left, target.centerX, target.right)
+                } else {
+                    listOf(target.top, target.centerY, target.bottom)
+                }
+                for (candidateValue in candidateValues) for (targetValue in targetValues) {
+                    if (abs(candidateValue - targetValue) > GUIDE_EPSILON) continue
+                    val guide = if (vertical) {
+                        Guide(true, targetValue, min(candidate.top, target.top), max(candidate.bottom, target.bottom))
+                    } else {
+                        Guide(false, targetValue, min(candidate.left, target.left), max(candidate.right, target.right))
+                    }
+                    val duplicate = guides.indexOfFirst { it.vertical == guide.vertical && abs(it.coordinate - guide.coordinate) <= GUIDE_EPSILON }
+                    if (duplicate < 0) guides.add(guide)
+                    else {
+                        val previous = guides[duplicate]
+                        guides[duplicate] = previous.copy(from = min(previous.from, guide.from), to = max(previous.to, guide.to))
+                    }
+                }
+            }
+        }
+        collect(vertical = true)
+        collect(vertical = false)
+        return guides
     }
+
+    private const val GUIDE_EPSILON = 0.5
 }
