@@ -733,6 +733,7 @@ internal fun ToolbarIcon(
             Box(
                 Modifier
                     .size(bar.circle)
+                    .clip(CircleShape)
                     .then(
                         if (glide == null || glideKey == null) Modifier
                         else Modifier.onGloballyPositioned { c ->
@@ -768,11 +769,11 @@ internal fun ToolbarIcon(
                 contentAlignment = Alignment.Center,
             ) {
                 if (image == null) {
-                    Icon(icon, contentDescription = contentDescription, tint = tint, modifier = Modifier.size(bar.icon))
+                    Icon(icon, contentDescription = contentDescription, tint = tint, modifier = Modifier.size(bar.icon * 1.12f))
                 } else {
                     // The toolbar gets its own close crop of the selected pen artwork: show the
                     // nib and a little neck/body instead of shrinking the entire pen-panel drawing.
-                    Box(Modifier.size(bar.icon), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(bar.icon * 1.12f), contentAlignment = Alignment.Center) {
                         Image(
                             image,
                             contentDescription = contentDescription,
