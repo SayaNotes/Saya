@@ -286,6 +286,8 @@ class InfiniteInteraction(
     val grabbing: Boolean get() = longPressPrevTool != null
 
     private val handler = Handler(Looper.getMainLooper())
+    private var temporaryEraserRunnable: Runnable? = null
+    private var temporaryEraserDown = Pt.ZERO
 
     var mode = CanvasPointerMode.IDLE
         private set
@@ -534,7 +536,12 @@ class InfiniteInteraction(
         val placing = effective == Tool.SHAPE && shapeConfig().placesCorners
         if (polygonDraft != null && !placing && effective != Tool.PAN) finishPolygonDraft()
         when {
-            effective.isStroke -> beginDraw(vx, vy, effective, e)
+            effective.isStroke -> {
+                beginDraw(vx, vy, effective, e)
+                if (tool.isPenPanelStyle && !buttonHeld && tool == effective &&
+                    (drawingIsStylus || (toolType == MotionEvent.TOOL_TYPE_FINGER && penButtonTool == Tool.ERASER))
+                ) armTemporaryEraser(Pt(vx, vy))
+            }
             effective == Tool.ERASER && configFor(Tool.ERASER).eraseMode == EraseMode.LASSO -> beginLassoErase(vx, vy)
             effective == Tool.ERASER -> beginErase(vx, vy)
             effective == Tool.SHAPE && selected -> dismissFirst(at)
@@ -544,7 +551,12 @@ class InfiniteInteraction(
             effective == Tool.SELECT -> beginSelect(vx, vy)
             effective == Tool.LASSO -> beginLasso(vx, vy)
             effective == Tool.TAPE -> beginTape(vx, vy)
-            else -> beginPan(vx, vy, fromPenButton = buttonHeld && penButtonTool == Tool.PAN)
+            else -> {
+                beginPan(vx, vy, fromPenButton = buttonHeld && penButtonTool == Tool.PAN)
+                if (tool.isPenPanelStyle && toolType == MotionEvent.TOOL_TYPE_FINGER && !buttonHeld && penButtonTool == Tool.ERASER) {
+                    armTemporaryEraser(Pt(vx, vy))
+                }
+            }
         }
     }
 
@@ -656,6 +668,9 @@ class InfiniteInteraction(
             val moved = Pt(e.getX(0).toDouble(), e.getY(0).toDouble()).distanceTo(longPressAt)
             if (moved > InteractionController.LONG_PRESS_SLOP) cancelLongPress()
         }
+        if (temporaryEraserRunnable != null &&
+            Pt(e.getX(0).toDouble(), e.getY(0).toDouble()).distanceTo(temporaryEraserDown) > InteractionController.TEMP_ERASER_SLOP
+        ) cancelTemporaryEraser()
         when (mode) {
             CanvasPointerMode.PAN -> extendPan(e.getX(0).toDouble(), e.getY(0).toDouble())
             CanvasPointerMode.PINCH -> updatePinch(e)
@@ -690,6 +705,7 @@ class InfiniteInteraction(
     }
 
     private fun handleUp(e: MotionEvent) {
+        cancelTemporaryEraser()
         cancelLongPress()
         val wasMoving = (mode == CanvasPointerMode.PAN && singleFingerPanAllowed() && !panFromPenButton) ||
             (mode == CanvasPointerMode.PINCH && pinchPanAllowed())
@@ -779,6 +795,31 @@ class InfiniteInteraction(
         setInteractive(false, true)
         stopFling()
         requestRender()
+    }
+
+    // A configured hold temporarily erases on a finger as well as a real stylus. Homemade
+    // capacitive styluses are reported by Android as fingers, so do not require a hardware button.
+    private fun armTemporaryEraser(down: Pt) {
+        cancelTemporaryEraser()
+        temporaryEraserDown = down
+        val task = Runnable {
+            temporaryEraserRunnable = null
+            if (drawingIsStylus || penButtonTool != Tool.ERASER || !tool.isPenPanelStyle ||
+                (mode != CanvasPointerMode.PAN && mode != CanvasPointerMode.DRAW)
+            ) return@Runnable
+            cancelLongPress()
+            if (mode == CanvasPointerMode.DRAW) abandonStroke()
+            eraseSession = onEraseBegin() ?: return@Runnable
+            mode = CanvasPointerMode.ERASE
+            eraseAt(down.x, down.y)
+        }
+        temporaryEraserRunnable = task
+        handler.postDelayed(task, InteractionController.TEMP_ERASER_HOLD_MS)
+    }
+
+    private fun cancelTemporaryEraser() {
+        temporaryEraserRunnable?.let { handler.removeCallbacks(it) }
+        temporaryEraserRunnable = null
     }
 
     // --- drawing ---
