@@ -221,36 +221,68 @@ class ShapeItem(
      * permanent marks in the document or cluttering an unselected page.
      */
     fun paintAngleMeasurements(r: Renderer) {
-        if (!shape.isClosed) return
-        val points = (if (isFree) vertices().orEmpty() else localGeometry().corners.map(::toPage))
+        // Only vertex-editable closed outlines have meaningful corners. This excludes smooth
+        // ellipses, glyph fills and imported colour fills, whose flattened paths are not corners.
+        if (!shape.isClosed || !shape.pointEditable || shape.isEndpointShape) return
+        val geometry = localGeometry()
+        val points = (if (isFree) vertices().orEmpty() else geometry.corners.map(::toPage))
             .let { pts ->
                 if (pts.size > 1 && pts.first().distanceTo(pts.last()) < 1e-6) pts.dropLast(1) else pts
             }
         if (points.size < 3) return
+
+        // Winding lets us distinguish reflex corners (e.g. a concave polygon's >180° angle)
+        // from convex corners. The dot-product angle alone loses that information.
+        var twiceArea = 0.0
+        for (i in points.indices) {
+            val a = points[i]
+            val b = points[(i + 1) % points.size]
+            twiceArea += a.x * b.y - b.x * a.y
+        }
+        if (abs(twiceArea) < 1e-8) return
+        val winding = if (twiceArea > 0.0) 1.0 else -1.0
+
         val font = FontSpec(8.0, FontFace.SANS, bold = true)
         val flags = TextFlags(wordWrap = false, alignLeft = false, alignTop = false, hAlign = HAlign.CENTER)
         for (i in points.indices) {
             val vertex = points[i]
             val previous = points[(i - 1 + points.size) % points.size]
             val next = points[(i + 1) % points.size]
-            val ax = previous.x - vertex.x
-            val ay = previous.y - vertex.y
-            val bx = next.x - vertex.x
-            val by = next.y - vertex.y
-            val al = kotlin.math.hypot(ax, ay)
-            val bl = kotlin.math.hypot(bx, by)
+            val incoming = Pt(vertex.x - previous.x, vertex.y - previous.y)
+            val outgoing = Pt(next.x - vertex.x, next.y - vertex.y)
+            val al = incoming.length()
+            val bl = outgoing.length()
             if (al < 1e-6 || bl < 1e-6) continue
-            val cosine = ((ax * bx + ay * by) / (al * bl)).coerceIn(-1.0, 1.0)
-            val degrees = Math.toDegrees(acos(cosine)).toInt()
-            var ux = ax / al + bx / bl
-            var uy = ay / al + by / bl
-            val length = kotlin.math.hypot(ux, uy)
-            if (length < 1e-6) {
-                ux = -ax / al
-                uy = -ay / al
+
+            val ax = -incoming.x / al
+            val ay = -incoming.y / al
+            val bx = outgoing.x / bl
+            val by = outgoing.y / bl
+            val cosine = (ax * bx + ay * by).coerceIn(-1.0, 1.0)
+            val smallerAngle = Math.toDegrees(acos(cosine))
+            val cross = incoming.x * outgoing.y - incoming.y * outgoing.x
+            val reflex = cross * winding < -1e-8
+            val degrees = (if (reflex) 360.0 - smallerAngle else smallerAngle).roundToInt()
+
+            // The unit-vector sum points into the smaller wedge. Reverse it at reflex vertices
+            // so the label remains inside the polygon rather than outside its concavity.
+            var ux = ax + bx
+            var uy = ay + by
+            if (reflex) { ux = -ux; uy = -uy }
+            var directionLength = hypot(ux, uy)
+            if (directionLength < 1e-6) {
+                ux = -ay
+                uy = ax
+                if (ux * winding < 0.0) { ux = -ux; uy = -uy }
+                directionLength = hypot(ux, uy)
             }
-            val directionLength = kotlin.math.hypot(ux, uy).coerceAtLeast(1e-6)
-            val labelCentre = Pt(vertex.x + ux / directionLength * 18.0, vertex.y + uy / directionLength * 18.0)
+            if (directionLength < 1e-6) continue
+
+            val offset = minOf(18.0, maxOf(7.0, minOf(al, bl) * 0.28))
+            val labelCentre = Pt(
+                vertex.x + ux / directionLength * offset,
+                vertex.y + uy / directionLength * offset,
+            )
             val rect = Rect(labelCentre.x - 13.0, labelCentre.y - 7.0, 26.0, 14.0)
             r.fillCircle(labelCentre, 9.0, Rgba(255, 255, 255, 224))
             r.drawText("$degrees°", rect, font, Rgba(25, 30, 38), flags)
