@@ -6017,8 +6017,8 @@ class InteractionController(
         /** Magic wand: fade-out duration (ms) once the batch starts disappearing. */
         const val WAND_FADE_MS = 500.0
 
-        /** Laser trails ease away after their configured visible time. */
-        const val LASER_FADE_MS = 420L
+        /** Three visible-to-dim pulses after the configured laser hold, then full removal. */
+        const val LASER_FADE_MS = 1500L
 
         /** Ruler: a stylus-down within this (dp) of a long edge snaps the stroke to that edge. */
         const val RULER_SNAP_DP = 12.0
