@@ -351,7 +351,7 @@ object ItemMesher {
             part.mesh.positions.asList().chunked(2).mapNotNull { xy ->
                 if (xy.size < 2) null else Pt(xy[0], xy[1])
             }
-        }.takeIf { it.isNotEmpty() }?.let(Rect::bounding)
+        }.takeIf { it.isNotEmpty() }?.let { Rect.bounding(it) }
         val bounds = annotationBounds?.let { shape.paintBounds().union(it) } ?: shape.paintBounds()
         // Drawn text has no line to fade when it thins out on screen.
         val half = if (shape.shape == com.xnotes.core.shapes.ShapeKind.GLYPHS) 0.0 else shape.strokeWidth / 2.0
