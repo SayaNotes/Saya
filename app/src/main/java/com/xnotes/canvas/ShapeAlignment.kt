@@ -59,7 +59,26 @@ internal object ShapeAlignment {
         val y = closerMatch(yEdge, ySize)
         val snappedEnd = Pt(end.x + (x?.delta ?: 0.0), end.y + (y?.delta ?: 0.0))
         val placed = Rect.fromPoints(start, snappedEnd)
-        return DragResult(snappedEnd, guidesFor(placed, targets))
+        val guides = guidesFor(placed, targets).toMutableList()
+        if (matchDimensions) {
+            // Equal-size matches need a visible cue even when the two rectangles sit apart and
+            // therefore have no coincident edges. Draw paired extent guides across both boxes.
+            for (target in targets) {
+                if (abs(placed.w - target.w) <= GUIDE_EPSILON) {
+                    val from = min(placed.top, target.top)
+                    val to = max(placed.bottom, target.bottom)
+                    guides.add(Guide(true, placed.left, from, to))
+                    guides.add(Guide(true, placed.right, from, to))
+                }
+                if (abs(placed.h - target.h) <= GUIDE_EPSILON) {
+                    val from = min(placed.left, target.left)
+                    val to = max(placed.right, target.right)
+                    guides.add(Guide(false, placed.top, from, to))
+                    guides.add(Guide(false, placed.bottom, from, to))
+                }
+            }
+        }
+        return DragResult(snappedEnd, guides.distinctBy { Triple(it.vertical, (it.coordinate / GUIDE_EPSILON).toLong(), (it.from / GUIDE_EPSILON).toLong()) })
     }
 
     private fun bestMoveMatch(candidate: Rect, targets: List<Rect>, tolerance: Double, vertical: Boolean): Match? {
