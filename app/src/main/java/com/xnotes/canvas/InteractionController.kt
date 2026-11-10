@@ -75,10 +75,8 @@ import com.xnotes.core.pal.Pen
 import com.xnotes.core.pal.Renderer
 import com.xnotes.core.pal.TextMeasurer
 import com.xnotes.core.pdf.MarkupPainter
-import com.xnotes.core.stroke.RecognizedShape
 import com.xnotes.core.stroke.Scribble
 import com.xnotes.core.stroke.Sample
-import com.xnotes.core.stroke.ShapeRecognizer
 import com.xnotes.core.stroke.StrokeSimplify
 import com.xnotes.core.tools.EraseMode
 import com.xnotes.core.tools.InkPalette
@@ -259,7 +257,6 @@ class InteractionController(
     var zoomLockPan: String = "single"
 
     /** Whether holding a freehand ink stroke still snaps it to a recognized shape (spec: "hold to snap"). */
-    var detectShapes: Boolean = false
 
     /** Whether rotating a selection snaps to the nearest 90 degrees. */
     var snapRotation90: Boolean = false
@@ -311,13 +308,9 @@ class InteractionController(
 
     // SHAPE SNAP (hold a freehand stroke still → it becomes a real shape)
     /** Pending "pen held still" timer; non-null only while a stroke is eligible and armed. */
-    private var dwellRunnable: Runnable? = null
     /** Viewport px of the last point that re-armed the dwell timer (sub-slop jitter doesn't reset it). */
-    private var dwellAnchor = Pt.ZERO
     /** True for the current stroke when snapping is allowed (pref on, an ink pen, not a straight line). */
-    private var dwellEligible = false
     /** A mid-stroke snap auto-selected a shape; show its menu once the pen lifts (endDraw). */
-    private var snappedSelectionPendingMenu = false
     /** This stroke began by dismissing an active selection; a bare tap then leaves no dot. */
     private var strokeDismissedSelection = false
 
@@ -1391,8 +1384,6 @@ class InteractionController(
         mode = PointerMode.DRAW
         // Hand-drawn shape recognition is deferred until pen-up, so no part of a live stroke
         // is replaced while the user is still drawing.
-        dwellEligible = detectShapes && drawTool.isStroke && drawTool != Tool.LASER && drawTool != Tool.HIGHLIGHTER && !straight &&
-            !ruler.visible && !wandMode
         frontInk?.wet(stroke, pageIndex)
         requestRender()
     }
@@ -1472,8 +1463,6 @@ class InteractionController(
         timeMs: Long,
     ) {
         // A stroke long enough to reach the next page is a line, not a held shape.
-        cancelDwell()
-        dwellEligible = false
         val last = stroke.samples.lastOrNull()
         retireCrossedSegment(stroke, fromPage)
         val next = Stroke(
@@ -1531,9 +1520,6 @@ class InteractionController(
     }
 
     private fun endDraw(e: MotionEvent) {
-        val recognizeOnLift = dwellEligible
-        cancelDwell()
-        dwellEligible = false
         val idx = e.findPointerIndex(drawingPointerId).coerceAtLeast(0)
         addStrokePoint(
             e.getX(idx).toDouble(), e.getY(idx).toDouble(),
@@ -1545,12 +1531,6 @@ class InteractionController(
         val pi = strokePageIndex
         if (stroke != null && pi != null && !stroke.isEmpty) {
             stroke.finished = true
-            val recognized = if (
-                recognizeOnLift && stroke.samples.size >= SHAPE_MIN_SAMPLES &&
-                stroke.tool.isStroke && stroke.tool != Tool.LASER && stroke.tool != Tool.HIGHLIGHTER && !stroke.straight &&
-                !ruler.visible && !wandMode
-            ) ShapeRecognizer.recognize(stroke.samples) else null
-            if (recognized != null) commitRecognizedShape(stroke, pi, recognized)
             if (liveStroke === stroke) when {
                 // A bare tap whose only job was to dismiss the selection: drop the dot it would leave.
                 strokeDismissedSelection && tapCandidate -> Unit
@@ -1582,10 +1562,6 @@ class InteractionController(
         snapPenViewport = null
         mode = PointerMode.IDLE
         // A mid-stroke snap left a shape selected; now that the gesture is idle, surface its menu.
-        if (snappedSelectionPendingMenu) {
-            snappedSelectionPendingMenu = false
-            refreshSelectionMenu()
-        }
         requestRender()
     }
 
@@ -1610,63 +1586,6 @@ class InteractionController(
         stroke.trimToSize()
     }
 
-    private fun armDwell() {
-        cancelDwell()
-        val r = Runnable { onDwellElapsed() }
-        dwellRunnable = r
-        handler.postDelayed(r, SHAPE_DWELL_MS)
-    }
-
-    private fun cancelDwell() {
-        dwellRunnable?.let { handler.removeCallbacks(it) }
-        dwellRunnable = null
-    }
-
-    /** Fired when the pen has held still: snap the live stroke to a shape if it's a confident match. */
-    private fun onDwellElapsed() {
-        dwellRunnable = null
-        if (!dwellEligible) return
-        val stroke = liveStroke ?: return
-        val pi = strokePageIndex ?: return
-        if (stroke.samples.size < SHAPE_MIN_SAMPLES) return // not enough yet; the next move re-arms
-        val rec = ShapeRecognizer.recognize(stroke.samples) ?: return // not a shape; the next move re-arms
-        commitRecognizedShape(stroke, pi, rec)
-    }
-
-    /** Replace the (uncommitted) live stroke with a recognized [ShapeItem], as one undoable add. */
-    private fun commitRecognizedShape(stroke: Stroke, pageIndex: Int, rec: RecognizedShape) {
-        val page = state.document.pages.getOrNull(pageIndex) ?: return
-        val strokeWidth = stroke.config.baseWidth * SHAPE_PEN_PARITY
-        val color = stroke.config.rgba // the as-drawn ink colour (not renderColor's alpha-scaled one)
-        val dashed = stroke.tool == Tool.DASHED // a dashed pen snaps to a dashed shape
-        // A neon pen snaps to a neon shape (the highlighter never snaps).
-        val shape = rec.toShape(
-            color, strokeWidth, shapeConfig.fillFor(rec.kind, color), stroke.config.neon, stroke.config.neonStrength,
-            dashed, stroke.config.dashLength, stroke.config.dashGap,
-        )
-        page.items.add(shape)
-        state.appendToCache(page, shape)
-        history.push(AddItem(page, shape))
-        state.document.dirty = true
-        // The stroke was never added to the page, so clearing liveStroke makes the live ink preview
-        // vanish the instant it snaps; the eventual pen-up in endDraw then commits nothing.
-        liveStroke = null
-        dwellEligible = false
-        cancelDwell()
-        // Auto-select the new shape so it can be resized right away. The menu only shows once the
-        // gesture settles, so flag it for the pen lift (endDraw) rather than mid-stroke here.
-        setSelection(listOf(Selected(pageIndex, shape)))
-        snappedSelectionPendingMenu = true
-        onContentChanged()
-        onHaptic()
-        requestRender()
-    }
-
-    /**
-     * Scribble to erase: when [stroke] reads as a scribble over ink, take that ink off instead of
-     * filing the scribble. The undo stack gets the scribble and then its erase, so one undo says
-     * "that was not an erase" and gives both back. False when the stroke stays ink.
-     */
     private fun scribbleErase(stroke: Stroke, pageIndex: Int): Boolean {
         val eraser = configFor(Tool.ERASER)
         if (!eraser.scribbleErase || !stroke.tool.isStroke || stroke.tool == Tool.HIGHLIGHTER) return false
@@ -4142,8 +4061,6 @@ class InteractionController(
         val task = Runnable {
             temporaryEraserRunnable = null
             if (mode != PointerMode.DRAW || !drawingIsStylus || liveStroke == null || !isHoldErasePen(tool)) return@Runnable
-            cancelDwell()
-            dwellEligible = false
             liveStroke = null
             strokePageIndex = null
             strokeDismissedSelection = false
@@ -5412,8 +5329,6 @@ class InteractionController(
         liveStroke = null
         strokePageIndex = null
         dropTapeDraft()
-        cancelDwell() // a second finger turns the gesture into a zoom; don't snap a shape mid-pinch
-        dwellEligible = false
         bandRect = null
         lassoPoints.clear()
         lassoErasing = false
@@ -5513,8 +5428,6 @@ class InteractionController(
         resumeLaserTrails()
         cancelTemporaryEraser()
         cancelLongPress()
-        cancelDwell()
-        dwellEligible = false
         snappedSelectionPendingMenu = false
         strokeDismissedSelection = false
         panMayCommitText = false
@@ -6118,14 +6031,6 @@ class InteractionController(
         private val CORNER_HANDLES = setOf(HandleId.TL, HandleId.TR, HandleId.BL, HandleId.BR)
 
         /** Hold-to-snap: how long the pen must rest (ms) before a freehand stroke snaps to a shape. */
-        const val SHAPE_DWELL_MS = 500L
-
-        /** Hold-to-snap: pen drift (viewport px) above which the dwell timer restarts rather than fires. */
-        const val SHAPE_DWELL_SLOP = 4.0
-
-        /** Hold-to-snap: minimum samples before recognition is even attempted (mirrors the recognizer). */
-        const val SHAPE_MIN_SAMPLES = 8
-
         /** Shape size -> thickness: the midpoint of the default pen's pressure width range (m=0.35..1.0),
          *  so a shape reads as thick as a same-size pen instead of as a flat full-width line. */
         const val SHAPE_PEN_PARITY = 0.675
