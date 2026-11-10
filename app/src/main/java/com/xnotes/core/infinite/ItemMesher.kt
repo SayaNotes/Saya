@@ -115,7 +115,7 @@ object ItemMesher {
     fun mesh(item: CanvasItem, tolerance: Double = StrokeTessellator.DEFAULT_TOLERANCE, measurer: TextMeasurer? = null): MeshedItem? =
         when (item) {
             is Stroke -> meshStroke(item, measurer, tolerance)
-            is ShapeItem -> meshShape(item, tolerance)
+            is ShapeItem -> meshShape(item, tolerance, measurer)
             is ConnectorItem -> meshConnector(item, tolerance)
             is AudioItem -> meshAudio(item, tolerance)
             is TapeItem -> meshTape(item, tolerance)
@@ -340,8 +340,10 @@ object ItemMesher {
         return if (min == Double.MAX_VALUE) 0.0 else min
     }
 
-    private fun meshShape(shape: ShapeItem, tolerance: Double): MeshedItem? {
-        val parts = ShapeTessellator.tessellate(shape, tolerance) + listOfNotNull(ShapeTessellator.labelPart(shape))
+    private fun meshShape(shape: ShapeItem, tolerance: Double, measurer: TextMeasurer?): MeshedItem? {
+        val parts = ShapeTessellator.tessellate(shape, tolerance) +
+            listOfNotNull(ShapeTessellator.labelPart(shape)) +
+            ShapeTessellator.angleParts(shape, measurer, tolerance)
         if (parts.isEmpty()) return null
         // Drawn text has no line to fade when it thins out on screen.
         val half = if (shape.shape == com.xnotes.core.shapes.ShapeKind.GLYPHS) 0.0 else shape.strokeWidth / 2.0
