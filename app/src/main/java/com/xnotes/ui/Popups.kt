@@ -76,7 +76,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Color as AndroidColor
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -459,7 +461,52 @@ internal fun bitmapPainterResource(resId: Int): BitmapPainter? {
     val context = LocalContext.current
     val bitmap = remember(context, resId) {
         runCatching {
-            BitmapFactory.decodeResource(context.resources, resId)?.asImageBitmap()
+            val decoded = BitmapFactory.decodeResource(context.resources, resId) ?: return@runCatching null
+            if (resId != R.drawable.taper_nib_mask) {
+                decoded.asImageBitmap()
+            } else {
+                // The supplied taper mask is a PNG while the other nib masks are WebP. Normalize
+                // both transparent masks and opaque black/white masks to a white alpha silhouette
+                // before SrcIn tinting, so its preview always follows the selected ink colour.
+                val width = decoded.width
+                val height = decoded.height
+                val pixels = IntArray(width * height)
+                decoded.getPixels(pixels, 0, width, 0, 0, width, height)
+                var borderAlpha = 0L
+                var borderLuminance = 0L
+                var borderCount = 0L
+                for (y in 0 until height) for (x in 0 until width) {
+                    if (x != 0 && y != 0 && x != width - 1 && y != height - 1) continue
+                    val pixel = pixels[y * width + x]
+                    borderAlpha += AndroidColor.alpha(pixel)
+                    borderLuminance += (
+                        AndroidColor.red(pixel) * 0.299 +
+                            AndroidColor.green(pixel) * 0.587 +
+                            AndroidColor.blue(pixel) * 0.114
+                        ).toLong()
+                    borderCount++
+                }
+                val transparentBackground = borderCount > 0 && borderAlpha / borderCount < 250L
+                val lightBackground = borderCount > 0 && borderLuminance / borderCount >= 128L
+                val normalized = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+                for (i in pixels.indices) {
+                    val pixel = pixels[i]
+                    val alpha = if (transparentBackground) {
+                        AndroidColor.alpha(pixel)
+                    } else {
+                        val luminance = (
+                            AndroidColor.red(pixel) * 0.299 +
+                                AndroidColor.green(pixel) * 0.587 +
+                                AndroidColor.blue(pixel) * 0.114
+                            ).toInt().coerceIn(0, 255)
+                        if (lightBackground) 255 - luminance else luminance
+                    }
+                    pixels[i] = AndroidColor.argb(alpha, 255, 255, 255)
+                }
+                normalized.setPixels(pixels, 0, width, 0, 0, width, height)
+                decoded.recycle()
+                normalized.asImageBitmap()
+            }
         }.getOrNull()
     }
     return bitmap?.let { BitmapPainter(it) }
