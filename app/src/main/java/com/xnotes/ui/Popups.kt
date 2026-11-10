@@ -294,7 +294,9 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                             .background(LocalPalette.current.surface.toComposeColor())
                             .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(16.dp))
                             .horizontalScroll(rememberScrollState())
-                            .padding(start = 6.dp, end = 6.dp, top = 7.dp, bottom = 0.dp),
+                            // Fixed tray height gives every pen slot the same bottom baseline.
+                            .padding(start = 6.dp, end = 6.dp, top = 7.dp, bottom = 0.dp)
+                            .height(154.dp),
                         horizontalArrangement = Arrangement.spacedBy(0.dp),
                         verticalAlignment = Alignment.Bottom,
                     ) {
@@ -303,7 +305,6 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                                 candidate,
                                 selected = candidate == tool,
                                 modifier = if (index == 0) Modifier.offset(x = (-4).dp) else Modifier,
-                                stampGlyph = if (candidate == Tool.STAMP) editor.toolConfig(Tool.STAMP).stampGlyph else null,
                                 nibColor = editor.toolConfig(candidate).colorOverride?.toComposeColor()
                                     ?: (editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor() ?: Color.Black),
                             ) { onSelectTool(candidate) }
@@ -863,7 +864,6 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
 private fun ToolModeButton(
     tool: Tool,
     selected: Boolean,
-    stampGlyph: String? = null,
     nibColor: Color = Color.Black,
     modifier: Modifier = Modifier,
     onClick: () -> Unit,
@@ -894,6 +894,8 @@ private fun ToolModeButton(
     val nibPainter = if (nibMask != 0) bitmapPainterResource(nibMask) else null
     Column(
         modifier = modifier
+            // Fill the tray's available height so every tool rests on the same bottom line.
+            .fillMaxHeight()
             .shadow(if (selected) 8.dp else 0.dp, RoundedCornerShape(9.dp))
             .clip(RoundedCornerShape(9.dp))
             .background(if (selected) palette.selectionBackground.toComposeColor() else Color.Transparent)
