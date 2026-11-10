@@ -5294,12 +5294,10 @@ class InteractionController(
         stopPageFlipAnimation()
         state.flipOffsetX = 0.0
         clearOverscroll()
-        cancelDwell()
         clearFading()
         clearLaserTrails()
         clearAlignmentGuides()
         crossedSegments.clear() // they belong to the outgoing document, whose history is gone
-        dwellEligible = false
         mode = PointerMode.IDLE
         dismissPressAt = null
         lastPan = Pt.ZERO
@@ -5428,7 +5426,6 @@ class InteractionController(
         resumeLaserTrails()
         cancelTemporaryEraser()
         cancelLongPress()
-        snappedSelectionPendingMenu = false
         strokeDismissedSelection = false
         panMayCommitText = false
         sideButtonEraseActive = false
