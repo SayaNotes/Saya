@@ -29,6 +29,8 @@ jobs:
           cache: gradle
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platform-tools platforms;android-36 ndk;27.0.12077973 cmake;3.22.1'
       - name: Install pinned Android native toolchain
         run: sdkmanager "ndk;27.0.12077973" "cmake;3.22.1"
       - name: Build debug APK

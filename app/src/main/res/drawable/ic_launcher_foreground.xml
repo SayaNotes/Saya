@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!-- Preserve the complete 245:321 user-supplied logo inside Android's adaptive-icon safe zone. -->
-<inset xmlns:android="http://schemas.android.com/apk/res/android"
-    android:drawable="@drawable/saya_logo_original"
-    android:insetLeft="29dp"
-    android:insetTop="21dp"
-    android:insetRight="29dp"
-    android:insetBottom="21dp" />
