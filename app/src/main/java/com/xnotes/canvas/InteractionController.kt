@@ -2435,8 +2435,10 @@ class InteractionController(
         val resizePage = state.document.pages.getOrNull(resizePageIndex)
         val resizeTargets = resizePage?.items?.filterIsInstance<ShapeItem>()
             ?.filterNot { it === item }?.map { it.bounds() }.orEmpty()
-        fun snappedPoint(anchor: Pt, moving: Pt): Pt {
-            val result = ShapeAlignment.snapDrag(anchor, moving, resizeTargets, alignmentTolerance())
+        fun snappedPoint(anchor: Pt, moving: Pt, matchDimensions: Boolean = false): Pt {
+            val result = ShapeAlignment.snapDrag(
+                anchor, moving, resizeTargets, alignmentTolerance(), matchDimensions = matchDimensions,
+            )
             alignmentGuides = result.guides
             alignmentGuidePageIndex = resizePageIndex.takeIf { result.guides.isNotEmpty() }
             return result.end
@@ -2473,7 +2475,7 @@ class InteractionController(
                     HandleId.BL -> Pt(bounds.right, bounds.top)
                     else -> Pt(bounds.left, bounds.top)
                 }
-                val snapped = snappedPoint(anchor, local)
+                val snapped = snappedPoint(anchor, local, matchDimensions = true)
                 val (s, en) = when {
                     item.shape.isEndpointShape -> ResizeMath.resizeOpenShape(item.start, item.end, handle, snapped)
                     item.shape.keepsAspect -> ResizeMath.resizeSquareShape(item.start, item.end, handle, snapped)
