@@ -373,6 +373,14 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                         )
                         Text("Bucket", color = LocalPalette.current.text.toComposeColor(), fontSize = 10.sp, maxLines = 1)
                     }
+                    if (canFill) {
+                        ToggleRow("Fill shape", config.fill) { emit(config.copy(fill = it)) }
+                        if (config.fill) {
+                            SliderRow("Fill opacity", (config.fillAlpha * 100.0).toFloat(), 0f..100f) {
+                                emit(config.copy(fillAlpha = (it / 100.0).coerceIn(0.0, 1.0)))
+                            }
+                        }
+                    }
                 }
             }
 
@@ -398,14 +406,6 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
 
             if (advancedExpanded) {
                 Box(Modifier.fillMaxWidth().height(1.dp).background(LocalPalette.current.border.toComposeColor()))
-                if (canFill) {
-                    ToggleRow("Fill shape", config.fill) { emit(config.copy(fill = it)) }
-                    if (config.fill) {
-                        SliderRow("Fill opacity", (config.fillAlpha * 100.0).toFloat(), 0f..100f) {
-                            emit(config.copy(fillAlpha = (it / 100.0).coerceIn(0.0, 1.0)))
-                        }
-                    }
-                }
                 ToggleRow("Dashed line", config.dashed) { emit(config.copy(dashed = it)) }
             }
         }
