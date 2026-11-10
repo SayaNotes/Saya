@@ -196,7 +196,7 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                                 },
                             ) {
                                 Column(
-                                    modifier = Modifier.width(244.dp).align(Alignment.TopCenter),
+                                    modifier = Modifier.width(224.dp).align(Alignment.TopCenter),
                                     verticalArrangement = Arrangement.spacedBy(6.dp),
                                 ) {
                                     shapePages[page].chunked(5).forEach { gridRow ->
