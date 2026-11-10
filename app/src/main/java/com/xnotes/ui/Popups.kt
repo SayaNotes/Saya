@@ -544,7 +544,7 @@ internal fun DesignedSizeSlider(
 
 /**
  * Dedicated laser preset. The visual style is intentionally fixed: fully opaque red,
- * maximum neon bloom, and the taper profile. Only width is exposed to the user.
+ * maximum neon bloom, and the taper profile. Width and visible duration are configurable.
  */
 @Composable
 fun LaserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
