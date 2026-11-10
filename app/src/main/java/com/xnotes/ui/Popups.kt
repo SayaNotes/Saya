@@ -223,8 +223,12 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
         modifier = Modifier.clip(RoundedCornerShape(26.dp)),
         frameless = true,
     ) {
+        AnimatedVisibility(
+            visible = true,
+            enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(220)) + fadeIn(tween(180)),
+        ) {
         Column(
-            Modifier.widthIn(max = 820.dp).fillMaxWidth()
+            Modifier.widthIn(max = 560.dp).fillMaxWidth()
                 .liquidGlassSurface(
                     RoundedCornerShape(26.dp),
                     LocalPalette.current.panel.toComposeColor(),
@@ -442,6 +446,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     if (glow) SliderRow(stringResource(R.string.caption_glow_intensity), glowIntensity, 0f..100f) { glowIntensity = it; emit() }
                 }
             }
+        }
         }
     }
 }
@@ -879,7 +884,7 @@ private fun ToolModeButton(
     ) {
         Box(
             Modifier.size(52.dp, 142.dp),
-            contentAlignment = Alignment.TopCenter,
+            contentAlignment = Alignment.BottomCenter,
         ) {
             if (artPainter != null) {
                 Image(
@@ -905,8 +910,8 @@ private fun ToolModeButton(
                 Text(
                     stampGlyph,
                     fontSize = 21.sp,
-                    modifier = Modifier.align(Alignment.TopCenter).offset(y = 18.dp)
-                        .background(Color.White.copy(alpha = 0.88f), CircleShape).padding(2.dp),
+                    modifier = Modifier.align(Alignment.BottomCenter).offset(y = (-8).dp)
+                        .background(Color.White.copy(alpha = 0.92f), CircleShape).padding(2.dp),
                 )
             }
         }
