@@ -508,7 +508,6 @@ private fun ToolButton(
                 popupTool == Tool.TEXT -> TextToolConfigPopup(editor) { setConfigForTool(null) }
                 popupTool == Tool.MARKUP -> MarkupToolPopup(editor) { setConfigForTool(null) }
                 popupTool == Tool.TAPE -> TapeConfigPopup(editor) { setConfigForTool(null) }
-                popupTool == Tool.LASER -> LaserConfigPopup(editor) { setConfigForTool(null) }
                 else -> ToolConfigPopup(editor, popupTool, onSelectTool = { editor.selectTool(it); setConfigForTool(it) }) { setConfigForTool(null) }
             }
         }
