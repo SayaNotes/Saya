@@ -214,6 +214,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
 
     // Twelve high-contrast presets arranged as the compact 3-column palette in the reference.
     val paletteColors = editor.swatches(SwatchRole.PEN)
+    val effectivePenColor = colorOverride ?: editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)
     val penTools = listOf(Tool.PEN, Tool.CALLIGRAPHY, Tool.HIGHLIGHTER, Tool.TAPER, Tool.LASER, Tool.STAMP)
 
     DropdownMenu(
@@ -302,7 +303,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     ) {
                         paletteColors.forEachIndexed { paletteIndex, swatch ->
                             val swatchColor = swatch.toComposeColor()
-                            val selected = colorOverride == swatch
+                            val selected = effectivePenColor == swatch
                             Box(
                                 Modifier.size(38.dp).clip(RoundedCornerShape(7.dp))
                                     .background(swatchColor)
@@ -339,7 +340,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     }
                     // Keep a visible selection marker when the active ink is a custom colour
                     // rather than one of the twelve built-in swatches.
-                    val activePenColor = editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)
+                    val activePenColor = effectivePenColor
                     if (activePenColor != null && activePenColor !in paletteColors) {
                         val customColor = activePenColor.toComposeColor()
                         Row(
@@ -363,7 +364,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                         ColorPickerDot(
                             null,
                             custom = false,
-                            onPick = { editor.setSwatchColor(editor.hostActiveColorIndex, it) },
+                            onPick = { colorOverride = it; emit() },
                             dismissOnPick = false,
                         ) { dismissPicker, pick ->
                             ColorPickerPopup(
