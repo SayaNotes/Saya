@@ -912,7 +912,7 @@ private fun ToolModeButton(
                     contentDescription = label,
                     contentScale = ContentScale.Fit,
                     modifier = Modifier.fillMaxSize().padding(top = 10.dp)
-                        .align(Alignment.BottomCenter),
+                        .align(Alignment.BottomCenter).offset(y = 8.dp),
                 )
                 if (nibPainter != null) {
                     Image(
