@@ -32,6 +32,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -63,6 +65,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -285,14 +288,15 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     // its content for intrinsic dimensions, while BoxWithConstraints is a
                     // SubcomposeLayout and cannot answer intrinsic measurements. FlowRow
                     // wraps the pen choices using the constraints it is actually given.
-                    FlowRow(
+                    Row(
                         modifier = Modifier.fillMaxWidth()
                             .clip(RoundedCornerShape(16.dp))
                             .background(LocalPalette.current.surface.toComposeColor())
                             .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(16.dp))
+                            .horizontalScroll(rememberScrollState())
                             .padding(horizontal = 6.dp, vertical = 7.dp),
-                        horizontalArrangement = Arrangement.SpaceEvenly,
-                        verticalArrangement = Arrangement.spacedBy(6.dp),
+                        horizontalArrangement = Arrangement.spacedBy(0.dp),
+                        verticalAlignment = Alignment.Bottom,
                     ) {
                         penTools.forEach { candidate ->
                             ToolModeButton(
@@ -897,7 +901,7 @@ private fun ToolModeButton(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            Modifier.size(52.dp, 142.dp),
+            Modifier.size(52.dp, 142.dp).clip(RoundedCornerShape(8.dp)),
             contentAlignment = Alignment.BottomCenter,
         ) {
             if (artPainter != null) {
@@ -905,7 +909,8 @@ private fun ToolModeButton(
                     artPainter,
                     contentDescription = label,
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxSize().padding(top = 10.dp),
+                    modifier = Modifier.fillMaxSize().padding(top = 10.dp)
+                        .graphicsLayer { if (selected) { scaleX = 1.12f; scaleY = 1.12f } },
                 )
                 if (nibPainter != null) {
                     Image(
@@ -916,7 +921,8 @@ private fun ToolModeButton(
                             nibColor,
                             androidx.compose.ui.graphics.BlendMode.SrcIn,
                         ),
-                        modifier = Modifier.fillMaxSize().padding(top = 10.dp),
+                        modifier = Modifier.fillMaxSize().padding(top = 10.dp)
+                            .graphicsLayer { if (selected) { scaleX = 1.12f; scaleY = 1.12f } },
                     )
                 }
             }
