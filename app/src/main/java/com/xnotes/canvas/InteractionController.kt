@@ -2261,15 +2261,28 @@ class InteractionController(
             return raw
         }
         val selected = selection.map { it.item }.toSet()
+        if (!shapeConfig.snapToAlign) {
+            alignmentGuides = emptyList()
+            alignmentGuidePageIndex = null
+            return raw
+        }
         val targets = page.items.filterIsInstance<ShapeItem>()
             .filterNot { it in selected }
             .map { it.bounds() }
         val local = state.vectorToPageSpace(raw)
         val candidate = original.translate(local.x, local.y)
         val result = ShapeAlignment.snapTranslation(candidate, targets, alignmentTolerance())
-        alignmentGuides = result.guides
-        alignmentGuidePageIndex = pageIndex.takeIf { result.guides.isNotEmpty() }
-        return pageVectorToContent(Pt(local.x + result.delta.x, local.y + result.delta.y))
+        val gridSpacing = page.takeIf { it.resolvedTemplate(state.document) == PagePattern.GRID.id }
+            ?.resolvedSpacing(state.document)
+            ?: if (page.resolvedTemplate(state.document) == PagePattern.GRID.id) PageStyle.DEFAULT_SPACING else null
+        val gridResult = gridSpacing?.let {
+            ShapeAlignment.snapGrid(Pt.ZERO, Pt(local.x, local.y), it, alignmentTolerance())
+        }
+        val delta = Pt(local.x + result.delta.x, local.y + result.delta.y)
+        val finalDelta = gridResult?.end ?: delta
+        alignmentGuides = result.guides + gridResult?.guides.orEmpty()
+        alignmentGuidePageIndex = pageIndex.takeIf { alignmentGuides.isNotEmpty() }
+        return pageVectorToContent(finalDelta)
     }
 
     private fun alignmentTolerance(): Double =
@@ -2358,6 +2371,11 @@ class InteractionController(
         val resizeTargets = resizePage?.items?.filterIsInstance<ShapeItem>()
             ?.filterNot { it === item }?.map { it.bounds() }.orEmpty()
         fun snappedPoint(anchor: Pt, moving: Pt, matchDimensions: Boolean = false): Pt {
+            if (!shapeConfig.snapToAlign) {
+                alignmentGuides = emptyList()
+                alignmentGuidePageIndex = null
+                return moving
+            }
             val result = ShapeAlignment.snapDrag(
                 anchor, moving, resizeTargets, alignmentTolerance(), matchDimensions = matchDimensions,
             )
@@ -2887,14 +2905,10 @@ class InteractionController(
             val raw = atan2(content.y - txCenter.y, content.x - txCenter.x) - txGrabAngle
             // A sticky zone around each 90-degree step, not a hard quantiser: the box clings to the
             // nearest quarter turn only while within ROTATE_SNAP_STICK of it, and turns freely otherwise.
-            val theta = if (snapRotation90) {
-                val quarter = Math.PI / 2.0
-                val target = txStartAngle + raw
-                val nearest = Math.round(target / quarter) * quarter
-                if (Math.abs(target - nearest) <= ROTATE_SNAP_STICK_RAD) nearest - txStartAngle else raw
-            } else {
-                raw
-            }
+            val snapStep = Math.toRadians(shapeConfig.angleSnapDegrees.coerceIn(15, 90).toDouble())
+            val target = txStartAngle + raw
+            val nearest = Math.round(target / snapStep) * snapStep
+            val theta = if (Math.abs(target - nearest) <= ROTATE_SNAP_STICK_RAD) nearest - txStartAngle else raw
             selObb = obb0.copy(angle = txStartAngle + theta)
             world = Affine.rotateAbout(txCenter, theta)
         }
@@ -2989,13 +3003,19 @@ class InteractionController(
             // A function graph keeps equal x and y scales while drawn; its handles stretch it later.
             shape.end = shapeAspect?.let { ResizeMath.aspectCorner(shape.start, raw, it) } ?: ResizeMath.drawnEnd(shape, raw, shapeConfig.perfect)
         }
-        if (!shape.shape.keepsAspect && shapeAspect == null && !shapeConfig.perfect) {
+        if (shapeConfig.snapToAlign && !shape.shape.keepsAspect && shapeAspect == null && !shapeConfig.perfect) {
             val page = state.document.pages.getOrNull(pi)
             val targets = page?.items?.filterIsInstance<ShapeItem>()?.map { it.bounds() }.orEmpty()
             val result = ShapeAlignment.snapDrag(shape.start, shape.end, targets, alignmentTolerance())
-            shape.end = result.end
-            alignmentGuides = result.guides
-            alignmentGuidePageIndex = pi.takeIf { result.guides.isNotEmpty() }
+            val gridSpacing = page?.takeIf { it.resolvedTemplate(state.document) == PagePattern.GRID.id }
+                ?.resolvedSpacing(state.document)
+                ?: if (page?.resolvedTemplate(state.document) == PagePattern.GRID.id) PageStyle.DEFAULT_SPACING else null
+            val gridResult = gridSpacing?.let {
+                ShapeAlignment.snapGrid(shape.start, result.end, it, alignmentTolerance())
+            }
+            shape.end = gridResult?.end ?: result.end
+            alignmentGuides = result.guides + gridResult?.guides.orEmpty()
+            alignmentGuidePageIndex = pi.takeIf { alignmentGuides.isNotEmpty() }
         } else {
             alignmentGuides = emptyList()
             alignmentGuidePageIndex = null
