@@ -719,9 +719,9 @@ fun StampConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                 presets.forEach { preset ->
                     val selected = glyph == preset
                     Box(
-                        Modifier.size(44.dp).clip(RoundedCornerShape(7.dp))
+                        Modifier.size(28.dp).clip(RoundedCornerShape(5.dp))
                             .background(if (selected) LocalPalette.current.accent.toComposeColor().copy(alpha = 0.22f) else LocalPalette.current.surface.toComposeColor())
-                            .border(1.dp, if (selected) LocalPalette.current.accent.toComposeColor() else LocalPalette.current.border.toComposeColor(), RoundedCornerShape(7.dp))
+                            .border(1.dp, if (selected) LocalPalette.current.accent.toComposeColor() else LocalPalette.current.border.toComposeColor(), RoundedCornerShape(5.dp))
                             .clickable { glyph = preset; emit() },
                         contentAlignment = Alignment.Center,
                     ) {
