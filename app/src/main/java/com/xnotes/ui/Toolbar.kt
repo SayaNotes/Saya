@@ -67,6 +67,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -75,8 +76,10 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.res.painterResource
+import android.graphics.BitmapFactory
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
@@ -432,7 +435,18 @@ private fun ToolButton(
         else -> null
     }
     val image = imageRes?.let { painterResource(it) }
-    val nibMask = nibMaskRes?.let { painterResource(it) }
+    // Decode the small nib mask as a Bitmap directly. Compose's painterResource path
+    // assumes the resolved drawable is a BitmapDrawable; on some Android builds this
+    // resource can resolve to another drawable type and crash the entire editor toolbar.
+    // A failed mask decode should only omit the tint mask, never prevent opening a note.
+    val context = LocalContext.current
+    val nibMask = remember(context, nibMaskRes) {
+        nibMaskRes?.let { resId ->
+            runCatching {
+                BitmapFactory.decodeResource(context.resources, resId)?.asImageBitmap()
+            }.getOrNull()
+        }?.let { BitmapPainter(it) }
+    }
     val nibColor = editor.toolConfig(displayTool).colorOverride?.toComposeColor()
         ?: editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor()
         ?: androidx.compose.ui.graphics.Color.Black
