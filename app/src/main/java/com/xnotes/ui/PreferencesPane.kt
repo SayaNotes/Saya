@@ -485,6 +485,11 @@ fun PreferencesPane(
                         Chip(stringResource(label), prefs.penButtonTool == id) { update(prefs.copy(penButtonTool = id)) }
                     }
                 }
+                Text(
+                    "When Eraser is selected, press and hold a finger on the page to erase temporarily; release to return to the armed tool.",
+                    color = palette.textDim.toComposeColor(),
+                    fontSize = 12.sp,
+                )
                 if (prefs.penButtonTool == "eraser" || prefs.penButtonTool == "pan") {
                     CheckRow(stringResource(R.string.pref_pen_button_hover), prefs.penButtonHover) {
                         update(prefs.copy(penButtonHover = it))
