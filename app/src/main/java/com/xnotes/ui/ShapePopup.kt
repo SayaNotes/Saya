@@ -406,8 +406,8 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                 if (canFill) {
                     ToggleRow("Fill shape", config.fill) { emit(config.copy(fill = it)) }
                     if (config.fill) {
-                        SliderRow("Fill opacity", (config.fillAlpha * 100.0).toFloat(), 5f..100f) {
-                            emit(config.copy(fillAlpha = (it / 100.0).coerceIn(0.05, 1.0)))
+                        SliderRow("Fill opacity", (config.fillAlpha * 100.0).toFloat(), 0f..100f) {
+                            emit(config.copy(fillAlpha = (it / 100.0).coerceIn(0.0, 1.0)))
                         }
                     }
                 }
