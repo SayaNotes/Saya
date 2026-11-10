@@ -1155,10 +1155,6 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         onToolStyleChanged?.invoke()
     }
 
-    override var snapHeldToShapes: Boolean
-        get() = false
-        set(v) { /* Removed feature: no-op for restored legacy settings. */ }
-
     override val hostShapeConfig: ShapeConfig get() = shapeConfig
 
     /** The app's hidden shape chips and pages, read live from the preferences the paged editor holds. */
@@ -2248,13 +2244,11 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         fingerDraws: Boolean,
         penButtonTool: Tool?,
         zoomLockPan: String,
-        detectShapes: Boolean,
         snapRotation90: Boolean = false,
     ) {
         interaction.fingerDraws = fingerDraws
         interaction.penButtonTool = penButtonTool
         interaction.zoomLockPan = zoomLockPan
-        // Deliberately ignore the legacy detectShapes preference.
         selection.snapRotation90 = snapRotation90
         this.snapRotation90 = snapRotation90
     }
