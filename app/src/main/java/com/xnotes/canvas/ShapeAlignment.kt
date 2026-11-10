@@ -88,6 +88,36 @@ internal object ShapeAlignment {
         return DragResult(snappedEnd, guides.distinct())
     }
 
+    /** Snap a dragged coordinate to the nearest page-grid line, in page-space units. */
+    fun snapGrid(
+        start: Pt,
+        end: Pt,
+        spacing: Double,
+        tolerance: Double,
+        matchDimensions: Boolean = false,
+    ): DragResult {
+        if (spacing <= 0.0 || tolerance <= 0.0) return DragResult(end, emptyList())
+        fun nearest(value: Double): Double? {
+            val line = kotlin.math.round(value / spacing) * spacing
+            return (line - value).takeIf { abs(it) <= tolerance }
+        }
+        val dx = nearest(end.x)
+        val dy = nearest(end.y)
+        val snapped = Pt(dx?.let { end.x + it } ?: end.x, dy?.let { end.y + it } ?: end.y)
+        val box = Rect.fromPoints(start, snapped)
+        val guides = buildList {
+            dx?.let { add(Guide(true, snapped.x, min(start.y, snapped.y), max(start.y, snapped.y))) }
+            dy?.let { add(Guide(false, snapped.y, min(start.x, snapped.x), max(start.x, snapped.x))) }
+            if (matchDimensions) {
+                val widthLine = kotlin.math.round(abs(snapped.x - start.x) / spacing) * spacing
+                val heightLine = kotlin.math.round(abs(snapped.y - start.y) / spacing) * spacing
+                if (abs(abs(snapped.x - start.x) - widthLine) <= tolerance) add(Guide(true, box.right, box.top, box.bottom))
+                if (abs(abs(snapped.y - start.y) - heightLine) <= tolerance) add(Guide(false, box.bottom, box.left, box.right))
+            }
+        }
+        return DragResult(snapped, guides.distinct())
+    }
+
     private fun bestMoveMatch(candidate: Rect, targets: List<Rect>, tolerance: Double, vertical: Boolean): Match? {
         val values = if (vertical) {
             listOf(candidate.left, candidate.centerX, candidate.right)
