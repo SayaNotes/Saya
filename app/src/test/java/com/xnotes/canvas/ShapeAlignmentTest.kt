@@ -81,6 +81,20 @@ class ShapeAlignmentTest {
         assertTrue(result.guides.any { it.vertical && it.coordinate == 300.0 })
     }
 
+    @Test fun resizeDimensionMatchWinsOverNearbyEdgeMatch() {
+        val result = ShapeAlignment.snapDrag(
+            Pt(0.0, 0.0), Pt(98.0, 40.0),
+            listOf(Rect(99.0, 200.0, 100.0, 60.0)),
+            6.0,
+            matchDimensions = true,
+        )
+
+        // The target's left edge is closer than the 2px width difference, but resize
+        // should still magnetize the dragged edge to the matching 100px width.
+        assertEquals(100.0, result.end.x, 0.0)
+        assertTrue(result.guides.any { it.vertical && it.coordinate == 100.0 })
+    }
+
     @Test fun resizingMatchesHeightIndependentlyAndShowsBothBoxes() {
         val target = Rect(200.0, 200.0, 60.0, 100.0)
         val result = ShapeAlignment.snapDrag(
