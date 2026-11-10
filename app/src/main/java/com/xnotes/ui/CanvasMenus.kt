@@ -166,8 +166,11 @@ interface SelectionMenuHost : SwatchHost {
      */
     fun restyleSelection(color: Rgba?, width: Double?, preview: Boolean = false)
 
-    /** The fills of the selected shapes that have one, for the restyle popup to open on. */
+    /** The fills of selected shapes that already have one, for the restyle popup to open on. */
     fun selectionFills(): List<Rgba>
+
+    /** True when the selection contains a closed shape that can be filled, even if it is empty. */
+    fun selectionCanFill(): Boolean
 
     /** The first selected tape's pattern, for the restyle popup to open on; null when no tape is selected. */
     fun selectionTapePattern(): com.xnotes.core.model.TapePattern?
@@ -773,8 +776,8 @@ private fun SelectionStylePopup(host: SelectionMenuHost, onDismiss: () -> Unit) 
                     }
                 }
             }
-            if (fills.isNotEmpty()) {
-                var fill by remember { mutableStateOf<Rgba?>(fills.first().copy(a = 255)) }
+            if (host.selectionCanFill()) {
+                var fill by remember { mutableStateOf<Rgba?>(fills.firstOrNull()?.copy(a = 255)) }
                 var editingFill by remember { mutableStateOf<Int?>(null) }
                 val outline = color
                 StyleCaption(stringResource(R.string.caption_fill_colour))
