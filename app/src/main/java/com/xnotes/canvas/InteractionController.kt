@@ -2275,10 +2275,10 @@ class InteractionController(
         val gridSpacing = page.takeIf { it.resolvedTemplate(state.document) == PagePattern.GRID.id }
             ?.resolvedSpacing(state.document)
             ?: if (page.resolvedTemplate(state.document) == PagePattern.GRID.id) PageStyle.DEFAULT_SPACING else null
-        val gridResult = gridSpacing?.let {
-            ShapeAlignment.snapGrid(Pt.ZERO, Pt(local.x, local.y), it, alignmentTolerance())
-        }
         val delta = Pt(local.x + result.delta.x, local.y + result.delta.y)
+        val gridResult = gridSpacing?.let {
+            ShapeAlignment.snapGrid(Pt.ZERO, delta, it, alignmentTolerance())
+        }
         val finalDelta = gridResult?.end ?: delta
         alignmentGuides = result.guides + gridResult?.guides.orEmpty()
         alignmentGuidePageIndex = pageIndex.takeIf { alignmentGuides.isNotEmpty() }
