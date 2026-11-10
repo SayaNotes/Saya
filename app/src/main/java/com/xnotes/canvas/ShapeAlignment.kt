@@ -69,12 +69,16 @@ internal object ShapeAlignment {
                     val to = max(placed.bottom, target.bottom)
                     guides.add(Guide(true, placed.left, from, to))
                     guides.add(Guide(true, placed.right, from, to))
+                    guides.add(Guide(true, target.left, from, to))
+                    guides.add(Guide(true, target.right, from, to))
                 }
                 if (abs(placed.h - target.h) <= GUIDE_EPSILON) {
                     val from = min(placed.left, target.left)
                     val to = max(placed.right, target.right)
                     guides.add(Guide(false, placed.top, from, to))
                     guides.add(Guide(false, placed.bottom, from, to))
+                    guides.add(Guide(false, target.top, from, to))
+                    guides.add(Guide(false, target.bottom, from, to))
                 }
             }
         }
