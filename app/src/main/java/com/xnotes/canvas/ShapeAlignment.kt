@@ -125,6 +125,36 @@ internal object ShapeAlignment {
         return best
     }
 
+    /** Match the resized width/height to an existing shape while keeping the fixed corner anchored. */
+    private fun bestDimensionMatch(
+        fixed: Double,
+        moving: Double,
+        targets: List<Rect>,
+        tolerance: Double,
+        vertical: Boolean,
+    ): Match? {
+        val currentSize = abs(moving - fixed)
+        val direction = if (moving >= fixed) 1.0 else -1.0
+        var best: Match? = null
+        for (target in targets) {
+            val targetSize = if (vertical) abs(target.w) else abs(target.h)
+            val difference = targetSize - currentSize
+            if (abs(difference) > tolerance) continue
+            val snappedMoving = fixed + direction * targetSize
+            val match = Match(snappedMoving - moving, abs(difference))
+            if (best == null || match.distance < best.distance) best = match
+        }
+        return best
+    }
+
+    /** Prefer the closest snap; on an exact tie, retain the edge/centre alignment match. */
+    private fun closerMatch(first: Match?, second: Match?): Match? = when {
+        first == null -> second
+        second == null -> first
+        second.distance < first.distance -> second
+        else -> first
+    }
+
     /** Return every edge/centre guide that is aligned after the chosen snap is applied. */
     private fun guidesFor(candidate: Rect, targets: List<Rect>): List<Guide> {
         val guides = mutableListOf<Guide>()
