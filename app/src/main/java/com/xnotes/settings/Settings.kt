@@ -383,6 +383,7 @@ data class Settings(
             .put("stamp_glyph", c.stampGlyph)
             .put("stamp_size", c.stampSize)
             .put("stamp_spacing", c.stampSpacing)
+            .put("laser_duration_ms", c.laserDurationMs)
             .put("rgba", rgbaArr(c.rgba))
             .apply { c.colorOverride?.let { put("color_override", rgbaArr(it)) } }
 
@@ -419,6 +420,8 @@ data class Settings(
                 stampGlyph = normalizeStampGlyph(o.optString("stamp_glyph", d.stampGlyph)),
                 stampSize = o.optDouble("stamp_size", d.stampSize).coerceIn(8.0, 96.0),
                 stampSpacing = o.optDouble("stamp_spacing", d.stampSpacing).coerceIn(8.0, 160.0),
+                laserDurationMs = o.optLong("laser_duration_ms", d.laserDurationMs)
+                    .coerceIn(ToolConfig.MIN_LASER_DURATION_MS, ToolConfig.MAX_LASER_DURATION_MS),
                 colorOverride = o.optJSONArray("color_override")
                     ?.let { a -> Rgba.fromList((0 until a.length()).map { i -> a.optInt(i, 0) }) }
                     ?: d.colorOverride,
