@@ -807,7 +807,7 @@ class InfiniteInteraction(
         temporaryEraserDown = down
         val task = Runnable {
             temporaryEraserRunnable = null
-            if (penButtonTool != Tool.ERASER || !isHoldErasePen(tool) ||
+            if ((!drawingIsStylus && penButtonTool != Tool.ERASER) || !isHoldErasePen(tool) ||
                 (mode != CanvasPointerMode.PAN && mode != CanvasPointerMode.DRAW)
             ) return@Runnable
             cancelLongPress()
