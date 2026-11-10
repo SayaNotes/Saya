@@ -237,7 +237,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                PopupTitle(stringResource(tool.labelRes))
+                PopupTitle("Tools")
                 Text("×", color = LocalPalette.current.text.toComposeColor(), fontSize = 20.sp,
                     modifier = Modifier.clip(CircleShape).clickable { onDismiss() }.padding(horizontal = 5.dp))
             }
