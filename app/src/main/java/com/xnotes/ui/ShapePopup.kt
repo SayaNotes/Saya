@@ -87,9 +87,9 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
     val shapes = remember(editor.hostHiddenShapes, editor.hostShapeOrder) {
         ShapePresets.shown(editor.hostHiddenShapes, editor.hostShapeOrder).flatMap { it.presets }
     }
-    // Keep the same 4 × 4 horizontal pages, but compose only the visible page and its
-    // immediate neighbours rather than eagerly creating every shape chip.
-    val shapePages = remember(shapes) { shapes.chunked(16) }
+    // Show five columns across four rows, using the existing vertical space to expose more
+    // presets per page without shrinking the shape artwork. Only the visible page is composed.
+    val shapePages = remember(shapes) { shapes.chunked(20) }
     val initialShapePage = config.shapePage.coerceIn(0, (shapePages.lastIndex).coerceAtLeast(0))
     var visibleShapePage by remember(shapes) { mutableStateOf(initialShapePage) }
     val page = visibleShapePage.coerceIn(0, (shapePages.lastIndex).coerceAtLeast(0))
@@ -176,7 +176,7 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                             fontSize = 11.sp,
                         )
                         if (shapePages.isNotEmpty()) {
-                            // Compose one 4 × 4 grid at a time. Avoids nested pager measurement
+                            // Compose one 5 × 4 grid at a time. Avoids nested pager measurement
                             // inside Material's dropdown popup, a known source of layout crashes.
                             // Horizontal swipes and the arrows both switch the lightweight page state.
                             var horizontalDrag by remember { mutableStateOf(0f) }
@@ -199,15 +199,15 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                                     modifier = Modifier.width(244.dp).align(Alignment.TopCenter),
                                     verticalArrangement = Arrangement.spacedBy(6.dp),
                                 ) {
-                                    shapePages[page].chunked(4).forEach { gridRow ->
+                                    shapePages[page].chunked(5).forEach { gridRow ->
                                         Row(
                                             modifier = Modifier.fillMaxWidth(),
-                                            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                                            horizontalArrangement = Arrangement.spacedBy(1.dp, Alignment.CenterHorizontally),
                                             verticalAlignment = Alignment.CenterVertically,
                                         ) {
                                             gridRow.forEach { preset ->
                                                 Box(
-                                                    modifier = Modifier.width(55.dp).height(44.dp),
+                                                    modifier = Modifier.width(44.dp).height(44.dp),
                                                     contentAlignment = Alignment.Center,
                                                 ) {
                                                     KindChip(
@@ -238,7 +238,7 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                                 )
                                 Text(
                                     if (shapePages.size > 1) {
-                                        "${page * 16 + 1}–${minOf((page + 1) * 16, shapes.size)} of ${shapes.size}"
+                                        "${page * 20 + 1}–${minOf((page + 1) * 20, shapes.size)} of ${shapes.size}"
                                     } else "All shapes",
                                     color = LocalPalette.current.textDim.toComposeColor(),
                                     fontSize = 11.sp,
