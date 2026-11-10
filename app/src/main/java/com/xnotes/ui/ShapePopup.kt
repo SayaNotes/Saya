@@ -170,11 +170,6 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                             .padding(horizontal = 9.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(7.dp),
                     ) {
-                        Text(
-                            "Basic shapes",
-                            color = LocalPalette.current.textDim.toComposeColor(),
-                            fontSize = 11.sp,
-                        )
                         if (shapePages.isNotEmpty()) {
                             // Compose one 5 × 4 grid at a time. Avoids nested pager measurement
                             // inside Material's dropdown popup, a known source of layout crashes.
