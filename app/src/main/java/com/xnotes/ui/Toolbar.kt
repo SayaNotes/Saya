@@ -434,18 +434,9 @@ private fun ToolButton(
         else -> null
     }
     val image = imageRes?.let { bitmapPainterResource(it) }
-    // Decode the small nib mask as a Bitmap directly. Compose's painterResource path
-    // assumes the resolved drawable is a BitmapDrawable; on some Android builds this
-    // resource can resolve to another drawable type and crash the entire editor toolbar.
-    // A failed mask decode should only omit the tint mask, never prevent opening a note.
-    val context = LocalContext.current
-    val nibMask = remember(context, nibMaskRes) {
-        nibMaskRes?.let { resId ->
-            runCatching {
-                BitmapFactory.decodeResource(context.resources, resId)?.asImageBitmap()
-            }.getOrNull()
-        }?.let { BitmapPainter(it) }
-    }
+    // Use the same safe mask decoder as the pen panel. It also normalizes the taper PNG
+    // into an alpha silhouette, keeping the toolbar nib preview in sync with the selected ink.
+    val nibMask = nibMaskRes?.let { bitmapPainterResource(it) }
     val nibColor = editor.toolConfig(displayTool).colorOverride?.toComposeColor()
         ?: editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor()
         ?: androidx.compose.ui.graphics.Color.Black
