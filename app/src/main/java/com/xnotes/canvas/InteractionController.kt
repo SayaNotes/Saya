@@ -3012,7 +3012,7 @@ class InteractionController(
             // A function graph keeps equal x and y scales while drawn; its handles stretch it later.
             shape.end = shapeAspect?.let { ResizeMath.aspectCorner(shape.start, raw, it) } ?: ResizeMath.drawnEnd(shape, raw, shapeConfig.perfect)
         }
-        if (!shape.shape.keepsAspect && shapeAspect == null) {
+        if (!shape.shape.keepsAspect && shapeAspect == null && !shapeConfig.perfect) {
             val page = state.document.pages.getOrNull(pi)
             val targets = page?.items?.filterIsInstance<ShapeItem>()?.map { it.bounds() }.orEmpty()
             val result = ShapeAlignment.snapDrag(shape.start, shape.end, targets, alignmentTolerance())
