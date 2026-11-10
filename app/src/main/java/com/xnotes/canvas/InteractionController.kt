@@ -2950,7 +2950,7 @@ class InteractionController(
                         HandleId.B -> Pt(bounds.centerX, bounds.bottom)
                         HandleId.BL -> Pt(bounds.left, bounds.bottom)
                         HandleId.L -> Pt(bounds.left, bounds.centerY)
-                        else -> return@forEachIndexed
+                        else -> Pt(bounds.right, bounds.bottom)
                     }
                     val targets = page.items.filterIsInstance<ShapeItem>()
                         .filterNot { it === shape }.map { it.bounds() }
