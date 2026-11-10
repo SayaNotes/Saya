@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 
 import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.hrm.latex.renderer.Latex
@@ -70,6 +71,7 @@ import androidx.compose.ui.layout.MeasureResult
 import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.painter.BitmapPainter
@@ -264,7 +266,9 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
 
                     // Light, inset pen tray echoes the original X Notes illustrated selector.
                     // On a narrow phone, wrap to two rows rather than clipping the six tools.
-                    BoxWithConstraints(Modifier.fillMaxWidth()) {
+                    var penTrayWidth by remember { mutableStateOf(0.dp) }
+                    val trayDensity = LocalDensity.current
+                    Box(Modifier.fillMaxWidth().onSizeChanged { penTrayWidth = with(trayDensity) { it.width.toDp() } }) {
                         val buttons: @Composable () -> Unit = {
                             penTools.forEach { candidate ->
                                 ToolModeButton(
@@ -276,7 +280,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                                 ) { onSelectTool(candidate) }
                             }
                         }
-                        ColumnOrRowPenTray(maxWidth, buttons)
+                        ColumnOrRowPenTray(penTrayWidth, buttons)
                     }
                 }
 
@@ -450,7 +454,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
  * A missing decorative asset simply leaves the control's native fallback visible.
  */
 @Composable
-private fun bitmapPainterResource(resId: Int): BitmapPainter? {
+internal fun bitmapPainterResource(resId: Int): BitmapPainter? {
     val context = LocalContext.current
     val bitmap = remember(context, resId) {
         runCatching {
@@ -470,15 +474,17 @@ internal fun DesignedSizeSlider(
     val fraction = ((value - valueRange.start) / (valueRange.endInclusive - valueRange.start)).coerceIn(0f, 1f)
     val trackPainter = bitmapPainterResource(R.drawable.pen_size_track)
     val thumbPainter = bitmapPainterResource(R.drawable.pen_size_thumb)
-    BoxWithConstraints(Modifier.fillMaxWidth().height(36.dp), contentAlignment = Alignment.CenterStart) {
+    val density = LocalDensity.current
+    var measuredWidth by remember { mutableStateOf(0.dp) }
+    Box(Modifier.fillMaxWidth().height(36.dp).onSizeChanged { measuredWidth = with(density) { it.width.toDp() } }, contentAlignment = Alignment.CenterStart) {
         trackPainter?.let {
             Image(it, null, contentScale = ContentScale.FillBounds,
                 modifier = Modifier.fillMaxWidth().height(8.dp))
         }
-        Box(Modifier.width(15.dp + (maxWidth - 30.dp) * fraction).height(8.dp)
+        Box(Modifier.width(15.dp + (measuredWidth - 30.dp).coerceAtLeast(0.dp) * fraction).height(8.dp)
             .clip(RoundedCornerShape(8.dp)).background(Color(0xFF414345)))
         thumbPainter?.let {
-            Image(it, null, modifier = Modifier.offset(x = (maxWidth - 30.dp) * fraction).size(30.dp))
+            Image(it, null, modifier = Modifier.offset(x = (measuredWidth - 30.dp).coerceAtLeast(0.dp) * fraction).size(30.dp))
         }
         Slider(value = value, onValueChange = onValueChange, valueRange = valueRange,
             modifier = Modifier.fillMaxWidth(),
