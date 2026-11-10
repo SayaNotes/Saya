@@ -420,12 +420,15 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                 Text("Rotation snapping", color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
                 Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     listOf(15, 45, 90).forEach { degrees ->
-                        KindChip(
-                            ShapeIcons.of(ShapePresets.byKey("line") ?: ShapePresets.forKind(com.xnotes.core.shapes.ShapeKind.LINE)),
+                        Text(
                             "$degrees°",
-                            selected = config.angleSnapDegrees == degrees,
-                            iconSize = 16.dp,
-                        ) { emit(config.copy(angleSnapDegrees = degrees)) }
+                            color = if (config.angleSnapDegrees == degrees) LocalPalette.current.accent.toComposeColor() else LocalPalette.current.text.toComposeColor(),
+                            fontSize = 12.sp,
+                            modifier = Modifier.clip(RoundedCornerShape(8.dp))
+                                .background(LocalPalette.current.surface.toComposeColor())
+                                .clickable { emit(config.copy(angleSnapDegrees = degrees)) }
+                                .padding(horizontal = 12.dp, vertical = 7.dp),
+                        )
                     }
                 }
             }
