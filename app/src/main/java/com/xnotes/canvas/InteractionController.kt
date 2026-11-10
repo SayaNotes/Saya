@@ -2927,19 +2927,30 @@ class InteractionController(
             val page = state.document.pages.getOrNull(selected.pageIndex)
             if (shape != null && page != null && abs(shape.frameObb()?.angle ?: 0.0) < 1e-5) {
                 val bounds = shape.bounds()
+                // Include all eight handles. Side handles anchor the opposite edge midpoint,
+                // so resizing from the left/right/top/bottom can snap without moving that edge.
                 val anchor = when (handle) {
                     HandleId.TL -> Pt(bounds.right, bounds.bottom)
+                    HandleId.T -> Pt(bounds.centerX, bounds.bottom)
                     HandleId.TR -> Pt(bounds.left, bounds.bottom)
-                    HandleId.BL -> Pt(bounds.right, bounds.top)
+                    HandleId.R -> Pt(bounds.left, bounds.centerY)
                     HandleId.BR -> Pt(bounds.left, bounds.top)
+                    HandleId.B -> Pt(bounds.centerX, bounds.top)
+                    HandleId.BL -> Pt(bounds.right, bounds.top)
+                    HandleId.L -> Pt(bounds.right, bounds.centerY)
                     else -> null
                 }
                 if (anchor != null) {
                     val moving = when (handle) {
                         HandleId.TL -> Pt(bounds.left, bounds.top)
+                        HandleId.T -> Pt(bounds.centerX, bounds.top)
                         HandleId.TR -> Pt(bounds.right, bounds.top)
+                        HandleId.R -> Pt(bounds.right, bounds.centerY)
+                        HandleId.BR -> Pt(bounds.right, bounds.bottom)
+                        HandleId.B -> Pt(bounds.centerX, bounds.bottom)
                         HandleId.BL -> Pt(bounds.left, bounds.bottom)
-                        else -> Pt(bounds.right, bounds.bottom)
+                        HandleId.L -> Pt(bounds.left, bounds.centerY)
+                        else -> return@forEachIndexed
                     }
                     val targets = page.items.filterIsInstance<ShapeItem>()
                         .filterNot { it === shape }.map { it.bounds() }
@@ -2953,10 +2964,16 @@ class InteractionController(
                     }
                     val snapped = gridSnap?.end ?: objectSnap.end
                     if (snapped != moving) {
-                        val (start, end) = when {
-                            shape.shape.isEndpointShape -> ResizeMath.resizeOpenShape(shape.start, shape.end, handle, snapped)
-                            shape.shape.keepsAspect -> ResizeMath.resizeSquareShape(shape.start, shape.end, handle, snapped)
-                            else -> ResizeMath.resizeClosedShape(shape.start, shape.end, handle, snapped)
+                        val (start, end) = when (handle) {
+                            HandleId.L -> Pt(snapped.x, bounds.top) to Pt(bounds.right, bounds.bottom)
+                            HandleId.R -> Pt(bounds.left, bounds.top) to Pt(snapped.x, bounds.bottom)
+                            HandleId.T -> Pt(bounds.left, snapped.y) to Pt(bounds.right, bounds.bottom)
+                            HandleId.B -> Pt(bounds.left, bounds.top) to Pt(bounds.right, snapped.y)
+                            else -> when {
+                                shape.shape.isEndpointShape -> ResizeMath.resizeOpenShape(shape.start, shape.end, handle, snapped)
+                                shape.shape.keepsAspect -> ResizeMath.resizeSquareShape(shape.start, shape.end, handle, snapped)
+                                else -> ResizeMath.resizeClosedShape(shape.start, shape.end, handle, snapped)
+                            }
                         }
                         shape.setGeometry(ShapeHandle(start, end))
                     }
