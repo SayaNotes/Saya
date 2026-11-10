@@ -468,7 +468,6 @@ fun PreferencesPane(
                     Chip(stringResource(R.string.pan_two), prefs.zoomLockPan == "double") { update(prefs.copy(zoomLockPan = "double")) }
                     Chip(stringResource(R.string.pan_none), prefs.zoomLockPan == "none") { update(prefs.copy(zoomLockPan = "none")) }
                 }
-                CheckRow(stringResource(R.string.pref_detect_shapes), prefs.detectShapes) { update(prefs.copy(detectShapes = it)) }
                 FieldLabel("Snap rotation to 90 degrees")
                 FlowRow(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
