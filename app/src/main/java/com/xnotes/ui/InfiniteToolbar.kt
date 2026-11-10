@@ -132,7 +132,7 @@ fun InfiniteToolbar(
                                     else -> null
                                 }
                                 val image = imageRes?.let { painterResource(it) }
-                                val nibMask = nibMaskRes?.let { bitmapPainterResource(it) }
+                                val nibMask = nibMaskRes?.let { bitmapPainterResource(it) ?: painterResource(it) }
                                 val nibColor = editor.toolConfig(displayTool).colorOverride?.toComposeColor()
                                     ?: editor.toolbarColors.getOrNull(editor.activeColorIndex)?.toComposeColor()
                                     ?: androidx.compose.ui.graphics.Color.Black
