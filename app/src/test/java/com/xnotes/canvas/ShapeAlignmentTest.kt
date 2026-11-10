@@ -35,7 +35,7 @@ class ShapeAlignmentTest {
         val result = ShapeAlignment.snapDrag(
             Pt(0.0, 0.0),
             Pt(96.0, 96.0),
-            listOf(Rect(40.0, 40.0, 60.0, 60.0)),
+            listOf(Rect(20.0, 20.0, 60.0, 60.0)),
             6.0,
         )
 
