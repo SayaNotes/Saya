@@ -450,22 +450,21 @@ private fun ToolButton(
     val selectionModeActive = tool == Tool.SELECT && editor.tool == Tool.LASSO
     val armed = penFamilyActive || editor.tool == tool || selectionModeActive
     val configurable = tool.isStroke || tool == Tool.SHAPE || tool == Tool.ERASER || tool == Tool.SELECT || tool == Tool.LASSO || tool == Tool.TEXT || tool == Tool.TABLE || tool == Tool.MARKUP || tool == Tool.TAPE
+    // Four pen-family toolbar glyphs are purpose-drawn for the compact toolbar.
+    // Laser and Stamp intentionally keep their existing artwork unchanged.
+    val toolbarNib = when (displayTool) {
+        Tool.PEN -> ImageVector.vectorResource(R.drawable.ic_toolbar_ballpoint_up)
+        Tool.CALLIGRAPHY -> ImageVector.vectorResource(R.drawable.ic_toolbar_calligraphy_up)
+        Tool.TAPER -> ImageVector.vectorResource(R.drawable.ic_toolbar_taper_up)
+        Tool.HIGHLIGHTER -> ImageVector.vectorResource(R.drawable.ic_toolbar_highlighter_up)
+        else -> null
+    }
     val imageRes = when (displayTool) {
-        Tool.PEN -> R.drawable.pen_tool_pen
-        Tool.CALLIGRAPHY -> R.drawable.pen_tool_calligraphy
-        Tool.HIGHLIGHTER -> R.drawable.pen_tool_highlighter
-        Tool.TAPER -> R.drawable.pen_tool_taper
         Tool.LASER -> R.drawable.pen_tool_laser
         Tool.STAMP -> R.drawable.pen_tool_stamp
         else -> null
     }
-    val nibMaskRes = when (displayTool) {
-        Tool.PEN -> R.drawable.pen_nib_mask
-        Tool.CALLIGRAPHY -> R.drawable.calligraphy_nib_mask
-        Tool.HIGHLIGHTER -> R.drawable.highlighter_nib_mask
-        Tool.TAPER -> R.drawable.taper_nib_mask
-        else -> null
-    }
+    val nibMaskRes = null
     // Stroke tools show only the selected nib silhouette in the toolbar.
     // Keep the full pen artwork inside the pen panel; the toolbar icon must stay
     // visually consistent in footprint with neighbouring lasso/arrow controls.
@@ -488,6 +487,7 @@ private fun ToolButton(
             image = image,
             nibMask = nibMask,
             nibColor = nibColor,
+            toolbarNib = toolbarNib,
             stampGlyph = stampGlyph,
         ) {
             if ((armed || editor.tool == tool) && configurable) {
@@ -688,6 +688,7 @@ internal fun ToolbarIcon(
     image: androidx.compose.ui.graphics.painter.Painter? = null,
     nibMask: androidx.compose.ui.graphics.painter.Painter? = null,
     nibColor: androidx.compose.ui.graphics.Color = androidx.compose.ui.graphics.Color.Black,
+    toolbarNib: ImageVector? = null,
     stampGlyph: String? = null,
     onLongClick: (() -> Unit)? = null,
     onClick: () -> Unit,
@@ -771,7 +772,11 @@ internal fun ToolbarIcon(
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                if (image == null && nibMask != null) {
+                if (toolbarNib != null) {
+                    // Toolbar-specific upright nibs follow the selected pen's ink colour.
+                    Icon(toolbarNib, contentDescription = contentDescription, tint = nibColor,
+                        modifier = Modifier.size(bar.icon * 1.18f))
+                } else if (image == null && nibMask != null) {
                     // The regular pen uses the nib silhouette alone in the toolbar; do not show
                     // the full pen artwork or its neck/body in the circular button.
                     Image(
