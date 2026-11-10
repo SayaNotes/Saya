@@ -389,6 +389,17 @@ class InteractionController(
 
     private class FadingStroke(val stroke: Stroke, val pageIndex: Int)
 
+    // Laser trails have independent lifetimes, so a new mark never extends an older mark.
+    private class LaserTrail(
+        val stroke: Stroke,
+        val pageIndex: Int,
+        val fadeAtMs: Long,
+        val fadeDurationMs: Long,
+    )
+    private val laserTrails = mutableListOf<LaserTrail>()
+    private var laserFrameRunning = false
+    private val laserFrame = Choreographer.FrameCallback { t -> stepLaserTrails(t) }
+
     // SELECTION
     private val selection = mutableListOf<Selected>()
     private val lassoPoints = mutableListOf<Pt>()
@@ -1352,7 +1363,7 @@ class InteractionController(
         stroke.finished = false
         strokeStartTimeMs = timeMs
         // Pen back down: re-solidify the held batch, so a long stroke can't outlive the previous fade.
-        if (wandMode && drawTool.isStroke) {
+        if (wandMode && drawTool.isStroke && drawTool != Tool.LASER) {
             stopFade()
             fadeAlpha = 1.0
             scheduleFade()
@@ -1541,6 +1552,7 @@ class InteractionController(
                 strokeDismissedSelection && tapCandidate -> Unit
                 // A bare tap on tape peels it back or covers it again, and leaves no dot.
                 tapCandidate && e.eventTime - tapDownTime < LONG_PRESS_MS && peelTapeAt(pi, Pt(stroke.xAt(0), stroke.yAt(0))) -> Unit
+                stroke.tool == Tool.LASER -> holdLaserTrail(stroke, pi)
                 wandMode && stroke.tool.isStroke -> {
                     // Disappearing ink: held ephemerally, never committed to the model/undo/cache/save.
                     // A stroke drawn mid-fade cancels the fade and re-solidifies the whole held batch.
@@ -5038,6 +5050,36 @@ class InteractionController(
         fadeTimerRunnable = null
     }
 
+    /** Keep a laser stroke out of the document model and fade it on its own expiry clock. */
+    private fun holdLaserTrail(stroke: Stroke, pageIndex: Int) {
+        val now = System.nanoTime() / 1_000_000L
+        val duration = stroke.config.laserDurationMs.coerceIn(
+            com.xnotes.core.tools.ToolConfig.MIN_LASER_DURATION_MS,
+            com.xnotes.core.tools.ToolConfig.MAX_LASER_DURATION_MS,
+        )
+        laserTrails.add(LaserTrail(stroke, pageIndex, now + duration, LASER_FADE_MS))
+        frontInk?.holdFading(stroke)
+        if (!laserFrameRunning) {
+            laserFrameRunning = true
+            choreographer.postFrameCallback(laserFrame)
+        }
+    }
+
+    private fun stepLaserTrails(frameTimeNanos: Long) {
+        if (!laserFrameRunning) return
+        val now = frameTimeNanos / 1_000_000L
+        laserTrails.removeAll { now >= it.fadeAtMs + it.fadeDurationMs }
+        requestRender()
+        if (laserTrails.isEmpty()) laserFrameRunning = false
+        else choreographer.postFrameCallback(laserFrame)
+    }
+
+    private fun clearLaserTrails() {
+        if (laserFrameRunning) choreographer.removeFrameCallback(laserFrame)
+        laserFrameRunning = false
+        laserTrails.clear()
+    }
+
     private fun startFade() {
         fadeTimerRunnable = null
         if (fadingStrokes.isEmpty()) return
@@ -5123,6 +5165,7 @@ class InteractionController(
         clearOverscroll()
         cancelDwell()
         clearFading()
+        clearLaserTrails()
         crossedSegments.clear() // they belong to the outgoing document, whose history is gone
         dwellEligible = false
         mode = PointerMode.IDLE
@@ -5369,6 +5412,20 @@ class InteractionController(
                 paintClippedToPage(r, fs.pageIndex) {
                     r.saveLayerBlended(fs.stroke.paintBounds(), fadeAlpha, fs.stroke.blendMode)
                     fs.stroke.paint(r)
+                    r.restore()
+                }
+            }
+
+            // Each laser trail has its own expiry, so fresh marks cannot keep older marks alive.
+            val laserNow = System.nanoTime() / 1_000_000L
+            for (trail in laserTrails) {
+                if (frontInk?.holding(trail.stroke) == true) continue
+                val t = ((laserNow - trail.fadeAtMs).toDouble() / trail.fadeDurationMs).coerceIn(0.0, 1.0)
+                val alpha = (1.0 - t) * (1.0 - t)
+                if (alpha <= 0.0) continue
+                paintClippedToPage(r, trail.pageIndex) {
+                    r.saveLayerBlended(trail.stroke.paintBounds(), alpha, trail.stroke.blendMode)
+                    trail.stroke.paint(r)
                     r.restore()
                 }
             }
@@ -5752,6 +5809,9 @@ class InteractionController(
 
         /** Magic wand: fade-out duration (ms) once the batch starts disappearing. */
         const val WAND_FADE_MS = 500.0
+
+        /** Laser trails ease away after their configured visible time. */
+        const val LASER_FADE_MS = 420L
 
         /** Ruler: a stylus-down within this (dp) of a long edge snaps the stroke to that edge. */
         const val RULER_SNAP_DP = 12.0
