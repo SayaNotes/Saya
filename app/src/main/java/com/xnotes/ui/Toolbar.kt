@@ -410,31 +410,33 @@ private fun ToolButton(
     if (icon == null) return
     if (tool == Tool.LASSO) {
         val selectionActive = editor.tool == Tool.SELECT || editor.tool == Tool.LASSO
-        ToolbarIcon(
-            icon = icon,
-            contentDescription = stringResource(R.string.tool_lasso),
-            active = selectionActive,
-            glideKey = Tool.LASSO,
-            hint = stringResource(R.string.hint_lasso_tap_hold),
-            shortcut = PAGED_TOOL_KEYS[Tool.LASSO],
-            onLongClick = {
-                editor.selectTool(Tool.LASSO)
-                setConfigForTool(null)
-            },
-        ) {
-            if (editor.tool == Tool.SELECT) {
-                setConfigForTool(Tool.SELECT)
-            } else {
-                editor.selectTool(Tool.SELECT)
-                setConfigForTool(null)
+        Box {
+            ToolbarIcon(
+                icon = icon,
+                contentDescription = stringResource(R.string.tool_lasso),
+                active = selectionActive,
+                glideKey = Tool.LASSO,
+                hint = stringResource(R.string.hint_lasso_tap_hold),
+                shortcut = PAGED_TOOL_KEYS[Tool.LASSO],
+                onLongClick = {
+                    editor.selectTool(Tool.LASSO)
+                    setConfigForTool(null)
+                },
+            ) {
+                if (editor.tool == Tool.SELECT) {
+                    setConfigForTool(Tool.SELECT)
+                } else {
+                    editor.selectTool(Tool.SELECT)
+                    setConfigForTool(null)
+                }
             }
-        }
-        if (configForTool == Tool.SELECT || configForTool == Tool.LASSO) {
-            SelectConfigPopup(
-                editor,
-                configForTool ?: Tool.SELECT,
-                onSelectTool = { next -> editor.selectTool(next); setConfigForTool(null) },
-            ) { setConfigForTool(null) }
+            if (configForTool == Tool.SELECT || configForTool == Tool.LASSO) {
+                SelectConfigPopup(
+                    editor,
+                    configForTool ?: Tool.SELECT,
+                    onSelectTool = { next -> editor.selectTool(next); setConfigForTool(null) },
+                ) { setConfigForTool(null) }
+            }
         }
         return
     }
