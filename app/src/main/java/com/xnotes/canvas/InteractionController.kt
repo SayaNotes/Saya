@@ -979,9 +979,15 @@ class InteractionController(
         // Zoom-lock pan preference: swallow a single-finger pan when locked and set to "double"/"none".
         // The pointer stays free, so a long press still picks up an item or selects text.
         if (effectiveTool == Tool.PAN && !singleFingerPanAllowed()) {
-            mode = PointerMode.IDLE
-            lockedPressAt = Pt(vx, vy)
-            armLongPress(Pt(vx, vy), content, isFinger, free)
+            val holdErase = isFinger && !buttonHeld && penButtonTool == Tool.ERASER && isHoldErasePen(tool)
+            if (holdErase) {
+                beginPan(vx, vy)
+                armTemporaryEraser(Pt(vx, vy))
+            } else {
+                mode = PointerMode.IDLE
+                lockedPressAt = Pt(vx, vy)
+                armLongPress(Pt(vx, vy), content, isFinger, free)
+            }
             return
         }
 
