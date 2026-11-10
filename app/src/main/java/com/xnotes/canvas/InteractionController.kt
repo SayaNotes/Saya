@@ -306,11 +306,6 @@ class InteractionController(
     private var drawingPointerId = -1
     private var drawingIsStylus = false
 
-    // SHAPE SNAP (hold a freehand stroke still → it becomes a real shape)
-    /** Pending "pen held still" timer; non-null only while a stroke is eligible and armed. */
-    /** Viewport px of the last point that re-armed the dwell timer (sub-slop jitter doesn't reset it). */
-    /** True for the current stroke when snapping is allowed (pref on, an ink pen, not a straight line). */
-    /** A mid-stroke snap auto-selected a shape; show its menu once the pen lifts (endDraw). */
     /** This stroke began by dismissing an active selection; a bare tap then leaves no dot. */
     private var strokeDismissedSelection = false
 
@@ -872,9 +867,7 @@ class InteractionController(
             hasSelection && drawingIsStylus && (tool.isStroke || tool == Tool.SHAPE || tool == Tool.TAPE) &&
                 drawingGrabsSelection(content) -> Tool.SELECT
             hasSelection && tool == Tool.TABLE && fingerHitsSelection(content) -> Tool.SELECT
-            // A shape that has just been auto-selected must be directly editable with a finger,
-            // even while the Shape tool remains armed. Route presses on its body/handles through
-            // the normal selection gesture state machine instead of dismissing the selection.
+            // A selected shape remains directly editable with a finger while the Shape tool is armed.
             hasSelection && tool == Tool.SHAPE && toolType == MotionEvent.TOOL_TYPE_FINGER &&
                 fingerHitsSelection(content) -> Tool.SELECT
             // A finger may grab/resize the ACTIVE selection even when finger-draw is off;
@@ -1467,7 +1460,6 @@ class InteractionController(
         pressure: Double,
         timeMs: Long,
     ) {
-        // A stroke long enough to reach the next page is a line, not a held shape.
         val last = stroke.samples.lastOrNull()
         retireCrossedSegment(stroke, fromPage)
         val next = Stroke(
@@ -1566,7 +1558,6 @@ class InteractionController(
         snapCurrentEdge = null
         snapPenViewport = null
         mode = PointerMode.IDLE
-        // A mid-stroke snap left a shape selected; now that the gesture is idle, surface its menu.
         requestRender()
     }
 
@@ -4053,9 +4044,8 @@ class InteractionController(
     // --- LONG-PRESS GRAB ---
 
     /**
-     * A stylus press held within the small movement tolerance becomes an erase gesture.
-     * The unfinished stroke is only a preview, so discard it before beginning the erase;
-     * the erase then follows the same pointer gesture and commits as one undo step on lift.
+     * A press held within the small movement tolerance temporarily becomes an erase gesture.
+     * Any unfinished ink preview is discarded; the erase commits as one undo step on lift.
      */
     private fun isHoldErasePen(candidate: Tool): Boolean =
         candidate == Tool.PEN || candidate == Tool.CALLIGRAPHY || candidate == Tool.TAPER
