@@ -4107,8 +4107,7 @@ class InteractionController(
      * A press held within the small movement tolerance temporarily becomes an erase gesture.
      * Any unfinished ink preview is discarded; the erase commits as one undo step on lift.
      */
-    private fun isHoldErasePen(candidate: Tool): Boolean =
-        candidate == Tool.PEN || candidate == Tool.CALLIGRAPHY || candidate == Tool.TAPER
+    private fun isHoldErasePen(candidate: Tool): Boolean = candidate.isStroke
 
     private fun armTemporaryEraser(down: Pt) {
         cancelTemporaryEraser()
