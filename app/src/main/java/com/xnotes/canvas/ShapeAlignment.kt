@@ -78,7 +78,7 @@ internal object ShapeAlignment {
                 }
             }
         }
-        return DragResult(snappedEnd, guides.distinctBy { Triple(it.vertical, (it.coordinate / GUIDE_EPSILON).toLong(), (it.from / GUIDE_EPSILON).toLong()) })
+        return DragResult(snappedEnd, guides.distinct())
     }
 
     private fun bestMoveMatch(candidate: Rect, targets: List<Rect>, tolerance: Double, vertical: Boolean): Match? {
