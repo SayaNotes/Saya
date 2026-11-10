@@ -23,13 +23,7 @@ internal object ShapeAlignment {
     data class DragResult(val end: Pt, val guides: List<Guide>)
     data class MoveResult(val delta: Pt, val guides: List<Guide>)
 
-    private data class Match(
-        val delta: Double,
-        val coordinate: Double,
-        val target: Rect,
-        val vertical: Boolean,
-        val distance: Double,
-    )
+    private data class Match(val delta: Double, val distance: Double)
 
     private data class DragFeature(val value: Double, val endpointFactor: Double, val priority: Int)
 
@@ -50,7 +44,6 @@ internal object ShapeAlignment {
      */
     fun snapDrag(start: Pt, end: Pt, targets: List<Rect>, tolerance: Double): DragResult {
         if (targets.isEmpty() || tolerance <= 0.0) return DragResult(end, emptyList())
-        val box = Rect.fromPoints(start, end)
         val x = bestDragMatch(start.x, end.x, targets, tolerance, vertical = true)
         val y = bestDragMatch(start.y, end.y, targets, tolerance, vertical = false)
         val snappedEnd = Pt(end.x + (x?.delta ?: 0.0), end.y + (y?.delta ?: 0.0))
@@ -76,7 +69,7 @@ internal object ShapeAlignment {
                     val delta = targetValue - value
                     if (abs(delta) > tolerance) continue
                     if (best == null || abs(delta) < abs(best.delta)) {
-                        best = Match(delta, targetValue, target, vertical, abs(delta))
+                        best = Match(delta, abs(delta))
                     }
                 }
             }
@@ -111,7 +104,7 @@ internal object ShapeAlignment {
                     if (best == null || abs(difference) < best.distance ||
                         (abs(difference) == best.distance && feature.priority < bestPriority)
                     ) {
-                        best = Match(difference * feature.endpointFactor, targetValue, target, vertical, abs(difference))
+                        best = Match(difference * feature.endpointFactor, abs(difference))
                         bestPriority = feature.priority
                     }
                 }
