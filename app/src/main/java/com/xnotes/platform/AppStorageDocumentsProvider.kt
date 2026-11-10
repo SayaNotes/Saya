@@ -15,12 +15,12 @@ import java.io.File
 import java.io.FileNotFoundException
 
 /**
- * Exposes an app-owned directory as a SAF tree, so the in-app explorer can browse "Internal
- * storage" with the very same DocumentsContract calls it uses for a user-granted folder. Document
- * ids are paths relative to the root ("root", "root/sub", "root/sub/note.xnote"), so they stay
- * valid even if the backing directory ever moves. The framework requires a DocumentsProvider to
- * be exported and MANAGE_DOCUMENTS-protected; with no DOCUMENTS_PROVIDER intent filter it stays
- * out of the system file picker, so only xnotes reaches it. Its files go on app uninstall.
+ * Exposes Saya's private internal app directory as a SAF tree, so the in-app explorer can browse
+ * "Internal storage" with the same DocumentsContract calls it uses for a user-granted folder.
+ * Document ids are paths relative to the root ("root", "root/sub", "root/sub/note.xnote"), so they
+ * stay valid even if the backing directory ever moves. The framework requires a DocumentsProvider
+ * to be exported and MANAGE_DOCUMENTS-protected; with no DOCUMENTS_PROVIDER intent filter it stays
+ * out of the system file picker, so only Saya reaches it. Its files go on app uninstall.
  */
 class AppStorageDocumentsProvider : DocumentsProvider() {
 
@@ -162,11 +162,9 @@ class AppStorageDocumentsProvider : DocumentsProvider() {
 
         private fun authority(context: Context): String = context.packageName + ".documents"
 
-        /** The app's private notes directory (app-external, removed on uninstall); created on demand. */
-        fun rootDir(context: Context): File {
-            val base = context.getExternalFilesDir(null) ?: context.filesDir
-            return File(base, DIR_NAME).apply { if (!exists()) mkdirs() }
-        }
+        /** The app's private internal notes directory, removed on uninstall; created on demand. */
+        fun rootDir(context: Context): File =
+            File(context.filesDir, DIR_NAME).apply { if (!exists()) mkdirs() }
 
         /** The SAF tree uri for that directory, usable as an explorer browse root. */
         fun treeUri(context: Context): Uri {
