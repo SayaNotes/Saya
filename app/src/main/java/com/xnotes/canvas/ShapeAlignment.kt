@@ -84,10 +84,11 @@ internal object ShapeAlignment {
         tolerance: Double,
         vertical: Boolean,
     ): Match? {
+        // Only the moving edge and centre may influence the endpoint. The fixed anchor is
+        // deliberately excluded: a nearby guide at the anchor must never block a useful snap.
         val features = listOf(
             DragFeature(moving, 1.0, 0),
             DragFeature((fixed + moving) / 2.0, 2.0, 1),
-            DragFeature(fixed, 0.0, 2),
         )
         var best: Match? = null
         var bestPriority = Int.MAX_VALUE
