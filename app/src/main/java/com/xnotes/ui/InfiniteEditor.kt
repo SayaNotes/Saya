@@ -127,7 +127,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         onCommitShape = { commitItem(it) },
         shapeConfig = { shapeConfig },
         inkColor = { inkColor },
-        detectShapes = { detectShapes },
+        detectShapes = { false },
         selection = { selection },
         itemsIn = { rect -> document.itemsIn(rect) },
         onSelectionChanged = { publishOverlay() },
@@ -165,7 +165,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         private set
 
     /** Whether a held freehand stroke may snap to the shape it looks like. */
-    private var detectShapes = false
+    // Hand-drawn shape recognition was removed; keep restored preference data inert.
 
     /** Live zoom, mirrored into Compose so a readout can follow a pinch frame by frame. */
     var zoomPercent by mutableStateOf(100)
@@ -1157,7 +1157,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
 
     override var snapHeldToShapes: Boolean
         get() = detectShapes
-        set(v) { detectShapes = v; onDetectShapesChanged?.invoke(v) }
+        set(v) { /* Removed feature: no-op for restored legacy settings. */ }
 
     /** Fired when the snap-to-shapes toggle changed here, so the host can persist it. */
     var onDetectShapesChanged: ((Boolean) -> Unit)? = null
@@ -2257,7 +2257,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         interaction.fingerDraws = fingerDraws
         interaction.penButtonTool = penButtonTool
         interaction.zoomLockPan = zoomLockPan
-        this.detectShapes = detectShapes
+        // Deliberately ignore the legacy detectShapes preference.
         selection.snapRotation90 = snapRotation90
         this.snapRotation90 = snapRotation90
     }
