@@ -5171,7 +5171,7 @@ class InteractionController(
     private fun stepLaserTrails(frameTimeNanos: Long) {
         if (!laserFrameRunning) return
         val now = frameTimeNanos / 1_000_000L
-        laserTrails.removeAll { now >= it.fadeAtMs + it.fadeDurationMs }
+        laserTrails.removeAll { LaserTrailTiming.expired(now, it.fadeAtMs, it.fadeDurationMs) }
         requestRender()
         if (laserTrails.isEmpty()) {
             laserFrameRunning = false
@@ -5550,8 +5550,7 @@ class InteractionController(
             val laserNow = System.nanoTime() / 1_000_000L
             for (trail in laserTrails) {
                 if (frontInk?.holding(trail.stroke) == true) continue
-                val t = ((laserNow - trail.fadeAtMs).toDouble() / trail.fadeDurationMs).coerceIn(0.0, 1.0)
-                val alpha = (1.0 - t) * (1.0 - t)
+                val alpha = LaserTrailTiming.alpha(laserNow, trail.fadeAtMs, trail.fadeDurationMs)
                 if (alpha <= 0.0) continue
                 paintClippedToPage(r, trail.pageIndex) {
                     r.saveLayerBlended(trail.stroke.paintBounds(), alpha, trail.stroke.blendMode)
