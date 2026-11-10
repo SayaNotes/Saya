@@ -3003,6 +3003,20 @@ class InteractionController(
             // A function graph keeps equal x and y scales while drawn; its handles stretch it later.
             shape.end = shapeAspect?.let { ResizeMath.aspectCorner(shape.start, raw, it) } ?: ResizeMath.drawnEnd(shape, raw, shapeConfig.perfect)
         }
+        // Open line/arrow shapes magnetize their direction to the selected angular interval.
+        if (shape.shape.isOpen && shapeAspect == null && !shapeConfig.perfect) {
+            val dx = shape.end.x - shape.start.x
+            val dy = shape.end.y - shape.start.y
+            val length = shape.start.distanceTo(shape.end)
+            if (length > 1e-6) {
+                val step = Math.toRadians(shapeConfig.angleSnapDegrees.toDouble())
+                val angle = atan2(dy, dx)
+                val snappedAngle = Math.round(angle / step) * step
+                if (abs(angle - snappedAngle) <= ROTATE_SNAP_STICK_RAD) {
+                    shape.end = Pt(shape.start.x + cos(snappedAngle) * length, shape.start.y + sin(snappedAngle) * length)
+                }
+            }
+        }
         if (shapeConfig.snapToAlign && !shape.shape.keepsAspect && shapeAspect == null && !shapeConfig.perfect) {
             val page = state.document.pages.getOrNull(pi)
             val targets = page?.items?.filterIsInstance<ShapeItem>()?.map { it.bounds() }.orEmpty()
