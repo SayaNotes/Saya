@@ -224,7 +224,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
         frameless = true,
     ) {
         Column(
-            Modifier.widthIn(max = 560.dp).fillMaxWidth()
+            Modifier.widthIn(max = 820.dp).fillMaxWidth()
                 .liquidGlassSurface(
                     RoundedCornerShape(26.dp),
                     LocalPalette.current.panel.toComposeColor(),
@@ -238,7 +238,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 horizontalArrangement = Arrangement.SpaceBetween,
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                PopupTitle("Tools")
+                PopupTitle(stringResource(tool.labelRes))
                 Text("×", color = LocalPalette.current.text.toComposeColor(), fontSize = 20.sp,
                     modifier = Modifier.clip(CircleShape).clickable { onDismiss() }.padding(horizontal = 5.dp))
             }
@@ -289,7 +289,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 }
 
                 Column(
-                    modifier = Modifier.width(112.dp)
+                    modifier = Modifier.width(176.dp)
                         .clip(RoundedCornerShape(10.dp))
                         .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(10.dp))
                         .padding(6.dp),
@@ -305,7 +305,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                             val swatchColor = swatch.toComposeColor()
                             val selected = colorOverride == swatch
                             Box(
-                                Modifier.size(28.dp).clip(RoundedCornerShape(5.dp))
+                                Modifier.size(44.dp).clip(RoundedCornerShape(7.dp))
                                     .background(swatchColor)
 .border(
                                         if (selected) 2.5.dp else 1.dp,
@@ -846,11 +846,11 @@ private fun ToolModeButton(
             .background(if (selected) palette.selectionBackground.toComposeColor() else Color.Transparent)
             .border(1.dp, if (selected) palette.accent.toComposeColor() else Color.Transparent, RoundedCornerShape(9.dp))
             .clickable(onClick = onClick)
-            .padding(start = 2.dp, end = 2.dp, top = 5.dp, bottom = 0.dp),
+            .padding(start = 3.dp, end = 3.dp, top = 5.dp, bottom = 0.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            Modifier.size(40.dp, 66.dp),
+            Modifier.size(52.dp, 132.dp),
             contentAlignment = Alignment.Center,
         ) {
             if (artPainter != null) {

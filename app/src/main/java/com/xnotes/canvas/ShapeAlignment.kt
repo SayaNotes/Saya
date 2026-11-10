@@ -44,8 +44,15 @@ internal object ShapeAlignment {
      */
     fun snapDrag(start: Pt, end: Pt, targets: List<Rect>, tolerance: Double): DragResult {
         if (targets.isEmpty() || tolerance <= 0.0) return DragResult(end, emptyList())
-        val x = bestDragMatch(start.x, end.x, targets, tolerance, vertical = true)
-        val y = bestDragMatch(start.y, end.y, targets, tolerance, vertical = false)
+        // While resizing, match both the dragged edge/centre and the resulting width/height.
+        // The latter is important when a user wants two separately placed shapes to share
+        // dimensions: the moving corner must magnetically reach the same width or height.
+        val xEdge = bestDragMatch(start.x, end.x, targets, tolerance, vertical = true)
+        val yEdge = bestDragMatch(start.y, end.y, targets, tolerance, vertical = false)
+        val xSize = bestDimensionMatch(start.x, end.x, targets, tolerance, vertical = true)
+        val ySize = bestDimensionMatch(start.y, end.y, targets, tolerance, vertical = false)
+        val x = closerMatch(xEdge, xSize)
+        val y = closerMatch(yEdge, ySize)
         val snappedEnd = Pt(end.x + (x?.delta ?: 0.0), end.y + (y?.delta ?: 0.0))
         val placed = Rect.fromPoints(start, snappedEnd)
         return DragResult(snappedEnd, guidesFor(placed, targets))

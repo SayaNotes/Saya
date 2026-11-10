@@ -57,6 +57,17 @@ class ShapeAlignmentTest {
         assertEquals(200.0, result.end.x, 0.0)
     }
 
+    @Test fun resizingSnapsWidthAndHeightToAnotherShape() {
+        val result = ShapeAlignment.snapDrag(
+            Pt(0.0, 0.0),
+            Pt(96.0, 96.0),
+            listOf(Rect(200.0, 200.0, 100.0, 120.0)),
+            6.0,
+        )
+
+        assertEquals(Pt(100.0, 120.0), result.end)
+    }
+
     @Test fun centreAlignmentSnapsTheCentreRatherThanTheAnchor() {
         val result = ShapeAlignment.snapDrag(
             Pt(0.0, 0.0),

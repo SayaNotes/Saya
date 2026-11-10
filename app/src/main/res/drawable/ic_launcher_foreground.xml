@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Keep the complete original Saya mark inside Android's adaptive-icon safe zone. -->
+<!-- Keep the complete 3:1 user-supplied logo inside Android's adaptive-icon safe zone. -->
 <inset xmlns:android="http://schemas.android.com/apk/res/android"
     android:drawable="@drawable/saya_logo_original"
-    android:insetLeft="26dp"
-    android:insetTop="26dp"
-    android:insetRight="26dp"
-    android:insetBottom="26dp" />
+    android:insetLeft="21dp"
+    android:insetTop="43dp"
+    android:insetRight="21dp"
+    android:insetBottom="43dp" />
