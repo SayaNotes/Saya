@@ -2496,6 +2496,8 @@ class InteractionController(
         resizeItem = null
         resizeHandle = null
         resizeOldGeom = null
+        alignmentGuides = emptyList()
+        alignmentGuidePageIndex = null
         // The endpoint resize (a single line/arrow) reshapes the box; refit it upright.
         selObb = selectionBox()
         mode = PointerMode.IDLE
