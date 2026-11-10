@@ -5650,7 +5650,7 @@ class InteractionController(
             }
 
             // Each laser trail has its own expiry, so fresh marks cannot keep older marks alive.
-            val laserNow = System.nanoTime() / 1_000_000L
+            val laserNow = laserPausedAtMs ?: (System.nanoTime() / 1_000_000L)
             for (trail in laserTrails) {
                 if (frontInk?.holding(trail.stroke) == true) continue
                 val alpha = LaserTrailTiming.alpha(laserNow, trail.fadeAtMs, trail.fadeDurationMs)
