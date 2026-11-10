@@ -11,6 +11,8 @@ import com.xnotes.core.model.Page
 import com.xnotes.core.model.RectHandle
 import com.xnotes.core.model.Rgba
 import com.xnotes.core.model.Stroke
+import com.xnotes.core.model.ShapeItem
+import com.xnotes.core.shapes.ShapeKind
 import com.xnotes.core.stroke.Sample
 import com.xnotes.core.tools.Tool
 import com.xnotes.core.tools.ToolDefaults
@@ -25,6 +27,32 @@ class HistoryTest {
 
     private fun strokeAt(x: Double): Stroke =
         Stroke(Tool.PEN, ToolDefaults.configFor(Tool.PEN), mutableListOf(Sample(x, 0.0, 1.0)))
+
+    @Test fun refillShapesAddsFillToAnUnfilledClosedShapeAndUndoRestoresIt() {
+        val shape = ShapeItem(
+            ShapeKind.RECTANGLE, Pt(0.0, 0.0), Pt(20.0, 20.0),
+            Rgba(20, 30, 40, 255), 3.0, null,
+        )
+        val entries = RefillShapes.of(listOf(shape), Rgba(10, 80, 220, 255))
+        assertEquals(1, entries.size)
+        val command = RefillShapes(entries)
+        command.redo()
+        assertEquals(Rgba(10, 80, 220, 64), shape.fillRgba)
+        command.undo()
+        assertNull(shape.fillRgba)
+    }
+
+    @Test fun refillShapesKeepsExistingFillOpacityIndependentOfOutline() {
+        val shape = ShapeItem(
+            ShapeKind.CIRCLE, Pt(0.0, 0.0), Pt(20.0, 20.0),
+            Rgba(20, 30, 40, 255), 3.0, Rgba(1, 2, 3, 42),
+        )
+        val command = RefillShapes(RefillShapes.of(listOf(shape), Rgba(200, 100, 50, 255)))
+        command.redo()
+        assertEquals(Rgba(200, 100, 50, 42), shape.fillRgba)
+        command.undo()
+        assertEquals(Rgba(1, 2, 3, 42), shape.fillRgba)
+    }
 
     @Test fun addItemUndoRedo() {
         val page = Page(100.0, 100.0)
