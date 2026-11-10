@@ -10,6 +10,11 @@ import com.xnotes.core.model.ShapeItem
 import com.xnotes.core.model.ShapeLabel
 import com.xnotes.core.pal.FillRule
 import com.xnotes.core.pal.Pen
+import com.xnotes.core.pal.FontFace
+import com.xnotes.core.pal.FontSpec
+import com.xnotes.core.pal.HAlign
+import com.xnotes.core.pal.TextFlags
+import com.xnotes.core.pal.TextMeasurer
 import com.xnotes.core.shapes.PathRole
 import com.xnotes.core.shapes.ShapePainter
 import com.xnotes.core.shapes.ShapePath
@@ -17,6 +22,9 @@ import com.xnotes.core.vector.PathFlattener
 import com.xnotes.core.vector.Triangulator
 import kotlin.math.abs
 import kotlin.math.atan2
+import kotlin.math.cos
+import kotlin.math.sin
+import kotlin.math.hypot
 
 /**
  * Turns a [ShapeItem] into triangles: the fills first, then the outline over them, each with its
@@ -50,6 +58,87 @@ object ShapeTessellator {
         val outline = outlineMesh(flat, pen, tolerance)
         if (!outline.isEmpty) parts.add(MeshPart(outline, pen.color, InkPass.OPAQUE))
         return parts
+    }
+
+    /**
+     * Angle markers and labels as ordinary mesh parts, so the infinite GL canvas renders the same
+     * annotations as the immediate-mode page renderer. No screen-space overlay or per-frame work:
+     * the geometry is built with the shape and follows its normal invalidation/cache lifecycle.
+     */
+    fun angleParts(
+        shape: ShapeItem,
+        measurer: TextMeasurer?,
+        tolerance: Double = StrokeTessellator.DEFAULT_TOLERANCE,
+    ): List<MeshPart> {
+        val measure = measurer ?: return emptyList()
+        if (!shape.shape.isClosed || shape.shape == com.xnotes.core.shapes.ShapeKind.GLYPHS ||
+            shape.shape == com.xnotes.core.shapes.ShapeKind.FILL ||
+            shape.shape == com.xnotes.core.shapes.ShapeKind.CIRCLE ||
+            shape.shape == com.xnotes.core.shapes.ShapeKind.ELLIPSE
+        ) return emptyList()
+
+        val corners = shape.localGeometry().corners.takeIf { it.size >= 3 }
+            ?: shape.vertices()?.let { points -> points.map(shape::toLocal) }?.takeIf { it.size >= 3 }
+            ?: return emptyList()
+        val area = corners.indices.sumOf { i ->
+            val a = corners[i]
+            val b = corners[(i + 1) % corners.size]
+            a.x * b.y - b.x * a.y
+        } * 0.5
+        if (!area.isFinite() || abs(area) < 1e-6) return emptyList()
+        val winding = if (area > 0.0) 1.0 else -1.0
+        val ink = shape.strokeRgba
+        val markerHalfWidth = maxOf(0.45, shape.strokeWidth * 0.275)
+        val font = FontSpec(9.0, FontFace.SANS)
+        val flags = TextFlags(wordWrap = false, alignLeft = false, alignTop = false, hAlign = HAlign.CENTER)
+        val wrapWidth = 36.0
+        val out = ArrayList<MeshPart>(corners.size * 2)
+
+        for (i in corners.indices) {
+            val vertex = corners[i]
+            val previous = corners[(i - 1 + corners.size) % corners.size]
+            val next = corners[(i + 1) % corners.size]
+            val prevLength = previous.distanceTo(vertex)
+            val nextLength = next.distanceTo(vertex)
+            if (prevLength < 1e-3 || nextLength < 1e-3) continue
+            val toPrevious = (previous - vertex) / prevLength
+            val toNext = (next - vertex) / nextLength
+            val dot = (toPrevious.x * toNext.x + toPrevious.y * toNext.y).coerceIn(-1.0, 1.0)
+            val cross = toPrevious.x * toNext.y - toPrevious.y * toNext.x
+            val small = Math.toDegrees(kotlin.math.acos(dot))
+            val reflex = cross * winding > 1e-8
+            val degrees = if (reflex) 360.0 - small else small
+            if (!degrees.isFinite() || degrees < 1.0 || degrees > 359.0) continue
+
+            val radius = minOf(12.0, prevLength * 0.20, nextLength * 0.20)
+            if (radius < 2.0) continue
+            val startAngle = atan2(toPrevious.y, toPrevious.x)
+            val sweep = -winding * Math.toRadians(degrees)
+            val marker = if (abs(degrees - 90.0) <= 1.0) {
+                val a = vertex + toPrevious * radius
+                val b = a + toNext * radius
+                listOf(shape.toPage(a), shape.toPage(b), shape.toPage(vertex + toNext * radius))
+            } else {
+                (0..12).map { step ->
+                    val angle = startAngle + sweep * step / 12.0
+                    shape.toPage(vertex + Pt(cos(angle) * radius, sin(angle) * radius))
+                }
+            }
+            val markerBuilder = MeshBuilder()
+            markerBuilder.polylineRibbon(marker, markerHalfWidth, false, tolerance)
+            if (!markerBuilder.isEmpty) out += MeshPart(markerBuilder.build(), ink, InkPass.OPAQUE)
+
+            val bisector = startAngle + sweep / 2.0
+            val labelDistance = radius + 9.0
+            val center = shape.toPage(vertex + Pt(cos(bisector) * labelDistance, sin(bisector) * labelDistance))
+            val text = "${Math.round(degrees)}°"
+            val block = measure.measure(text, font, wrapWidth, flags)
+            val top = center.y - block.h / 2.0
+            val left = center.x - wrapWidth / 2.0
+            val glyphs = measure.outline(text, font, wrapWidth, flags)
+            textPart(glyphs, ink) { Pt(left + it.x, top + it.y) }?.let(out::add)
+        }
+        return out
     }
 
     /**
