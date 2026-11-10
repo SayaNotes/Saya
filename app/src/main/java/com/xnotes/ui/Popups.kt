@@ -553,6 +553,7 @@ fun LaserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
     val base = remember(editor) { editor.toolConfig(Tool.LASER) }
     var width by remember { mutableStateOf(base.baseWidth.toFloat().coerceIn(1f, 20f)) }
     var duration by remember { mutableStateOf(base.laserDurationMs.takeIf { it in setOf(3000L, 5000L, 15000L) }?.toFloat() ?: 5000f) }
+    var advancedExpanded by remember { mutableStateOf(false) }
     val laserRed = Rgba(255, 0, 0, 255)
 
     fun emit() {
@@ -626,36 +627,53 @@ fun LaserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                     inactiveTrackColor = LocalPalette.current.border.toComposeColor(),
                 ),
             )
-            StyleCaption("Visible duration")
             Row(
-                Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(7.dp),
+                Modifier.fillMaxWidth()
+                    .clip(RoundedCornerShape(8.dp))
+                    .clickable { advancedExpanded = !advancedExpanded }
+                    .padding(vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                listOf(3000L, 5000L, 15000L).forEach { milliseconds ->
-                    val selected = duration.toLong() == milliseconds
-                    Box(
-                        Modifier.weight(1f)
-                            .clip(RoundedCornerShape(9.dp))
-                            .background(if (selected) LocalPalette.current.selectionBackground.toComposeColor() else Color.Transparent)
-                            .border(
-                                1.dp,
-                                if (selected) LocalPalette.current.accent.toComposeColor() else LocalPalette.current.border.toComposeColor(),
-                                RoundedCornerShape(9.dp),
+                StyleCaption("Advanced settings")
+                Text(
+                    if (advancedExpanded) "⌃" else "⌄",
+                    color = LocalPalette.current.textDim.toComposeColor(),
+                    fontSize = 16.sp,
+                )
+            }
+            if (advancedExpanded) {
+                StyleCaption("Visible duration")
+                Row(
+                    Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(7.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    listOf(3000L, 5000L, 15000L).forEach { milliseconds ->
+                        val selected = duration.toLong() == milliseconds
+                        Box(
+                            Modifier.weight(1f)
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(if (selected) LocalPalette.current.selectionBackground.toComposeColor() else Color.Transparent)
+                                .border(
+                                    1.dp,
+                                    if (selected) LocalPalette.current.accent.toComposeColor() else LocalPalette.current.border.toComposeColor(),
+                                    RoundedCornerShape(9.dp),
+                                )
+                                .clickable {
+                                    duration = milliseconds.toFloat()
+                                    emit()
+                                }
+                                .padding(vertical = 9.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Text(
+                                "${milliseconds / 1000L} sec",
+                                color = LocalPalette.current.text.toComposeColor(),
+                                fontSize = 12.sp,
+                                fontWeight = if (selected) androidx.compose.ui.text.font.FontWeight.SemiBold else androidx.compose.ui.text.font.FontWeight.Normal,
                             )
-                            .clickable {
-                                duration = milliseconds.toFloat()
-                                emit()
-                            }
-                            .padding(vertical = 9.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            "${milliseconds / 1000L} sec",
-                            color = LocalPalette.current.text.toComposeColor(),
-                            fontSize = 12.sp,
-                            fontWeight = if (selected) androidx.compose.ui.text.font.FontWeight.SemiBold else androidx.compose.ui.text.font.FontWeight.Normal,
-                        )
+                        }
                     }
                 }
             }
