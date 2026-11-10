@@ -6,6 +6,10 @@ import com.xnotes.core.geometry.Obb
 import com.xnotes.core.geometry.Pt
 import com.xnotes.core.geometry.Rect
 import com.xnotes.core.pal.Mark
+import com.xnotes.core.pal.FontFace
+import com.xnotes.core.pal.FontSpec
+import com.xnotes.core.pal.HAlign
+import com.xnotes.core.pal.TextFlags
 import com.xnotes.core.pal.Pen
 import com.xnotes.core.pal.Renderer
 import com.xnotes.core.shapes.ConnectionPoint
@@ -207,6 +211,7 @@ class ShapeItem(
 
     override fun paint(r: Renderer) {
         paintBody(r)
+        paintAngleAnnotations(r)
         paintLabel(r)
     }
 
@@ -216,6 +221,76 @@ class ShapeItem(
         if (neon) return Outline.paintNeon(r, paths, fillRgba, pen(), neonStrength, paintBounds())
         ShapePainter.fill(r, paths, fillRgba, strokeRgba)
         ShapePainter.stroke(r, paths, pen())
+    }
+
+    /**
+     * Paints compact interior-angle annotations for polygonal shapes. The geometry is taken from
+     * the kind's real vertices, so labels follow resize, flip and rotation without becoming
+     * separate document objects. Smooth outlines (circles/curves) have no discrete angles.
+     */
+    fun paintAngleAnnotations(r: Renderer) {
+        if (!shape.isClosed || shape == ShapeKind.GLYPHS) return
+        val corners = localGeometry().corners.takeIf { it.size >= 3 }
+            ?: vertices()?.takeIf { it.size >= 3 }
+            ?: return
+        val area = corners.indices.sumOf { i ->
+            val a = corners[i]
+            val b = corners[(i + 1) % corners.size]
+            a.x * b.y - b.x * a.y
+        } * 0.5
+        if (abs(area) < 1e-6) return
+        val winding = if (area > 0.0) 1.0 else -1.0
+        val font = FontSpec(9.0, FontFace.SANS)
+        val flags = TextFlags(wordWrap = false, alignLeft = false, alignTop = false, hAlign = HAlign.CENTER)
+        val ink = strokeRgba
+        val markerPen = Pen(ink, width = max(0.9, strokeWidth * 0.55), cosmetic = false)
+
+        for (i in corners.indices) {
+            val vertex = corners[i]
+            val previous = corners[(i - 1 + corners.size) % corners.size]
+            val next = corners[(i + 1) % corners.size]
+            val toPrevious = (previous - vertex).normalized()
+            val toNext = (next - vertex).normalized()
+            val previousLength = previous.distanceTo(vertex)
+            val nextLength = next.distanceTo(vertex)
+            if (previousLength < 1e-3 || nextLength < 1e-3) continue
+
+            val dot = (toPrevious.x * toNext.x + toPrevious.y * toNext.y).coerceIn(-1.0, 1.0)
+            val cross = toPrevious.x * toNext.y - toPrevious.y * toNext.x
+            val small = Math.toDegrees(kotlin.math.acos(dot))
+            val reflex = cross * winding > 1e-8
+            val degrees = if (reflex) 360.0 - small else small
+            if (!degrees.isFinite() || degrees < 1.0 || degrees > 359.0) continue
+
+            val radius = minOf(12.0, previousLength * 0.20, nextLength * 0.20)
+            if (radius < 2.0) continue
+            val startAngle = atan2(toPrevious.y, toPrevious.x)
+            val sweep = -winding * Math.toRadians(degrees)
+            val rightAngle = abs(degrees - 90.0) <= 1.0
+
+            if (rightAngle) {
+                val a = vertex + toPrevious * radius
+                val b = a + toNext * radius
+                val d = vertex + toNext * radius
+                r.strokePolyline(listOf(toPage(a), toPage(b), toPage(d)), markerPen)
+            } else {
+                val points = (0..12).map { step ->
+                    val angle = startAngle + sweep * step / 12.0
+                    toPage(vertex + Pt(kotlin.math.cos(angle) * radius, kotlin.math.sin(angle) * radius))
+                }
+                r.strokePolyline(points, markerPen)
+            }
+
+            val bisectorAngle = startAngle + sweep / 2.0
+            val labelDistance = radius + 9.0
+            val labelLocal = vertex + Pt(
+                kotlin.math.cos(bisectorAngle) * labelDistance,
+                kotlin.math.sin(bisectorAngle) * labelDistance,
+            )
+            val labelCenter = toPage(labelLocal)
+            val labelRect = Rect(labelCenter.x - 17.0, labelCenter.y - 7.0, 34.0, 14.0)
+            r.drawText("${Math.round(degrees)}°", labelRect, font, ink, flags)
+        }
     }
 
     /** The label set in [labelRect] and turned with the shape, as text a PDF reader can select. */
