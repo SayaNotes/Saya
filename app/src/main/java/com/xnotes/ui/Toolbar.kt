@@ -470,7 +470,7 @@ private fun ToolButton(
     val image = imageRes?.let { bitmapPainterResource(it) }
     // Use the same safe mask decoder as the pen panel. It also normalizes the taper PNG
     // into an alpha silhouette, keeping the toolbar nib preview in sync with the selected ink.
-    val nibMask = nibMaskRes?.let { bitmapPainterResource(it) ?: painterResource(it) }
+    val nibMask = nibMaskRes?.let { bitmapPainterResource(it) }
     val nibColor = editor.toolConfig(displayTool).colorOverride?.toComposeColor()
         ?: editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor()
         ?: androidx.compose.ui.graphics.Color.Black
