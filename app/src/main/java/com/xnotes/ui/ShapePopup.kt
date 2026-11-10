@@ -26,6 +26,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FormatColorFill
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -152,6 +153,23 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                     Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(LocalPalette.current.surface.toComposeColor().copy(alpha = 0.55f))
+                            .padding(horizontal = 9.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                            Text("Hand-drawn shape", color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
+                            Text("Recognize after pen-up", color = LocalPalette.current.textDim.toComposeColor(), fontSize = 10.sp)
+                        }
+                        Switch(
+                            checked = editor.snapHeldToShapes,
+                            onCheckedChange = { editor.snapHeldToShapes = it },
+                        )
+                    }
+
                     Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
                         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.SpaceBetween) {
@@ -254,13 +272,42 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                 }
 
                 Column(
-                    Modifier.width(112.dp)
+                    Modifier.width(176.dp)
                         .clip(RoundedCornerShape(12.dp))
                         .background(LocalPalette.current.surface.toComposeColor().copy(alpha = 0.42f))
                         .padding(6.dp),
                     verticalArrangement = Arrangement.spacedBy(7.dp),
                 ) {
-                    Text("Colour", color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
+                    Row(
+                        Modifier.fillMaxWidth(),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Text("Colour", color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
+                        Box(
+                            Modifier.size(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(if (editor.hostBucketFillArmed) LocalPalette.current.selectionBackground.toComposeColor() else Color.Transparent)
+                                .border(
+                                    1.dp,
+                                    if (editor.hostBucketFillArmed) LocalPalette.current.accent.toComposeColor() else LocalPalette.current.border.toComposeColor(),
+                                    RoundedCornerShape(8.dp),
+                                )
+                                .clickable {
+                                    val arm = !editor.hostBucketFillArmed
+                                    editor.setBucketFillArmed(arm)
+                                    if (arm) onDismiss()
+                                },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                Icons.Default.FormatColorFill,
+                                contentDescription = "Bucket fill",
+                                tint = LocalPalette.current.text.toComposeColor(),
+                                modifier = Modifier.size(18.dp),
+                            )
+                        }
+                    }
                     FlowRow(
                         maxItemsInEachRow = 3,
                         horizontalArrangement = Arrangement.spacedBy(5.dp),
@@ -271,7 +318,7 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                             val isCurrent = color == activeShapeColor
                             val luminance = swatchColor.red * 0.299f + swatchColor.green * 0.587f + swatchColor.blue * 0.114f
                             Box(
-                                Modifier.size(28.dp).clip(RoundedCornerShape(6.dp))
+                                Modifier.size(44.dp).clip(RoundedCornerShape(7.dp))
                                     .background(swatchColor)
                                     .border(
                                         if (isCurrent) 2.5.dp else 1.dp,
@@ -316,7 +363,7 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                             horizontalArrangement = Arrangement.Center,
                         ) {
                             Box(
-                                Modifier.size(28.dp).clip(RoundedCornerShape(6.dp))
+                                Modifier.size(44.dp).clip(RoundedCornerShape(7.dp))
                                     .background(customColor)
                                     .border(
                                         2.5.dp,
@@ -347,32 +394,6 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                         )
                     }
 
-                    Row(
-                        Modifier.fillMaxWidth()
-                            .clip(RoundedCornerShape(9.dp))
-                            .background(if (editor.hostBucketFillArmed) LocalPalette.current.selectionBackground.toComposeColor() else Color.Transparent)
-                            .border(
-                                1.dp,
-                                if (editor.hostBucketFillArmed) LocalPalette.current.accent.toComposeColor() else LocalPalette.current.border.toComposeColor(),
-                                RoundedCornerShape(9.dp),
-                            )
-                            .clickable {
-                                val arm = !editor.hostBucketFillArmed
-                                editor.setBucketFillArmed(arm)
-                                if (arm) onDismiss()
-                            }
-                            .padding(horizontal = 7.dp, vertical = 7.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        Icon(
-                            Icons.Default.FormatColorFill,
-                            contentDescription = "Bucket fill",
-                            tint = LocalPalette.current.text.toComposeColor(),
-                            modifier = Modifier.size(17.dp),
-                        )
-                        Text("Bucket", color = LocalPalette.current.text.toComposeColor(), fontSize = 10.sp, maxLines = 1)
-                    }
                     if (canFill) {
                         ToggleRow("Fill shape", config.fill) { emit(config.copy(fill = it)) }
                         if (config.fill) {
