@@ -83,6 +83,7 @@ import androidx.compose.ui.graphics.painter.BitmapPainter
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Color as AndroidColor
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
@@ -875,7 +876,7 @@ private fun ToolModeButton(
         else -> 0
     }
     val artPainter = if (art != 0) bitmapPainterResource(art) else null
-    val nibPainter = if (nibMask != 0) bitmapPainterResource(nibMask) else null
+    val nibPainter = if (nibMask != 0) bitmapPainterResource(nibMask) ?: painterResource(nibMask) else null
     Column(
         modifier = Modifier
             .shadow(if (selected) 8.dp else 0.dp, RoundedCornerShape(9.dp))
