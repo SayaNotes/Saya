@@ -2100,6 +2100,13 @@ class InteractionController(
         if (beginTableChrome(content)) return
         if (tryGrabSelectionHandle(content)) return
         if (trySlideLabel(content)) return
+        val lassoInterior = selectedLassoBoundary
+        if (lassoInterior != null && lassoInterior.size >= 3 &&
+            Geometry.pointInPolygon(lassoInterior, content)
+        ) {
+            beginMove(content)
+            return
+        }
         // Inside the settled selection the press moves it, whatever it landed on. Hit-testing
         // first would re-pick the stroke under the finger, and you meant to drag what is
         // selected, not to select what happens to sit inside it.
