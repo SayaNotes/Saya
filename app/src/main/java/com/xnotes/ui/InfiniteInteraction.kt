@@ -669,7 +669,7 @@ class InfiniteInteraction(
             if (moved > InteractionController.LONG_PRESS_SLOP) cancelLongPress()
         }
         if (temporaryEraserRunnable != null &&
-            Pt(e.getX(0).toDouble(), e.getY(0).toDouble()).distanceTo(temporaryEraserDown) > InteractionController.TEMP_ERASER_SLOP
+            Pt(e.getX(0).toDouble(), e.getY(0).toDouble()).distanceTo(temporaryEraserDown) > InteractionController.LONG_PRESS_SLOP
         ) cancelTemporaryEraser()
         when (mode) {
             CanvasPointerMode.PAN -> extendPan(e.getX(0).toDouble(), e.getY(0).toDouble())
