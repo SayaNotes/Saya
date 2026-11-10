@@ -404,6 +404,8 @@ class InteractionController(
     // SELECTION
     private val selection = mutableListOf<Selected>()
     private val lassoPoints = mutableListOf<Pt>()
+    /** The completed freeform loop remains visible around its selection until that selection changes. */
+    private var selectedLassoBoundary: List<Pt>? = null
     /** True only while the lasso gesture belongs to the eraser rather than the selection tool. */
     private var lassoErasing = false
     private var bandRect: Rect? = null
@@ -2209,6 +2211,7 @@ class InteractionController(
             return
         }
         if (lassoPoints.size >= 3) {
+            val boundary = lassoPoints.toList()
             val drawable = state.drawablePageRange()
             val members = SelectionMath.lassoMembers(state.document.pages, state.pageRects, lassoPoints, configFor(Tool.LASSO).selectWholeItems) { i, p ->
                 state.toPageSpace(i, p)
@@ -2217,6 +2220,7 @@ class InteractionController(
                 clearSelection()
             } else {
                 setSelection(members)
+                selectedLassoBoundary = boundary
             }
         } else {
             clearSelection()
@@ -2377,6 +2381,7 @@ class InteractionController(
             // already excludes them — needs no repair; it is repainted at their final spot
             // when the selection is later cleared.
             onContentChanged()
+            selectedLassoBoundary = selectedLassoBoundary?.map { Pt(it.x + moveOffset.x, it.y + moveOffset.y) }
         }
         // A press that never really moved leaves the connectors as it found them.
         if (!moved) for ((_, f) in follows) f.restore()
@@ -2396,6 +2401,7 @@ class InteractionController(
     // --- RESIZE ---
 
     private fun beginResize(sel: Selected, handle: HandleId) {
+        selectedLassoBoundary = null
         resizeItem = sel.item
         resizeHandle = handle
         resizePageIndex = sel.pageIndex
@@ -2868,6 +2874,7 @@ class InteractionController(
     /** Begin a resize ([handle] non-null) or rotate ([handle] null) of the whole selection. Snapshots
      *  every member and the oriented box so each move can restore-then-rebake without drift. */
     private fun beginTransform(handle: HandleId?, content: Pt) {
+        selectedLassoBoundary = null
         txItems = selection.toList()
         txSnaps = txItems.map { it.item.snapshotGeometry() }
         beginFollow(rigid = true, pin = true)
@@ -4213,6 +4220,7 @@ class InteractionController(
     // --- selection management ---
 
     private fun setSelection(picked: List<Selected>) {
+        selectedLassoBoundary = null
         // A member picked brings its whole group along, from its own page: a group never spans pages.
         val onPages = picked.map { it.pageIndex }.distinct().asSequence()
             .flatMap { i -> state.document.pages.getOrNull(i)?.items.orEmpty().asSequence().map { Selected(i, it) } }
@@ -4376,6 +4384,7 @@ class InteractionController(
     }
 
     fun clearSelection() {
+        selectedLassoBoundary = null
         // Restore the tool a long-press grab temporarily switched away from.
         longPressPrevTool?.let {
             tool = it
@@ -5566,10 +5575,16 @@ class InteractionController(
                 mode == PointerMode.TEXT_DRAG -> textDragRect?.let { r.strokeRect(it, accent) }
                 mode == PointerMode.LASSO_DRAW && lassoPoints.size >= 2 ->
                     r.strokePolyline(lassoPoints, chromePen(1.3))
-                selection.isNotEmpty() ->
-                    selectionChromeBox()?.let { obb ->
-                        r.strokePolygon(obb.corners().map { Pt(it.x + moveOffset.x, it.y + moveOffset.y) }, accent)
+                selection.isNotEmpty() -> {
+                    val lassoBoundary = selectedLassoBoundary
+                    if (lassoBoundary != null) {
+                        r.strokePolygon(lassoBoundary.map { Pt(it.x + moveOffset.x, it.y + moveOffset.y) }, accent)
+                    } else {
+                        selectionChromeBox()?.let { obb ->
+                            r.strokePolygon(obb.corners().map { Pt(it.x + moveOffset.x, it.y + moveOffset.y) }, accent)
+                        }
                     }
+                }
             }
 
             // Resize + rotate handles for the settled selection (single, multi, or mixed).
