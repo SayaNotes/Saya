@@ -34,6 +34,10 @@ data class ShapeConfig(
     val dashGap: Double = 8.0,
     /** Every shape dragged out takes its kind's perfect proportions; lines and arrows keep to 15 degree steps. */
     val perfect: Boolean = false,
+    /** Magnetically align shape drawing, moving and resizing to other shapes and page grids. */
+    val snapToAlign: Boolean = true,
+    /** Selection rotation snap interval in degrees (15 includes 45° and 90°). */
+    val angleSnapDegrees: Int = 15,
     /** A counted chip's point or side count; 0 takes the chip's own. */
     val n: Int = 0,
     /** The heads an open chip draws with. */
