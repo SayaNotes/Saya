@@ -2918,6 +2918,53 @@ class InteractionController(
             if (state.pageRects.getOrNull(sel.pageIndex) == null) continue
             sel.item.applyTransform(state.affineToPageSpace(sel.pageIndex, world))
         }
+        // Ordinary closed-shape selection handles resize through this OBB path, not extendResize.
+        // Apply object/grid snapping after the live transform. Recalculate the touch tolerance on
+        // every pointer update so it remains density/zoom-aware when the app window is resized.
+        if (handle != null && shapeConfig.snapToAlign && txItems.size == 1) {
+            val selected = txItems.single()
+            val shape = selected.item as? ShapeItem
+            val page = state.document.pages.getOrNull(selected.pageIndex)
+            if (shape != null && page != null && abs(shape.frameObb()?.angle ?: 0.0) < 1e-5) {
+                val bounds = shape.bounds()
+                val anchor = when (handle) {
+                    HandleId.TL -> Pt(bounds.right, bounds.bottom)
+                    HandleId.TR -> Pt(bounds.left, bounds.bottom)
+                    HandleId.BL -> Pt(bounds.right, bounds.top)
+                    HandleId.BR -> Pt(bounds.left, bounds.top)
+                    else -> null
+                }
+                if (anchor != null) {
+                    val moving = when (handle) {
+                        HandleId.TL -> Pt(bounds.left, bounds.top)
+                        HandleId.TR -> Pt(bounds.right, bounds.top)
+                        HandleId.BL -> Pt(bounds.left, bounds.bottom)
+                        else -> Pt(bounds.right, bounds.bottom)
+                    }
+                    val targets = page.items.filterIsInstance<ShapeItem>()
+                        .filterNot { it === shape }.map { it.bounds() }
+                    val tolerance = alignmentTolerance()
+                    val objectSnap = ShapeAlignment.snapDrag(anchor, moving, targets, tolerance, matchDimensions = true)
+                    val gridSpacing = page.takeIf { it.resolvedTemplate(state.document) == PagePattern.GRID.id }
+                        ?.resolvedSpacing(state.document)
+                        ?: if (page.resolvedTemplate(state.document) == PagePattern.GRID.id) PageStyle.DEFAULT_SPACING else null
+                    val gridSnap = gridSpacing?.let {
+                        ShapeAlignment.snapGrid(anchor, objectSnap.end, it, tolerance, matchDimensions = true)
+                    }
+                    val snapped = gridSnap?.end ?: objectSnap.end
+                    if (snapped != moving) {
+                        val (start, end) = when {
+                            shape.shape.isEndpointShape -> ResizeMath.resizeOpenShape(shape.start, shape.end, handle, snapped)
+                            shape.shape.keepsAspect -> ResizeMath.resizeSquareShape(shape.start, shape.end, handle, snapped)
+                            else -> ResizeMath.resizeClosedShape(shape.start, shape.end, handle, snapped)
+                        }
+                        shape.setGeometry(ShapeHandle(start, end))
+                    }
+                    alignmentGuides = (objectSnap.guides + gridSnap?.guides.orEmpty()).distinct()
+                    alignmentGuidePageIndex = selected.pageIndex.takeIf { alignmentGuides.isNotEmpty() }
+                }
+            }
+        }
         // A pill stops at its smallest by itself, so its box is read back from it.
         if (txItems.isNotEmpty() && txItems.all { it.item is AudioItem }) selObb = selectionBox()
         for ((pi, f) in follows) {
@@ -3002,20 +3049,6 @@ class InteractionController(
         } else {
             // A function graph keeps equal x and y scales while drawn; its handles stretch it later.
             shape.end = shapeAspect?.let { ResizeMath.aspectCorner(shape.start, raw, it) } ?: ResizeMath.drawnEnd(shape, raw, shapeConfig.perfect)
-        }
-        // Open line/arrow shapes magnetize their direction to the selected angular interval.
-        if (shape.shape.isOpen && shapeAspect == null && !shapeConfig.perfect) {
-            val dx = shape.end.x - shape.start.x
-            val dy = shape.end.y - shape.start.y
-            val length = shape.start.distanceTo(shape.end)
-            if (length > 1e-6) {
-                val step = Math.toRadians(shapeConfig.angleSnapDegrees.toDouble())
-                val angle = atan2(dy, dx)
-                val snappedAngle = Math.round(angle / step) * step
-                if (abs(angle - snappedAngle) <= ROTATE_SNAP_STICK_RAD) {
-                    shape.end = Pt(shape.start.x + cos(snappedAngle) * length, shape.start.y + sin(snappedAngle) * length)
-                }
-            }
         }
         if (shapeConfig.snapToAlign && !shape.shape.keepsAspect && shapeAspect == null && !shapeConfig.perfect) {
             val page = state.document.pages.getOrNull(pi)
