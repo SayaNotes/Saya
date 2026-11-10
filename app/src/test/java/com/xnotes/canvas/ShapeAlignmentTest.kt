@@ -70,6 +70,28 @@ class ShapeAlignmentTest {
         assertTrue("matching dimensions should show guides even when boxes are apart", result.guides.isNotEmpty())
     }
 
+    @Test fun resizingMatchesWidthIndependentlyAndShowsBothBoxes() {
+        val target = Rect(200.0, 200.0, 100.0, 60.0)
+        val result = ShapeAlignment.snapDrag(
+            Pt(0.0, 0.0), Pt(96.0, 30.0), listOf(target), 6.0, matchDimensions = true,
+        )
+
+        assertEquals(Pt(100.0, 30.0), result.end)
+        assertTrue(result.guides.any { it.vertical && it.coordinate == 200.0 })
+        assertTrue(result.guides.any { it.vertical && it.coordinate == 300.0 })
+    }
+
+    @Test fun resizingMatchesHeightIndependentlyAndShowsBothBoxes() {
+        val target = Rect(200.0, 200.0, 60.0, 100.0)
+        val result = ShapeAlignment.snapDrag(
+            Pt(0.0, 0.0), Pt(30.0, 96.0), listOf(target), 6.0, matchDimensions = true,
+        )
+
+        assertEquals(Pt(30.0, 100.0), result.end)
+        assertTrue(result.guides.any { !it.vertical && it.coordinate == 200.0 })
+        assertTrue(result.guides.any { !it.vertical && it.coordinate == 300.0 })
+    }
+
     @Test fun centreAlignmentSnapsTheCentreRatherThanTheAnchor() {
         val result = ShapeAlignment.snapDrag(
             Pt(0.0, 0.0),
