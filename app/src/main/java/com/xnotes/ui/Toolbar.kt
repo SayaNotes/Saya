@@ -412,8 +412,7 @@ private fun ToolButton(
     val displayTool = if (tool == Tool.TAPER && editor.tool.isPenPanelStyle) editor.tool else tool
     val popupTool = displayTool
     val selectionModeActive = tool == Tool.SELECT && editor.tool == Tool.LASSO
-    // Let the selected pen button reopen its settings; Taper remains the shared active-pen shortcut.
-    val armed = editor.tool == tool || (editor.tool.isPenPanelStyle && tool == Tool.TAPER) || selectionModeActive
+    val armed = if (editor.tool.isPenPanelStyle && tool.isStroke) tool == Tool.TAPER else editor.tool == tool || selectionModeActive
     val configurable = tool.isStroke || tool == Tool.SHAPE || tool == Tool.ERASER || tool == Tool.SELECT || tool == Tool.LASSO || tool == Tool.TEXT || tool == Tool.TABLE || tool == Tool.MARKUP || tool == Tool.TAPE
     val imageRes = when (displayTool) {
         Tool.PEN -> R.drawable.pen_tool_pen
@@ -445,14 +444,14 @@ private fun ToolButton(
             stringResource(displayTool.labelRes),
             active = armed,
             glideKey = displayTool,
-            hint = if (armed && configurable) stringResource(R.string.tip_tap_for_settings) else null,
+            hint = if ((armed || editor.tool == tool) && configurable) stringResource(R.string.tip_tap_for_settings) else null,
             shortcut = PAGED_TOOL_KEYS[displayTool],
             image = image,
             nibMask = nibMask,
             nibColor = nibColor,
             stampGlyph = stampGlyph,
         ) {
-            if (armed && configurable) {
+            if ((armed || editor.tool == tool) && configurable) {
                 setConfigForTool(if (tool == Tool.SELECT && editor.tool == Tool.LASSO) Tool.LASSO else popupTool)
             } else {
                 editor.selectTool(tool)
