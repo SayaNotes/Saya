@@ -409,6 +409,14 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
     private val batchDir = tempDir("batchpdf")
 
     init {
+        // A fresh install should enter Saya's home directly using its private app-storage
+        // provider. This avoids the mandatory folder-picker screen and needs no SAF grant.
+        // Keep an explicitly chosen folder untouched on subsequent launches.
+        if (pane == Pane.PRIMARY && settings.browseRoot == null) {
+            val internalRoot = com.xnotes.platform.AppStorageDocumentsProvider.treeUri(appContext).toString()
+            settings = settings.copy(browseRoot = internalRoot)
+            settingsRepo.save(settings)
+        }
         // The purge above took the files of what an earlier editor in this process copied.
         if (pane == Pane.PRIMARY) {
             PageClipboard.put(null)
