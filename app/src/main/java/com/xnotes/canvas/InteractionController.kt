@@ -398,6 +398,7 @@ class InteractionController(
     )
     private val laserTrails = mutableListOf<LaserTrail>()
     private var laserFrameRunning = false
+    private var laserTimerRunnable: Runnable? = null
     private val laserFrame = Choreographer.FrameCallback { t -> stepLaserTrails(t) }
 
     // SELECTION
@@ -5059,10 +5060,32 @@ class InteractionController(
         )
         laserTrails.add(LaserTrail(stroke, pageIndex, now + duration, LASER_FADE_MS))
         frontInk?.holdFading(stroke)
-        if (!laserFrameRunning) {
-            laserFrameRunning = true
-            choreographer.postFrameCallback(laserFrame)
+        scheduleLaserTimer()
+    }
+
+    /** Sleep during the steady hold; animate only while at least one trail is fading. */
+    private fun scheduleLaserTimer() {
+        laserTimerRunnable?.let { handler.removeCallbacks(it) }
+        laserTimerRunnable = null
+        if (laserTrails.isEmpty()) return
+        val now = System.nanoTime() / 1_000_000L
+        val nextFade = laserTrails.minOf { it.fadeAtMs }
+        if (nextFade <= now) {
+            if (!laserFrameRunning) {
+                laserFrameRunning = true
+                choreographer.postFrameCallback(laserFrame)
+            }
+            return
         }
+        val task = Runnable {
+            laserTimerRunnable = null
+            if (laserTrails.isNotEmpty() && !laserFrameRunning) {
+                laserFrameRunning = true
+                choreographer.postFrameCallback(laserFrame)
+            }
+        }
+        laserTimerRunnable = task
+        handler.postDelayed(task, nextFade - now)
     }
 
     private fun stepLaserTrails(frameTimeNanos: Long) {
@@ -5070,11 +5093,21 @@ class InteractionController(
         val now = frameTimeNanos / 1_000_000L
         laserTrails.removeAll { now >= it.fadeAtMs + it.fadeDurationMs }
         requestRender()
-        if (laserTrails.isEmpty()) laserFrameRunning = false
-        else choreographer.postFrameCallback(laserFrame)
+        if (laserTrails.isEmpty()) {
+            laserFrameRunning = false
+            laserTimerRunnable?.let { handler.removeCallbacks(it) }
+            laserTimerRunnable = null
+        } else if (laserTrails.any { now >= it.fadeAtMs }) {
+            choreographer.postFrameCallback(laserFrame)
+        } else {
+            laserFrameRunning = false
+            scheduleLaserTimer()
+        }
     }
 
     private fun clearLaserTrails() {
+        laserTimerRunnable?.let { handler.removeCallbacks(it) }
+        laserTimerRunnable = null
         if (laserFrameRunning) choreographer.removeFrameCallback(laserFrame)
         laserFrameRunning = false
         laserTrails.clear()
