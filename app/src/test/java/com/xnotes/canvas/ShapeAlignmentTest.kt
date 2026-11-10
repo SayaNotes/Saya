@@ -63,9 +63,11 @@ class ShapeAlignmentTest {
             Pt(96.0, 96.0),
             listOf(Rect(200.0, 200.0, 100.0, 100.0)),
             6.0,
+            matchDimensions = true,
         )
 
         assertEquals(Pt(100.0, 100.0), result.end)
+        assertTrue("matching dimensions should show guides even when boxes are apart", result.guides.isNotEmpty())
     }
 
     @Test fun centreAlignmentSnapsTheCentreRatherThanTheAnchor() {
