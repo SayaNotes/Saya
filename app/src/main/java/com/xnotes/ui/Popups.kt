@@ -552,7 +552,7 @@ internal fun DesignedSizeSlider(
 fun LaserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
     val base = remember(editor) { editor.toolConfig(Tool.LASER) }
     var width by remember { mutableStateOf(base.baseWidth.toFloat().coerceIn(1f, 20f)) }
-    var duration by remember { mutableStateOf(base.laserDurationMs.toFloat()) }
+    var duration by remember { mutableStateOf(base.laserDurationMs.takeIf { it in setOf(3000L, 5000L, 15000L) }?.toFloat() ?: 5000f) }
     val laserRed = Rgba(255, 0, 0, 255)
 
     fun emit() {
@@ -560,7 +560,7 @@ fun LaserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
             Tool.LASER,
             base.copy(
                 baseWidth = width.toDouble(),
-                laserDurationMs = duration.toLong().coerceIn(ToolConfig.MIN_LASER_DURATION_MS, ToolConfig.MAX_LASER_DURATION_MS),
+                laserDurationMs = duration.toLong(),
                 rgba = laserRed,
                 colorOverride = laserRed,
                 pressureEnabled = true,
@@ -626,24 +626,39 @@ fun LaserConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                     inactiveTrackColor = LocalPalette.current.border.toComposeColor(),
                 ),
             )
+            StyleCaption("Visible duration")
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
+                horizontalArrangement = Arrangement.spacedBy(7.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                StyleCaption("Visible duration")
-                Text("%.1f s".format(duration / 1000f), color = LocalPalette.current.text.toComposeColor(), fontSize = 12.sp)
+                listOf(3000L, 5000L, 15000L).forEach { milliseconds ->
+                    val selected = duration.toLong() == milliseconds
+                    Box(
+                        Modifier.weight(1f)
+                            .clip(RoundedCornerShape(9.dp))
+                            .background(if (selected) LocalPalette.current.selectionBackground.toComposeColor() else Color.Transparent)
+                            .border(
+                                1.dp,
+                                if (selected) LocalPalette.current.accent.toComposeColor() else LocalPalette.current.border.toComposeColor(),
+                                RoundedCornerShape(9.dp),
+                            )
+                            .clickable {
+                                duration = milliseconds.toFloat()
+                                emit()
+                            }
+                            .padding(vertical = 9.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            "${milliseconds / 1000L} sec",
+                            color = LocalPalette.current.text.toComposeColor(),
+                            fontSize = 12.sp,
+                            fontWeight = if (selected) androidx.compose.ui.text.font.FontWeight.SemiBold else androidx.compose.ui.text.font.FontWeight.Normal,
+                        )
+                    }
+                }
             }
-            Slider(
-                value = duration,
-                onValueChange = { duration = it; emit() },
-                valueRange = ToolConfig.MIN_LASER_DURATION_MS.toFloat()..ToolConfig.MAX_LASER_DURATION_MS.toFloat(),
-                colors = SliderDefaults.colors(
-                    thumbColor = LocalPalette.current.accent.toComposeColor(),
-                    activeTrackColor = LocalPalette.current.accent.toComposeColor(),
-                    inactiveTrackColor = LocalPalette.current.border.toComposeColor(),
-                ),
-            )
             Text(
                 "Red • Neon Glow • 100% opacity • Taper • fades after the selected duration",
                 color = LocalPalette.current.textDim.toComposeColor(),
@@ -850,15 +865,15 @@ private fun ToolModeButton(
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(
-            Modifier.size(52.dp, 132.dp),
-            contentAlignment = Alignment.Center,
+            Modifier.size(52.dp, 142.dp),
+            contentAlignment = Alignment.TopCenter,
         ) {
             if (artPainter != null) {
                 Image(
                     artPainter,
                     contentDescription = label,
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().padding(top = 10.dp),
                 )
                 if (nibPainter != null) {
                     Image(
@@ -869,7 +884,7 @@ private fun ToolModeButton(
                             nibColor,
                             androidx.compose.ui.graphics.BlendMode.SrcIn,
                         ),
-                        modifier = Modifier.fillMaxSize(),
+                        modifier = Modifier.fillMaxSize().padding(top = 10.dp),
                     )
                 }
             }
@@ -877,7 +892,7 @@ private fun ToolModeButton(
                 Text(
                     stampGlyph,
                     fontSize = 12.sp,
-                    modifier = Modifier.align(Alignment.TopCenter).offset(y = 1.dp),
+                    modifier = Modifier.align(Alignment.TopCenter).offset(y = 11.dp),
                 )
             }
         }
