@@ -466,7 +466,10 @@ private fun ToolButton(
         Tool.TAPER -> R.drawable.taper_nib_mask
         else -> null
     }
-    val image = imageRes?.takeUnless { displayTool == Tool.PEN }?.let { bitmapPainterResource(it) }
+    // Stroke tools show only the selected nib silhouette in the toolbar.
+    // Keep the full pen artwork inside the pen panel; the toolbar icon must stay
+    // visually consistent in footprint with neighbouring lasso/arrow controls.
+    val image = imageRes?.takeUnless { nibMaskRes != null }?.let { bitmapPainterResource(it) }
     // Use the same safe mask decoder as the pen panel. It also normalizes the taper PNG
     // into an alpha silhouette, keeping the toolbar nib preview in sync with the selected ink.
     val nibMask = nibMaskRes?.let { bitmapPainterResource(it) }
