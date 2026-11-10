@@ -997,11 +997,18 @@ class InteractionController(
             finishPolygonDraft()
         }
         when {
-            effectiveTool == Tool.PAN -> beginPan(vx, vy, fromPenButton = buttonHeld && penButtonTool == Tool.PAN)
+            effectiveTool == Tool.PAN -> {
+                beginPan(vx, vy, fromPenButton = buttonHeld && penButtonTool == Tool.PAN)
+                // Homemade styluses are reported as fingers and have no hardware side button.
+                if (isFinger && !buttonHeld && penButtonTool == Tool.ERASER && isHoldErasePen(tool)) {
+                    armTemporaryEraser(Pt(vx, vy))
+                }
+            }
             effectiveTool.isStroke -> {
                 beginDraw(content, resolvePressure(e, 0, toolType), effectiveTool, e.eventTime, Pt(vx, vy))
                 // Hold the stylus still briefly to erase without changing the selected pen.
-                if (drawingIsStylus && !buttonHeld && effectiveTool == tool && isHoldErasePen(tool) && liveStroke != null) {
+                if (!buttonHeld && effectiveTool == tool && isHoldErasePen(tool) && liveStroke != null &&
+                    (drawingIsStylus || (isFinger && penButtonTool == Tool.ERASER))) {
                     armTemporaryEraser(Pt(vx, vy))
                 }
             }
@@ -1382,8 +1389,6 @@ class InteractionController(
         liveStroke = stroke
         strokePageIndex = pageIndex
         mode = PointerMode.DRAW
-        // Hand-drawn shape recognition is deferred until pen-up, so no part of a live stroke
-        // is replaced while the user is still drawing.
         frontInk?.wet(stroke, pageIndex)
         requestRender()
     }
@@ -4060,7 +4065,9 @@ class InteractionController(
         temporaryEraserDown = down
         val task = Runnable {
             temporaryEraserRunnable = null
-            if (mode != PointerMode.DRAW || !drawingIsStylus || liveStroke == null || !isHoldErasePen(tool)) return@Runnable
+            val fingerHold = !drawingIsStylus && penButtonTool == Tool.ERASER
+            if ((mode != PointerMode.DRAW && mode != PointerMode.PAN) ||
+                (!drawingIsStylus && !fingerHold) || !isHoldErasePen(tool)) return@Runnable
             liveStroke = null
             strokePageIndex = null
             strokeDismissedSelection = false
@@ -4069,7 +4076,7 @@ class InteractionController(
             snapCurrentEdge = null
             snapPenViewport = null
             tapCandidate = false
-            erasingWithFinger = false
+            erasingWithFinger = fingerHold
             beginErase(temporaryEraserDown.x, temporaryEraserDown.y)
         }
         temporaryEraserRunnable = task
