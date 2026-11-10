@@ -942,7 +942,7 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
         val canvas = infinite
         canvas.replaceDocument(doc)
         canvas.applyPalette(palette)
-        canvas.applyInputPrefs(settings.prefs.fingerDraws, controller.penButtonTool, settings.prefs.zoomLockPan, settings.prefs.detectShapes, settings.prefs.snapRotation90)
+        canvas.applyInputPrefs(settings.prefs.fingerDraws, controller.penButtonTool, settings.prefs.zoomLockPan, settings.prefs.snapRotation90)
         canvas.applyZoomRange(settings.prefs.canvasMinZoomPercent, settings.prefs.canvasMaxZoomPercent)
         canvas.hiddenShapes = { settings.prefs.hiddenShapes }
         canvas.shapeOrder = { settings.prefs.shapeOrder }
@@ -3014,7 +3014,6 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
             p.fingerDraws,
             if (p.penButtonTool == "none") null else (Tool.fromId(p.penButtonTool) ?: Tool.ERASER),
             p.zoomLockPan,
-            p.detectShapes,
             p.snapRotation90,
         )
         infiniteOrNull?.applyZoomRange(p.canvasMinZoomPercent, p.canvasMaxZoomPercent)
@@ -3032,7 +3031,6 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
         }
         controller.fingerDraws = p.fingerDraws
         controller.zoomLockPan = p.zoomLockPan
-        controller.detectShapes = p.detectShapes
         controller.snapRotation90 = p.snapRotation90
         flowText.markdownInput = p.markdownInput
         flowText.slashCommands = p.slashCommands
@@ -7140,10 +7138,6 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
 
     /** The live config for a stroke tool (read by its config popup). */
     override fun toolConfig(tool: Tool): com.xnotes.core.tools.ToolConfig = controller.configFor(tool)
-
-    override var snapHeldToShapes: Boolean
-        get() = false
-        set(v) { /* Hand-drawn shape recognition has been removed. */ }
 
     override val hostShapeConfig: ShapeConfig get() = shapeConfig
     override val hostToolbarColors: List<Rgba> get() = toolbarColors
