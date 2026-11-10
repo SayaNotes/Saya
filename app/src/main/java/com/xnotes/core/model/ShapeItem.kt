@@ -225,8 +225,9 @@ class ShapeItem(
         // Only vertex-editable closed outlines have meaningful corners. This excludes smooth
         // ellipses, glyph fills and imported colour fills, whose flattened paths are not corners.
         if (!shape.isClosed || !shape.pointEditable || shape.isEndpointShape) return
-        val geometry = localGeometry()
-        val points = (if (isFree) vertices().orEmpty() else geometry.corners.map(::toPage))
+        // Geometry already contains the outline's vertex list for both built-in and free
+        // polygon kinds. Reuse it instead of rebuilding FreePath placement a second time per frame.
+        val points = localGeometry().corners.map(::toPage)
             .let { pts ->
                 if (pts.size > 1 && pts.first().distanceTo(pts.last()) < 1e-6) pts.dropLast(1) else pts
             }
