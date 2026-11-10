@@ -779,7 +779,7 @@ internal fun ToolbarIcon(
                         contentDescription = contentDescription,
                         contentScale = ContentScale.Fit,
                         colorFilter = ColorFilter.tint(nibColor, BlendMode.SrcIn),
-                        modifier = Modifier.size(bar.icon * 1.12f),
+                        modifier = Modifier.size(bar.icon * 1.38f),
                     )
                 } else if (image == null) {
                     Icon(icon, contentDescription = contentDescription, tint = tint, modifier = Modifier.size(bar.icon * 1.12f))

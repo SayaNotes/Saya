@@ -911,7 +911,7 @@ private fun ToolModeButton(
                     artPainter,
                     contentDescription = label,
                     contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxSize().padding(top = 10.dp)
+                    modifier = Modifier.fillMaxSize().padding(top = 10.dp).offset(y = 8.dp)
                         .graphicsLayer { if (selected) { scaleX = 1.12f; scaleY = 1.12f } },
                 )
                 if (nibPainter != null) {
@@ -923,7 +923,7 @@ private fun ToolModeButton(
                             nibColor,
                             androidx.compose.ui.graphics.BlendMode.SrcIn,
                         ),
-                        modifier = Modifier.fillMaxSize().padding(top = 10.dp)
+                        modifier = Modifier.fillMaxSize().padding(top = 10.dp).offset(y = 8.dp)
                             .graphicsLayer { if (selected) { scaleX = 1.12f; scaleY = 1.12f } },
                     )
                 }
