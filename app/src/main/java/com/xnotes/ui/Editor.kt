@@ -8118,6 +8118,8 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
 
     override fun selectionFills() = controller.selectionFills()
 
+    override fun selectionCanFill() = controller.selectionCanFill()
+
     override fun selectionTapePattern() = controller.selectionTapePattern()
 
     override fun setSelectionTapePattern(pattern: com.xnotes.core.model.TapePattern) = controller.setSelectionTapePattern(pattern)
