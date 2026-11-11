@@ -118,8 +118,8 @@ data class ShapeConfig(
     }
 
     companion object {
-        /** Default reduced opacity applied to the ink colour when a closed shape is filled. */
-        const val FILL_ALPHA = 0.25
+        /** Default opacity applied to a closed shape's fill; new shapes start fully opaque. */
+        const val FILL_ALPHA = 1.0
 
         /** Settable fill-opacity range; never fully transparent, never fully opaque. */
         const val FILL_ALPHA_MIN = 0.05
