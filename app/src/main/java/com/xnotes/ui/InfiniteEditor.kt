@@ -164,6 +164,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         private set
 
     /** Whether a held freehand stroke may snap to the shape it looks like. */
+    var detectShapes: Boolean = false
 
     /** Live zoom, mirrored into Compose so a readout can follow a pinch frame by frame. */
     var zoomPercent by mutableStateOf(100)
@@ -2246,6 +2247,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         detectShapes: Boolean = false,
     ) {
         interaction.fingerDraws = fingerDraws
+        this.detectShapes = detectShapes
         interaction.detectShapes = detectShapes
         interaction.penButtonTool = penButtonTool
         interaction.zoomLockPan = zoomLockPan

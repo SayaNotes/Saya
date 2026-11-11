@@ -35,6 +35,7 @@ import com.xnotes.core.model.TapeItem
 import com.xnotes.core.model.TapeMode
 import com.xnotes.core.shapes.ShapeKind
 import com.xnotes.core.stroke.Sample
+import com.xnotes.core.stroke.ShapeRecognizer
 import com.xnotes.core.stroke.Scribble
 import com.xnotes.core.stroke.StrokeSimplify
 import com.xnotes.core.tape.TapeGeometry
@@ -172,6 +173,9 @@ class InfiniteInteraction(
     /** Disappearing ink is armed, so a held stroke must not become a committed shape. */
     var wandEnabled: Boolean = false
 
+    /** Original XNotes hold-to-snap option, mirrored from the app preference. */
+    var detectShapes: Boolean = false
+
     /** Which pans still move a locked view: "single" (default) | "double" | "none". */
     var zoomLockPan: String = "single"
 
@@ -299,6 +303,9 @@ class InfiniteInteraction(
     private var drawingPointerId = -1
     private var drawingIsStylus = false
     private var strokeStartTimeMs = 0L
+    private var dwellRunnable: Runnable? = null
+    private var dwellAnchor = Pt.ZERO
+    private var dwellEligible = false
 
     // Pan and inertial fling, in viewport px and viewport px/s.
     private var lastPan = Pt.ZERO
@@ -864,6 +871,11 @@ class InfiniteInteraction(
         stroke.addSample(Sample(p.x, p.y, pressureOf(e, 0)))
         liveStroke = stroke
         mode = CanvasPointerMode.DRAW
+        dwellEligible = detectShapes && drawTool.isStroke && drawTool != Tool.HIGHLIGHTER && !wandEnabled
+        if (dwellEligible) {
+            dwellAnchor = Pt(vx, vy)
+            armShapeDwell()
+        }
         onWetStroke(stroke)
         requestRender()
     }
@@ -906,9 +918,15 @@ class InfiniteInteraction(
         if (force || last == null || Pt(last.x, last.y).manhattanTo(p) >= gate) {
             stroke.addSample(Sample(p.x, p.y, pressure.coerceIn(0.0, 1.0), t))
         }
+        if (dwellEligible && Pt(vx, vy).distanceTo(dwellAnchor) > InteractionController.SHAPE_DWELL_SLOP) {
+            dwellAnchor = Pt(vx, vy)
+            armShapeDwell()
+        }
     }
 
     private fun endDraw(e: MotionEvent) {
+        cancelShapeDwell()
+        dwellEligible = false
         val idx = e.findPointerIndex(drawingPointerId).coerceAtLeast(0)
         addStrokePoint(
             e.getX(idx).toDouble(), e.getY(idx).toDouble(),
@@ -933,6 +951,50 @@ class InfiniteInteraction(
         simplifyForCommit(stroke)
         if (scribbleErase(stroke)) return
         onCommitStroke(stroke)
+    }
+
+    private fun armShapeDwell() {
+        cancelShapeDwell()
+        val callback = Runnable { onShapeDwellElapsed() }
+        dwellRunnable = callback
+        handler.postDelayed(callback, InteractionController.SHAPE_DWELL_MS)
+    }
+
+    private fun cancelShapeDwell() {
+        dwellRunnable?.let { handler.removeCallbacks(it) }
+        dwellRunnable = null
+    }
+
+    /** Restore the original hold-to-snap gesture on the infinite canvas as well. */
+    private fun onShapeDwellElapsed() {
+        dwellRunnable = null
+        if (!dwellEligible) return
+        val stroke = liveStroke ?: return
+        if (stroke.samples.size < InteractionController.SHAPE_MIN_SAMPLES) return
+        val recognized = ShapeRecognizer.recognize(stroke.samples) ?: return
+        val width = stroke.config.baseWidth * InteractionController.SHAPE_PEN_PARITY
+        val shape = if (recognized.vertices != null) {
+            ShapeItem.poly(recognized.kind, recognized.vertices, stroke.config.rgba, width, null, stroke.config.neon, stroke.config.neonStrength)
+        } else {
+            ShapeItem(
+                shape = recognized.kind,
+                start = recognized.start,
+                end = recognized.end,
+                strokeRgba = stroke.config.rgba,
+                strokeWidth = width,
+                fillRgba = null,
+                neon = stroke.config.neon,
+                neonStrength = stroke.config.neonStrength,
+            )
+        }
+        liveStroke = null
+        dwellEligible = false
+        cancelShapeDwell()
+        onWetStroke(null)
+        onCommitShape(shape)
+        selection()?.select(listOf(shape))
+        onSelectionChanged()
+        requestRender()
     }
 
     /** Scribble to erase: when [stroke] reads as a scribble over ink, erase that instead of committing it. */
@@ -1966,6 +2028,8 @@ class InfiniteInteraction(
 
     /** Drop the wet stroke without committing it, when a second finger turns the gesture into a zoom. */
     private fun abandonStroke() {
+        cancelShapeDwell()
+        dwellEligible = false
         liveStroke = null
         onWetStroke(null)
     }

@@ -6144,7 +6144,6 @@ class InteractionController(
         const val SHAPE_DWELL_MS = 500L
         const val SHAPE_DWELL_SLOP = 4.0
         const val SHAPE_MIN_SAMPLES = 8
-        const val SHAPE_PEN_PARITY = 0.675
 
         /** Content px a duplicate lands from its original, so the copy is visibly a copy. */
         const val DUPLICATE_NUDGE = 24.0
