@@ -1312,10 +1312,6 @@ class InfiniteInteraction(
         item is ImageItem && com.xnotes.platform.ImageDecoder.isVector(item.image.file.path)
 
     /**
-     * A resize in progress. The model is left alone and the renderer is handed the map, so a handle
-     * drag costs a few uniforms however much is selected.
-     */
-    /**
      * Snap a lone upright shape while its selection handles are dragged. The immutable gesture
      * frame is used on every sample, so snapping never compounds from the previous snapped frame.
      * Side handles are constrained to their own axis and keep the opposite edge anchored.
@@ -1329,13 +1325,9 @@ class InfiniteInteraction(
 
         val tolerance = 8.0 * devicePxPerDp() / viewport.zoom
         if (!tolerance.isFinite() || tolerance <= 0.0) return pointer
-        val search = Rect(
-            frame.center.x - frame.halfW - tolerance,
-            frame.center.y - frame.halfH - tolerance,
-            frame.halfW * 2.0 + tolerance * 2.0,
-            frame.halfH * 2.0 + tolerance * 2.0,
-        )
-        val targets = itemsIn(search).filterIsInstance<ShapeItem>()
+        // Include visible neighbours, not only shapes touching the current bounds: equal-size
+        // snapping is useful even when the reference shape is elsewhere in the visible canvas.
+        val targets = itemsIn(viewport.cullRect(24.0 * devicePxPerDp())).filterIsInstance<ShapeItem>()
             .filterNot { it === shape }
             .map { it.bounds() }
         if (targets.isEmpty()) return pointer
