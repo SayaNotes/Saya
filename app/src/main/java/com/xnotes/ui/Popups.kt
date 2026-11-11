@@ -284,7 +284,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
             ) {
                 // Keep the original six-tool box dimensions and bottom alignment.
                 Row(
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.weight(1f)
                         .clip(RoundedCornerShape(16.dp))
                         .background(LocalPalette.current.surface.toComposeColor())
                         .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(16.dp))
@@ -323,7 +323,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                             Box(
                                 Modifier.size(38.dp).clip(RoundedCornerShape(7.dp))
                                     .background(swatchColor)
-.border(
+                                    .border(
                                         if (selected) 2.5.dp else 1.dp,
                                         if (selected) {
                                             val luminance = swatchColor.red * 0.299f + swatchColor.green * 0.587f + swatchColor.blue * 0.114f
