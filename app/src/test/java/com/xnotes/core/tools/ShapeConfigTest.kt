@@ -76,6 +76,13 @@ class ShapeConfigTest {
         assertSame(ShapeKind.RECTANGLE, ShapeConfig(preset = "hexagram").shape)
     }
 
+    @Test fun newShapeFillDefaultsToFullyOpaque() {
+        val config = ShapeConfig(fill = true)
+        assertEquals(1.0, config.fillAlpha, 0.0)
+        assertEquals(ink.copy(a = 255), config.fillFor(ShapeKind.RECTANGLE, ink))
+        assertEquals(teal.copy(a = 255), config.copy(fillColor = teal).fillFor(ShapeKind.RECTANGLE, ink))
+    }
+
     @Test fun theFillTakesItsOwnColourAtItsOpacity() {
         val c = ShapeConfig(fill = true, fillAlpha = 0.5, fillColor = teal)
         assertEquals(Rgba(0, 128, 128, 127), c.fillFor(ShapeKind.RECTANGLE, ink))
