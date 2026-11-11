@@ -237,7 +237,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
             enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(220)) + fadeIn(tween(180)),
         ) {
         Column(
-            Modifier.widthIn(max = 560.dp).fillMaxWidth()
+            Modifier.widthIn(max = 680.dp).fillMaxWidth()
                 .liquidGlassSurface(
                     RoundedCornerShape(26.dp),
                     LocalPalette.current.panel.toComposeColor(),
@@ -256,125 +256,8 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     modifier = Modifier.clip(CircleShape).clickable { onDismiss() }.padding(horizontal = 5.dp))
             }
 
-            // Full-width six-tool tray: every tool gets an equal slot and shares one
-            // measured bottom baseline. This avoids horizontal scrolling or clipped tools.
-            Row(
-                modifier = Modifier.fillMaxWidth()
-                    .clip(RoundedCornerShape(16.dp))
-                    .background(LocalPalette.current.surface.toComposeColor())
-                    .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(16.dp))
-                    .padding(start = 6.dp, end = 6.dp, top = 7.dp, bottom = 0.dp)
-                    .height(154.dp),
-                horizontalArrangement = Arrangement.spacedBy(0.dp),
-                verticalAlignment = Alignment.Bottom,
-            ) {
-                penTools.forEach { candidate ->
-                    ToolModeButton(
-                        candidate,
-                        selected = candidate == tool,
-                        modifier = Modifier.weight(1f),
-                        nibColor = editor.toolConfig(candidate).colorOverride?.toComposeColor()
-                            ?: (editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor() ?: Color.Black),
-                    ) { onSelectTool(candidate) }
-                }
-            }
-
-            // Keep the colour palette beneath the tray, aligned to its right edge.
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-            ) {
-            Column(
-                modifier = Modifier.width(144.dp)
-                    .clip(RoundedCornerShape(10.dp))
-                    .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(10.dp))
-                    .padding(6.dp),
-                verticalArrangement = Arrangement.spacedBy(5.dp),
-            ) {
-                StyleCaption(stringResource(R.string.caption_colour))
-                FlowRow(
-                    maxItemsInEachRow = 3,
-                    horizontalArrangement = Arrangement.spacedBy(5.dp),
-                    verticalArrangement = Arrangement.spacedBy(5.dp),
-                ) {
-                    paletteColors.forEachIndexed { paletteIndex, swatch ->
-                        val swatchColor = swatch.toComposeColor()
-                        val selected = effectivePenColor == swatch
-                        Box(
-                            Modifier.size(38.dp).clip(RoundedCornerShape(7.dp))
-                                .background(swatchColor)
-.border(
-                                    if (selected) 2.5.dp else 1.dp,
-                                    if (selected) {
-                                        val luminance = swatchColor.red * 0.299f + swatchColor.green * 0.587f + swatchColor.blue * 0.114f
-                                        if (luminance > 0.55f) Color.Black else Color.White
-                                    } else LocalPalette.current.border.toComposeColor(),
-                                    RoundedCornerShape(5.dp),
-                                )
-                                .combinedClickable(
-                                    onClick = { colorOverride = swatch; emit() },
-                                    onLongClick = { editingPaletteColor = paletteIndex },
-                                ),
-                        ) {}
-                    }
-                }
-                editingPaletteColor?.let { paletteIndex ->
-                    val seed = paletteColors.getOrNull(paletteIndex)
-                    if (seed != null) ColorPickerPopup(
-                        initial = seed,
-                        recents = editor.hostRecentColors,
-                        onDismiss = { editingPaletteColor = null },
-                        onPick = { picked ->
-                            editor.setSwatch(SwatchRole.PEN, paletteIndex, picked)
-                            if (colorOverride == seed) {
-                                colorOverride = picked
-                                emit()
-                            }
-                            editingPaletteColor = null
-                        },
-                    )
-                }
-                // Keep a visible selection marker when the active ink is a custom colour
-                // rather than one of the twelve built-in swatches.
-                val activePenColor = effectivePenColor
-                if (activePenColor != null && activePenColor !in paletteColors) {
-                    val customColor = activePenColor.toComposeColor()
-                    Row(
-                        Modifier.fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.Center,
-                    ) {
-                        Box(
-                            Modifier.size(28.dp).clip(RoundedCornerShape(5.dp))
-                                .background(customColor)
-                                .border(
-                                    2.5.dp,
-                                    if (customColor.red * 0.299f + customColor.green * 0.587f + customColor.blue * 0.114f > 0.55f) Color.Black else Color.White,
-                                    RoundedCornerShape(5.dp),
-                                ),
-                        ) {}
-                        Text("  Current", color = LocalPalette.current.textDim.toComposeColor(), fontSize = 10.sp)
-                    }
-                }
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    ColorPickerDot(
-                        null,
-                        custom = false,
-                        onPick = { colorOverride = it; emit() },
-                        dismissOnPick = false,
-                    ) { dismissPicker, pick ->
-                        ColorPickerPopup(
-                            initial = editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex),
-                            recents = editor.hostRecentColors,
-                            onDismiss = dismissPicker,
-                            onPick = pick,
-                        )
-                    }
-                }
-            }
-            }
-
-            // The size control sits below the tray and palette and uses the full panel width.
+            // Size first, then the unchanged pen box with its palette alongside.
+            // Size stays at the top of the pen panel.
             Column(
                 modifier = Modifier.fillMaxWidth(),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -394,7 +277,123 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 )
             }
 
-            HorizontalDivider(color = LocalPalette.current.border.toComposeColor())
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // Keep the original six-tool box dimensions and bottom alignment.
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(LocalPalette.current.surface.toComposeColor())
+                        .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(16.dp))
+                        .padding(start = 6.dp, end = 6.dp, top = 7.dp, bottom = 0.dp)
+                        .height(154.dp),
+                    horizontalArrangement = Arrangement.spacedBy(0.dp),
+                    verticalAlignment = Alignment.Bottom,
+                ) {
+                    penTools.forEach { candidate ->
+                        ToolModeButton(
+                            candidate,
+                            selected = candidate == tool,
+                            modifier = Modifier.weight(1f),
+                            nibColor = editor.toolConfig(candidate).colorOverride?.toComposeColor()
+                                ?: (editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex)?.toComposeColor() ?: Color.Black),
+                        ) { onSelectTool(candidate) }
+                    }
+                }
+
+                Column(
+                    modifier = Modifier.width(144.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .border(1.dp, LocalPalette.current.border.toComposeColor(), RoundedCornerShape(10.dp))
+                        .padding(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(5.dp),
+                ) {
+                    StyleCaption(stringResource(R.string.caption_colour))
+                    FlowRow(
+                        maxItemsInEachRow = 3,
+                        horizontalArrangement = Arrangement.spacedBy(5.dp),
+                        verticalArrangement = Arrangement.spacedBy(5.dp),
+                    ) {
+                        paletteColors.forEachIndexed { paletteIndex, swatch ->
+                            val swatchColor = swatch.toComposeColor()
+                            val selected = effectivePenColor == swatch
+                            Box(
+                                Modifier.size(38.dp).clip(RoundedCornerShape(7.dp))
+                                    .background(swatchColor)
+.border(
+                                        if (selected) 2.5.dp else 1.dp,
+                                        if (selected) {
+                                            val luminance = swatchColor.red * 0.299f + swatchColor.green * 0.587f + swatchColor.blue * 0.114f
+                                            if (luminance > 0.55f) Color.Black else Color.White
+                                        } else LocalPalette.current.border.toComposeColor(),
+                                        RoundedCornerShape(5.dp),
+                                    )
+                                    .combinedClickable(
+                                        onClick = { colorOverride = swatch; emit() },
+                                        onLongClick = { editingPaletteColor = paletteIndex },
+                                    ),
+                            ) {}
+                        }
+                    }
+                    editingPaletteColor?.let { paletteIndex ->
+                        val seed = paletteColors.getOrNull(paletteIndex)
+                        if (seed != null) ColorPickerPopup(
+                            initial = seed,
+                            recents = editor.hostRecentColors,
+                            onDismiss = { editingPaletteColor = null },
+                            onPick = { picked ->
+                                editor.setSwatch(SwatchRole.PEN, paletteIndex, picked)
+                                if (colorOverride == seed) {
+                                    colorOverride = picked
+                                    emit()
+                                }
+                                editingPaletteColor = null
+                            },
+                        )
+                    }
+                    // Keep a visible selection marker when the active ink is a custom colour
+                    // rather than one of the twelve built-in swatches.
+                    val activePenColor = effectivePenColor
+                    if (activePenColor != null && activePenColor !in paletteColors) {
+                        val customColor = activePenColor.toComposeColor()
+                        Row(
+                            Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.Center,
+                        ) {
+                            Box(
+                                Modifier.size(28.dp).clip(RoundedCornerShape(5.dp))
+                                    .background(customColor)
+                                    .border(
+                                        2.5.dp,
+                                        if (customColor.red * 0.299f + customColor.green * 0.587f + customColor.blue * 0.114f > 0.55f) Color.Black else Color.White,
+                                        RoundedCornerShape(5.dp),
+                                    ),
+                            ) {}
+                            Text("  Current", color = LocalPalette.current.textDim.toComposeColor(), fontSize = 10.sp)
+                        }
+                    }
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                        ColorPickerDot(
+                            null,
+                            custom = false,
+                            onPick = { colorOverride = it; emit() },
+                            dismissOnPick = false,
+                        ) { dismissPicker, pick ->
+                            ColorPickerPopup(
+                                initial = editor.hostToolbarColors.getOrNull(editor.hostActiveColorIndex),
+                                recents = editor.hostRecentColors,
+                                onDismiss = dismissPicker,
+                                onPick = pick,
+                            )
+                        }
+                    }
+                }
+
+            }
 
             Row(
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp))
