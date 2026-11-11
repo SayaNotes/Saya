@@ -222,19 +222,15 @@ class ShapeItem(
      * permanent marks in the document or cluttering an unselected page.
      */
     fun paintAngleMeasurements(r: Renderer) {
-        // Only vertex-editable closed outlines have meaningful corners. This excludes smooth
-        // ellipses, glyph fills and imported colour fills, whose flattened paths are not corners.
+        // Only vertex-editable closed outlines have meaningful corners. Smooth ellipses,
+        // glyph fills and imported colour fills are intentionally excluded.
         if (!shape.isClosed || !shape.pointEditable || shape.isEndpointShape) return
-        // Geometry already contains the outline's vertex list for both built-in and free
-        // polygon kinds. Reuse it instead of rebuilding FreePath placement a second time per frame.
-        val points = localGeometry().corners.map(::toPage)
-            .let { pts ->
-                if (pts.size > 1 && pts.first().distanceTo(pts.last()) < 1e-6) pts.dropLast(1) else pts
-            }
+        val points = localGeometry().corners.map(::toPage).let { pts ->
+            if (pts.size > 1 && pts.first().distanceTo(pts.last()) < 1e-6) pts.dropLast(1) else pts
+        }
         if (points.size < 3) return
 
-        // Winding lets us distinguish reflex corners (e.g. a concave polygon's >180° angle)
-        // from convex corners. The dot-product angle alone loses that information.
+        // Polygon winding determines which sweep is the interior one, including reflex angles.
         var twiceArea = 0.0
         for (i in points.indices) {
             val a = points[i]
@@ -243,52 +239,52 @@ class ShapeItem(
         }
         if (abs(twiceArea) < 1e-8) return
         val winding = if (twiceArea > 0.0) 1.0 else -1.0
-
-        // Keep the complete degree value inside the existing 18 px white vertex badge.
-        val font = FontSpec(6.0, FontFace.SANS, bold = true)
+        val arcPen = Pen(Rgba(45, 115, 235, 235), width = 1.35, cosmetic = true)
+        val font = FontSpec(6.5, FontFace.SANS, bold = true)
         val flags = TextFlags(wordWrap = false, alignLeft = false, alignTop = false, hAlign = HAlign.CENTER)
+
         for (i in points.indices) {
             val vertex = points[i]
             val previous = points[(i - 1 + points.size) % points.size]
             val next = points[(i + 1) % points.size]
-            val incoming = Pt(vertex.x - previous.x, vertex.y - previous.y)
-            val outgoing = Pt(next.x - vertex.x, next.y - vertex.y)
-            val al = incoming.length()
-            val bl = outgoing.length()
+            val ax = previous.x - vertex.x
+            val ay = previous.y - vertex.y
+            val bx = next.x - vertex.x
+            val by = next.y - vertex.y
+            val al = hypot(ax, ay)
+            val bl = hypot(bx, by)
             if (al < 1e-6 || bl < 1e-6) continue
 
-            val ax = -incoming.x / al
-            val ay = -incoming.y / al
-            val bx = outgoing.x / bl
-            val by = outgoing.y / bl
-            val cosine = (ax * bx + ay * by).coerceIn(-1.0, 1.0)
-            val smallerAngle = Math.toDegrees(acos(cosine))
-            val cross = incoming.x * outgoing.y - incoming.y * outgoing.x
-            val reflex = cross * winding < -1e-8
-            val degrees = (if (reflex) 360.0 - smallerAngle else smallerAngle).roundToInt()
-
-            // The unit-vector sum points into the smaller wedge. Reverse it at reflex vertices
-            // so the label remains inside the polygon rather than outside its concavity.
-            var ux = ax + bx
-            var uy = ay + by
-            if (reflex) { ux = -ux; uy = -uy }
-            var directionLength = hypot(ux, uy)
-            if (directionLength < 1e-6) {
-                ux = -ay
-                uy = ax
-                if (ux * winding < 0.0) { ux = -ux; uy = -uy }
-                directionLength = hypot(ux, uy)
+            val startAngle = atan2(ay, ax)
+            val endAngle = atan2(by, bx)
+            var sweep = endAngle - startAngle
+            // Positive screen-space winding has an interior sweep in the negative direction.
+            if (winding > 0.0) {
+                while (sweep >= 0.0) sweep -= 2.0 * PI
+            } else {
+                while (sweep <= 0.0) sweep += 2.0 * PI
             }
-            if (directionLength < 1e-6) continue
+            if (abs(sweep) < 1e-5) continue
+            val degrees = Math.toDegrees(abs(sweep)).roundToInt()
+            val radius = minOf(17.0, maxOf(8.0, minOf(al, bl) * 0.18))
+            val segments = maxOf(8, (abs(sweep) * 10.0).roundToInt())
+            val arc = (0..segments).map { step ->
+                val angle = startAngle + sweep * step / segments
+                Pt(vertex.x + cos(angle) * radius, vertex.y + sin(angle) * radius)
+            }
+            r.strokePolyline(arc, arcPen)
 
-            val offset = minOf(18.0, maxOf(7.0, minOf(al, bl) * 0.28))
+            // Keep the value just beyond the arc on its angular bisector. The small white
+            // disc is a quiet backing for legibility, not a badge covering the vertex itself.
+            val middle = startAngle + sweep / 2.0
+            val labelRadius = radius + 9.0
             val labelCentre = Pt(
-                vertex.x + ux / directionLength * offset,
-                vertex.y + uy / directionLength * offset,
+                vertex.x + cos(middle) * labelRadius,
+                vertex.y + sin(middle) * labelRadius,
             )
-            val rect = Rect(labelCentre.x - 9.0, labelCentre.y - 6.0, 18.0, 12.0)
-            r.fillCircle(labelCentre, 9.0, Rgba(255, 255, 255, 224))
-            r.drawText("$degrees°", rect, font, Rgba(25, 30, 38), flags)
+            r.fillCircle(labelCentre, 7.5, Rgba(255, 255, 255, 238))
+            val rect = Rect(labelCentre.x - 11.0, labelCentre.y - 6.0, 22.0, 12.0)
+            r.drawText("${degrees}°", rect, font, Rgba(35, 91, 180), flags)
         }
     }
 
