@@ -191,6 +191,13 @@ class MainActivity : ComponentActivity() {
                     com.xnotes.platform.TemplateLibrary.init(context.applicationContext)
                 }
             }
+            // Prune old temporary recordings after the first composition instead of
+            // blocking Activity.onCreate on a filesDir directory scan.
+            LaunchedEffect(Unit) {
+                kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+                    com.xnotes.ui.AudioRecording.cleanupStaleRecordings(context.applicationContext)
+                }
+            }
             var ready by remember { mutableStateOf(false) }
             LaunchedEffect(Unit) {
                 ed.restoreSession()
