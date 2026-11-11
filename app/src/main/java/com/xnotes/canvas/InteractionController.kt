@@ -2955,23 +2955,29 @@ class InteractionController(
                     val targets = page.items.filterIsInstance<ShapeItem>()
                         .filterNot { it === shape }.map { it.bounds() }
                     val tolerance = alignmentTolerance()
-                    val objectSnap = ShapeAlignment.snapDrag(anchor, moving, targets, tolerance, matchDimensions = true)
+                    val objectSnap = ShapeAlignment.snapResizeHandle(
+                        anchor, moving, targets, tolerance, handle, matchDimensions = true,
+                    )
                     val gridSpacing = page.takeIf { it.resolvedTemplate(state.document) == PagePattern.GRID.id }
                         ?.resolvedSpacing(state.document)
                         ?: if (page.resolvedTemplate(state.document) == PagePattern.GRID.id) PageStyle.DEFAULT_SPACING else null
-                    val gridSnap = gridSpacing?.let {
+                    val gridRaw = gridSpacing?.let {
                         ShapeAlignment.snapGrid(anchor, objectSnap.end, it, tolerance, matchDimensions = true)
                     }
-                    // Side handles move on one axis only. Ignore orthogonal matches from the
-                    // zero-length axis so a guide cannot appear without a corresponding resize.
-                    val horizontalSide = handle == HandleId.L || handle == HandleId.R
-                    val verticalSide = handle == HandleId.T || handle == HandleId.B
-                    val rawSnapped = gridSnap?.end ?: objectSnap.end
-                    val snapped = when {
-                        horizontalSide -> Pt(rawSnapped.x, moving.y)
-                        verticalSide -> Pt(moving.x, rawSnapped.y)
-                        else -> rawSnapped
+                    val gridSnap = gridRaw?.let { result ->
+                        when (handle) {
+                            HandleId.L, HandleId.R -> result.copy(
+                                end = Pt(result.end.x, moving.y),
+                                guides = result.guides.filter { it.vertical },
+                            )
+                            HandleId.T, HandleId.B -> result.copy(
+                                end = Pt(moving.x, result.end.y),
+                                guides = result.guides.filterNot { it.vertical },
+                            )
+                            else -> result
+                        }
                     }
+                    val snapped = gridSnap?.end ?: objectSnap.end
                     if (snapped != moving) {
                         val (start, end) = when (handle) {
                             HandleId.L -> Pt(snapped.x, bounds.top) to Pt(bounds.right, bounds.bottom)

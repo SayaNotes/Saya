@@ -1359,17 +1359,12 @@ class InfiniteInteraction(
         val resizePointer = frame.localToWorld(
             Pt(localPointer.x - direction.x * transformMargin, localPointer.y - direction.y * transformMargin),
         )
-        val result = ShapeAlignment.snapDrag(
-            anchor, resizePointer, targets, tolerance, matchDimensions = true,
+        val result = ShapeAlignment.snapResizeHandle(
+            anchor, resizePointer, targets, tolerance, handle, matchDimensions = true,
         )
         val snappedLocal = frame.worldToLocal(result.end)
-        val axisConstrained = when (handle) {
-            HandleId.L, HandleId.R -> Pt(snappedLocal.x, localPointer.y - direction.y * transformMargin)
-            HandleId.T, HandleId.B -> Pt(localPointer.x - direction.x * transformMargin, snappedLocal.y)
-            else -> snappedLocal
-        }
         return frame.localToWorld(
-            Pt(axisConstrained.x + direction.x * transformMargin, axisConstrained.y + direction.y * transformMargin),
+            Pt(snappedLocal.x + direction.x * transformMargin, snappedLocal.y + direction.y * transformMargin),
         )
     }
 

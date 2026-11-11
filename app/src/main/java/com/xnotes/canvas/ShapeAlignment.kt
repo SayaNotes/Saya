@@ -88,6 +88,28 @@ internal object ShapeAlignment {
         return DragResult(snappedEnd, guides.distinct())
     }
 
+    /**
+     * Snap a resize handle without allowing a side handle to drift on its perpendicular axis.
+     * A left/right handle only moves X; a top/bottom handle only moves Y.
+     */
+    fun snapResizeHandle(
+        anchor: Pt,
+        moving: Pt,
+        targets: List<Rect>,
+        tolerance: Double,
+        handle: HandleId,
+        matchDimensions: Boolean = true,
+    ): DragResult {
+        val result = snapDrag(anchor, moving, targets, tolerance, matchDimensions)
+        return when (handle) {
+            HandleId.L, HandleId.R ->
+                DragResult(Pt(result.end.x, moving.y), result.guides.filter { it.vertical })
+            HandleId.T, HandleId.B ->
+                DragResult(Pt(moving.x, result.end.y), result.guides.filterNot { it.vertical })
+            else -> result
+        }
+    }
+
     /** Snap a dragged coordinate to the nearest page-grid line, in page-space units. */
     fun snapGrid(
         start: Pt,

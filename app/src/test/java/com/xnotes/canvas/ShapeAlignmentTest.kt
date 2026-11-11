@@ -106,6 +106,34 @@ class ShapeAlignmentTest {
         assertTrue(result.guides.any { !it.vertical && it.coordinate == 300.0 })
     }
 
+    @Test fun leftAndRightResizeSnappingNeverChangesHeight() {
+        val result = ShapeAlignment.snapResizeHandle(
+            anchor = Pt(200.0, 50.0),
+            moving = Pt(95.0, 50.0),
+            targets = listOf(Rect(300.0, 0.0, 100.0, 100.0)),
+            tolerance = 6.0,
+            handle = HandleId.L,
+        )
+
+        assertEquals(Pt(100.0, 50.0), result.end)
+        assertTrue(result.guides.isNotEmpty())
+        assertTrue(result.guides.all { it.vertical })
+    }
+
+    @Test fun topAndBottomResizeSnappingNeverChangesWidth() {
+        val result = ShapeAlignment.snapResizeHandle(
+            anchor = Pt(50.0, 200.0),
+            moving = Pt(50.0, 95.0),
+            targets = listOf(Rect(0.0, 300.0, 100.0, 100.0)),
+            tolerance = 6.0,
+            handle = HandleId.T,
+        )
+
+        assertEquals(Pt(50.0, 100.0), result.end)
+        assertTrue(result.guides.isNotEmpty())
+        assertTrue(result.guides.none { it.vertical })
+    }
+
     @Test fun centreAlignmentSnapsTheCentreRatherThanTheAnchor() {
         val result = ShapeAlignment.snapDrag(
             Pt(0.0, 0.0),
