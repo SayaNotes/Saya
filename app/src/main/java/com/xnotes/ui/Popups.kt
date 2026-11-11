@@ -275,7 +275,6 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     value = width,
                     valueRange = ToolConversions.widthRange(tool).let { it.start.toFloat()..it.endInclusive.toFloat() },
                     onValueChange = { width = it; emit() },
-                    modifier = Modifier.fillMaxWidth(),
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
