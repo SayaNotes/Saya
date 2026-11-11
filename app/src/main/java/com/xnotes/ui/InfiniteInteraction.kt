@@ -1311,10 +1311,6 @@ class InfiniteInteraction(
         item is ImageItem && com.xnotes.platform.ImageDecoder.isVector(item.image.file.path)
 
     /**
-     * A resize in progress. The model is left alone and the renderer is handed the map, so a handle
-     * drag costs a few uniforms however much is selected.
-     */
-    /**
      * Apply the same 8dp alignment magnet used by the paged editor to an upright, lone shape.
      * Rotated frames and endpoint handles deliberately stay free-form: snapping their world-space
      * coordinates to axis-aligned targets would distort the shape or make the handle jump.
