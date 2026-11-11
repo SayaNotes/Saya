@@ -112,7 +112,7 @@ class ShapeConfigTest {
         assertEquals(teal.copy(a = 64), own.fillRgba)
     }
 
-    @Test fun refillingKeepsEachFillsOpacityAndUndoes() {
+    @Test fun refillingDefaultsNewFillsToFullyOpaqueAndPreservesExistingOpacity() {
         val a = ShapeItem(ShapeKind.RECTANGLE, Pt.ZERO, Pt(1.0, 1.0), ink, 2.0, ink.copy(a = 64))
         val b = ShapeItem(ShapeKind.ELLIPSE, Pt.ZERO, Pt(1.0, 1.0), ink, 2.0, teal.copy(a = 200))
         val bare = ShapeItem(ShapeKind.RECTANGLE, Pt.ZERO, Pt(1.0, 1.0), ink, 2.0)
@@ -122,7 +122,7 @@ class ShapeConfigTest {
         cmd.redo()
         assertEquals(teal.copy(a = 64), a.fillRgba)
         assertEquals(teal.copy(a = 200), b.fillRgba)
-        assertEquals(teal.copy(a = 64), bare.fillRgba)
+        assertEquals(teal.copy(a = 255), bare.fillRgba)
         cmd.undo()
         assertEquals(ink.copy(a = 64), a.fillRgba)
         assertNull(bare.fillRgba)
