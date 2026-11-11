@@ -629,6 +629,9 @@ class InteractionController(
                     r.translate(moveOffset.x, moveOffset.y)
                     state.applyPageTransform(r, page)
                     state.paintItem(sel.item, r)
+                    // Keep angle guides visible while a polygon is selected, including during
+                    // move/resize/vertex editing; they remain transient overlay feedback.
+                    (sel.item as? ShapeItem)?.paintAngleMeasurements(r)
                 }
             }
         }
