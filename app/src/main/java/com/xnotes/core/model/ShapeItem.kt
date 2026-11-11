@@ -217,9 +217,9 @@ class ShapeItem(
     }
 
     /**
-     * Temporary interior-angle readouts for a selected closed polygon. The editor calls this
-     * from its selection overlay only, so measurements follow live edits without becoming
-     * permanent marks in the document or cluttering an unselected page.
+     * Temporary interior-angle readouts for a live closed-polygon preview. The editor calls
+     * this only while the shape is being drawn, so measurements never become document content
+     * and disappear as soon as the preview is committed or dismissed.
      */
     fun paintAngleMeasurements(r: Renderer) {
         // Only vertex-editable closed outlines have meaningful corners. Smooth ellipses,
