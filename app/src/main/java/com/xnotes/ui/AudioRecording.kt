@@ -122,9 +122,16 @@ object AudioRecording {
     }
 
     fun init(context: Context) {
+        // Keep application startup free of directory enumeration and stale-file cleanup.
         app = context.applicationContext
+    }
+
+    /** Remove abandoned recordings away from the UI thread after the first screen is shown. */
+    fun cleanupStaleRecordings(context: Context) {
         val cutoff = System.currentTimeMillis() - KEEP_LEFT_MS
-        for (f in dir(context).listFiles().orEmpty()) if (f.lastModified() < cutoff) f.delete()
+        for (f in dir(context.applicationContext).listFiles().orEmpty()) {
+            if (f.lastModified() < cutoff) f.delete()
+        }
     }
 
     /** Where recordings in progress are written; nothing else lives there. */
