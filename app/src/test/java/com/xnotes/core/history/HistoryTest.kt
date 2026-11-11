@@ -37,7 +37,7 @@ class HistoryTest {
         assertEquals(1, entries.size)
         val command = RefillShapes(entries)
         command.redo()
-        assertEquals(Rgba(10, 80, 220, 64), shape.fillRgba)
+        assertEquals(Rgba(10, 80, 220, 255), shape.fillRgba)
         assertEquals(Rgba(20, 30, 40, 255), shape.strokeRgba)
         command.undo()
         assertNull(shape.fillRgba)
