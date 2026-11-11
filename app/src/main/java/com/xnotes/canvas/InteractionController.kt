@@ -80,6 +80,8 @@ import com.xnotes.core.pal.Renderer
 import com.xnotes.core.pal.TextMeasurer
 import com.xnotes.core.pdf.MarkupPainter
 import com.xnotes.core.stroke.Scribble
+import com.xnotes.core.stroke.ShapeRecognizer
+import com.xnotes.core.stroke.RecognizedShape
 import com.xnotes.core.stroke.Sample
 import com.xnotes.core.stroke.StrokeSimplify
 import com.xnotes.core.tools.EraseMode
@@ -257,6 +259,9 @@ class InteractionController(
     /** Whether a finger draws (true) or pans (false). The stylus always uses the armed tool. */
     var fingerDraws: Boolean = false
 
+    /** Original XNotes hold-to-snap shape recognition preference. */
+    var detectShapes: Boolean = false
+
     /** Panning allowed while zoom is locked: "single" (default) | "double" | "none". */
     var zoomLockPan: String = "single"
 
@@ -302,6 +307,12 @@ class InteractionController(
             if (value == null) frontInk?.abandon()
         }
     private var strokePageIndex: Int? = null
+
+    // Original XNotes shape snap: hold a freehand ink stroke still to replace it with a clean shape.
+    private var dwellRunnable: Runnable? = null
+    private var dwellAnchor = Pt.ZERO
+    private var dwellEligible = false
+    private var snappedSelectionPendingMenu = false
 
     /** Event time of the live stroke's first sample; later samples store `eventTime − this` (the speed pen reads it). */
     private var strokeStartTimeMs = 0L
@@ -1395,6 +1406,13 @@ class InteractionController(
         liveStroke = stroke
         strokePageIndex = pageIndex
         mode = PointerMode.DRAW
+        // Preserve the original XNotes gesture: only solid freehand ink can snap after a still hold.
+        dwellEligible = detectShapes && drawTool.isStroke && drawTool != Tool.HIGHLIGHTER &&
+            !straight && !ruler.visible && !wandMode
+        if (dwellEligible) {
+            dwellAnchor = downViewport
+            armDwell()
+        }
         frontInk?.wet(stroke, pageIndex)
         requestRender()
     }
@@ -1430,6 +1448,8 @@ class InteractionController(
         if (!stroke.straight) {
             val onPage = state.pageIndexAtContent(content)
             if (onPage != null && onPage != pi) {
+                cancelDwell()
+                dwellEligible = false // a cross-page stroke is never a single recognized shape
                 handOverStroke(stroke, pi, onPage, content, pressure, timeMs)
                 return
             }
@@ -1453,7 +1473,11 @@ class InteractionController(
         if (force || last == null || Pt(last.x, last.y).manhattanTo(local) >= gate) {
             stroke.addSample(Sample(local.x, local.y, pressure.coerceIn(0.0, 1.0), (timeMs - strokeStartTimeMs).toDouble()))
         }
-        // Shape recognition is deferred until endDraw, after the user lifts the pen.
+        // Movement beyond the original slop restarts the 500 ms hold; small digitizer jitter does not.
+        if (dwellEligible && Pt(vx, vy).distanceTo(dwellAnchor) > SHAPE_DWELL_SLOP) {
+            dwellAnchor = Pt(vx, vy)
+            armDwell()
+        }
     }
 
     /**
@@ -1530,6 +1554,9 @@ class InteractionController(
     }
 
     private fun endDraw(e: MotionEvent) {
+        // Pen-up must not re-arm or fire a pending hold timer.
+        cancelDwell()
+        dwellEligible = false
         val idx = e.findPointerIndex(drawingPointerId).coerceAtLeast(0)
         addStrokePoint(
             e.getX(idx).toDouble(), e.getY(idx).toDouble(),
@@ -1571,6 +1598,68 @@ class InteractionController(
         snapCurrentEdge = null
         snapPenViewport = null
         mode = PointerMode.IDLE
+        if (snappedSelectionPendingMenu) {
+            snappedSelectionPendingMenu = false
+            refreshSelectionMenu()
+        }
+        requestRender()
+    }
+
+    private fun armDwell() {
+        cancelDwell()
+        val callback = Runnable { onDwellElapsed() }
+        dwellRunnable = callback
+        handler.postDelayed(callback, SHAPE_DWELL_MS)
+    }
+
+    private fun cancelDwell() {
+        dwellRunnable?.let { handler.removeCallbacks(it) }
+        dwellRunnable = null
+    }
+
+    /** Called after the pen has rested: confidently classify the live samples or leave them as ink. */
+    private fun onDwellElapsed() {
+        dwellRunnable = null
+        if (!dwellEligible) return
+        val stroke = liveStroke ?: return
+        val pageIndex = strokePageIndex ?: return
+        if (stroke.samples.size < SHAPE_MIN_SAMPLES) return
+        val recognized = ShapeRecognizer.recognize(stroke.samples) ?: return
+        commitRecognizedShape(stroke, pageIndex, recognized)
+    }
+
+    /** Replace the live, uncommitted ink with one ordinary undoable shape item. */
+    private fun commitRecognizedShape(stroke: Stroke, pageIndex: Int, recognized: RecognizedShape) {
+        val page = state.document.pages.getOrNull(pageIndex) ?: return
+        val width = stroke.config.baseWidth * SHAPE_PEN_PARITY
+        val color = stroke.config.rgba
+        val vertices = recognized.vertices
+        val shape = if (vertices != null) {
+            ShapeItem.poly(recognized.kind, vertices, color, width, null, stroke.config.neon, stroke.config.neonStrength)
+        } else {
+            ShapeItem(
+                shape = recognized.kind,
+                start = recognized.start,
+                end = recognized.end,
+                strokeRgba = color,
+                strokeWidth = width,
+                fillRgba = null,
+                neon = stroke.config.neon,
+                neonStrength = stroke.config.neonStrength,
+            )
+        }
+        page.items.add(shape)
+        state.appendToCache(page, shape)
+        history.push(AddItem(page, shape))
+        state.document.dirty = true
+        // The live preview is discarded; the recognised item is now the sole committed result.
+        liveStroke = null
+        dwellEligible = false
+        cancelDwell()
+        setSelection(listOf(Selected(pageIndex, shape)))
+        snappedSelectionPendingMenu = true
+        onContentChanged()
+        onHaptic()
         requestRender()
     }
 
@@ -5540,6 +5629,9 @@ class InteractionController(
     }
 
     private fun abortGesture() {
+        cancelDwell()
+        dwellEligible = false
+        snappedSelectionPendingMenu = false
         resumeLaserTrails()
         cancelTemporaryEraser()
         cancelLongPress()
@@ -6047,6 +6139,12 @@ class InteractionController(
 
     companion object {
         const val MIN_SAMPLE_DIST = 1.0
+
+        /** Original XNotes hold-to-snap timing and tolerance. */
+        const val SHAPE_DWELL_MS = 500L
+        const val SHAPE_DWELL_SLOP = 4.0
+        const val SHAPE_MIN_SAMPLES = 8
+        const val SHAPE_PEN_PARITY = 0.675
 
         /** Content px a duplicate lands from its original, so the copy is visibly a copy. */
         const val DUPLICATE_NUDGE = 24.0
