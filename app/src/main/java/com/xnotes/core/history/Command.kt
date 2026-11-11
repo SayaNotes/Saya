@@ -326,7 +326,7 @@ class RefillShapes(private val entries: List<Entry>) : Command {
             val before = s.fillRgba
             // A newly added fill starts fully opaque. Existing fills retain their individual
             // alpha when only their colour is changed.
-            val alpha = before?.a ?: (color?.a ?: 255)
+            val alpha = before?.a ?: 255
             val next = (color ?: s.strokeRgba).copy(a = alpha)
             if (next == before) null else Entry(s, before, next)
         }
