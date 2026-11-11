@@ -244,7 +244,8 @@ class ShapeItem(
         if (abs(twiceArea) < 1e-8) return
         val winding = if (twiceArea > 0.0) 1.0 else -1.0
 
-        val font = FontSpec(8.0, FontFace.SANS, bold = true)
+        // Keep the complete degree value inside the existing 18 px white vertex badge.
+        val font = FontSpec(6.0, FontFace.SANS, bold = true)
         val flags = TextFlags(wordWrap = false, alignLeft = false, alignTop = false, hAlign = HAlign.CENTER)
         for (i in points.indices) {
             val vertex = points[i]
@@ -285,7 +286,7 @@ class ShapeItem(
                 vertex.x + ux / directionLength * offset,
                 vertex.y + uy / directionLength * offset,
             )
-            val rect = Rect(labelCentre.x - 13.0, labelCentre.y - 7.0, 26.0, 14.0)
+            val rect = Rect(labelCentre.x - 9.0, labelCentre.y - 6.0, 18.0, 12.0)
             r.fillCircle(labelCentre, 9.0, Rgba(255, 255, 255, 224))
             r.drawText("$degrees°", rect, font, Rgba(25, 30, 38), flags)
         }
