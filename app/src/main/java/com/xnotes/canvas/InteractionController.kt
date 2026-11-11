@@ -5644,8 +5644,8 @@ class InteractionController(
             if (frontInk?.live != true) {
                 liveStroke?.let { stroke -> paintClippedToPage(r, strokePageIndex) { state.paintLiveStroke(r, stroke) } }
             }
-            // Interior-angle guides are transient drawing feedback: render only for the
-            // in-progress shape preview. Committed/selected shapes never retain or show them.
+            // Interior-angle guides are transient feedback for live previews and selected shapes.
+            // The selected-item overlay also redraws them during move, resize and vertex editing.
             pendingShape?.let { shape ->
                 paintClippedToPage(r, shapePageIndex) {
                     shape.paint(r)
