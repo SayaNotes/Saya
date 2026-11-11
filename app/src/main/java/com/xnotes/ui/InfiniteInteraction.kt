@@ -1327,10 +1327,6 @@ class InfiniteInteraction(
             HandleId.TR -> Pt(-frame.halfW, frame.halfH)
             HandleId.BL -> Pt(frame.halfW, -frame.halfH)
             HandleId.BR -> Pt(-frame.halfW, -frame.halfH)
-            HandleId.T -> Pt(0.0, frame.halfH)
-            HandleId.B -> Pt(0.0, -frame.halfH)
-            HandleId.L -> Pt(frame.halfW, 0.0)
-            HandleId.R -> Pt(-frame.halfW, 0.0)
             else -> return pointer
         }
         val anchor = frame.localToWorld(anchorLocal)
