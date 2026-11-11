@@ -2993,11 +2993,7 @@ class InteractionController(
                         shape.setGeometry(ShapeHandle(start, end))
                     }
                     val guides = objectSnap.guides + gridSnap?.guides.orEmpty()
-                    alignmentGuides = when {
-                        horizontalSide -> guides.filter { it.vertical }
-                        verticalSide -> guides.filterNot { it.vertical }
-                        else -> guides
-                    }.distinct()
+                    alignmentGuides = guides.distinct()
                     alignmentGuidePageIndex = selected.pageIndex.takeIf { alignmentGuides.isNotEmpty() }
                 }
             }
