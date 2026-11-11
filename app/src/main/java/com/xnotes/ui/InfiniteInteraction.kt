@@ -9,6 +9,7 @@ import com.xnotes.canvas.HandleId
 import com.xnotes.canvas.InteractionController
 import com.xnotes.canvas.ResizeMath
 import com.xnotes.canvas.SelectionMath
+import com.xnotes.canvas.ShapeAlignment
 import com.xnotes.canvas.StylusButtonLatch
 import com.xnotes.core.geometry.Affine
 import com.xnotes.core.geometry.Pt
@@ -1313,10 +1314,47 @@ class InfiniteInteraction(
      * A resize in progress. The model is left alone and the renderer is handed the map, so a handle
      * drag costs a few uniforms however much is selected.
      */
+    /**
+     * Apply the same 8dp alignment magnet used by the paged editor to an upright, lone shape.
+     * Rotated frames and endpoint handles deliberately stay free-form: snapping their world-space
+     * coordinates to axis-aligned targets would distort the shape or make the handle jump.
+     */
+    private fun snappedShapeResizePointer(sel: CanvasSelection, handle: HandleId, pointer: Pt): Pt {
+        if (!shapeConfig().snapToAlign) return pointer
+        val shape = sel.items.singleOrNull() as? ShapeItem ?: return pointer
+        if (shape.shape.isEndpointShape) return pointer
+        val frame = sel.box ?: return pointer
+        if (kotlin.math.abs(frame.angle) > 1e-9) return pointer
+
+        val anchorLocal = when (handle) {
+            HandleId.TL -> Pt(frame.halfW, frame.halfH)
+            HandleId.TR -> Pt(-frame.halfW, frame.halfH)
+            HandleId.BL -> Pt(frame.halfW, -frame.halfH)
+            HandleId.BR -> Pt(-frame.halfW, -frame.halfH)
+            HandleId.T -> Pt(0.0, frame.halfH)
+            HandleId.B -> Pt(0.0, -frame.halfH)
+            HandleId.L -> Pt(frame.halfW, 0.0)
+            HandleId.R -> Pt(-frame.halfW, 0.0)
+            else -> return pointer
+        }
+        val anchor = frame.localToWorld(anchorLocal)
+        val tolerance = InteractionController.ALIGNMENT_SNAP_DP *
+            devicePxPerDp() / viewport.zoom.coerceAtLeast(1e-6)
+        val targets = itemsIn(viewport.visibleContentRect().outset(tolerance))
+            .filterIsInstance<ShapeItem>()
+            .filterNot { it === shape }
+            .map { it.bounds() }
+        if (targets.isEmpty()) return pointer
+        return ShapeAlignment.snapDrag(
+            anchor, pointer, targets, tolerance, matchDimensions = true,
+        ).end
+    }
+
     private fun extendResize(vx: Double, vy: Double) {
         val sel = selection() ?: return
         val handle = grabHandle ?: return
-        val at = viewport.viewportToContent(Pt(vx, vy))
+        val rawAt = viewport.viewportToContent(Pt(vx, vy))
+        val at = snappedShapeResizePointer(sel, handle, rawAt)
         transformPointer = at
         if (liftedTransform) {
             val map = sel.previewResize(handle, at, transformMargin) ?: return
