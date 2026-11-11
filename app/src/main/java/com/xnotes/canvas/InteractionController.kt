@@ -5611,7 +5611,6 @@ class InteractionController(
                     r.translate(pr.left + moveOffset.x, pr.top + moveOffset.y)
                     state.applyPageTransform(r, state.document.pages[sel.pageIndex])
                     state.paintItem(sel.item, r)
-                    (sel.item as? ShapeItem)?.paintAngleMeasurements(r)
                 }
             }
 
@@ -5642,7 +5641,14 @@ class InteractionController(
             if (frontInk?.live != true) {
                 liveStroke?.let { stroke -> paintClippedToPage(r, strokePageIndex) { state.paintLiveStroke(r, stroke) } }
             }
-            pendingShape?.let { shape -> paintClippedToPage(r, shapePageIndex) { shape.paint(r) } }
+            // Interior-angle guides are transient drawing feedback: render only for the
+            // in-progress shape preview. Committed/selected shapes never retain or show them.
+            pendingShape?.let { shape ->
+                paintClippedToPage(r, shapePageIndex) {
+                    shape.paint(r)
+                    shape.paintAngleMeasurements(r)
+                }
+            }
             if (alignmentGuides.isNotEmpty()) {
                 alignmentGuidePageIndex?.let { pageIndex ->
                     paintClippedToPage(r, pageIndex) {
