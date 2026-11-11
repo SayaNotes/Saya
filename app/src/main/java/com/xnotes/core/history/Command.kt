@@ -324,9 +324,9 @@ class RefillShapes(private val entries: List<Entry>) : Command {
         fun of(shapes: List<ShapeItem>, color: Rgba?): List<Entry> = shapes.mapNotNull { s ->
             if (!s.shape.isClosed || s.isFill) return@mapNotNull null
             val before = s.fillRgba
-            // An unfilled shape starts with the same subtle 25% opacity as a newly drawn fill.
-            // Existing fills retain their individual alpha when only their colour is changed.
-            val alpha = before?.a ?: (((color?.a ?: 255) * 0.25 + 0.5).toInt().coerceIn(1, 255))
+            // A newly added fill starts fully opaque. Existing fills retain their individual
+            // alpha when only their colour is changed.
+            val alpha = before?.a ?: (color?.a ?: 255)
             val next = (color ?: s.strokeRgba).copy(a = alpha)
             if (next == before) null else Entry(s, before, next)
         }
