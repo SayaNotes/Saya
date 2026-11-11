@@ -8,6 +8,7 @@ import android.view.MotionEvent
 import com.xnotes.canvas.HandleId
 import com.xnotes.canvas.InteractionController
 import com.xnotes.canvas.ResizeMath
+import com.xnotes.canvas.ShapeAlignment
 import com.xnotes.canvas.SelectionMath
 import com.xnotes.canvas.StylusButtonLatch
 import com.xnotes.core.geometry.Affine
