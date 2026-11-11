@@ -347,6 +347,9 @@ class CanvasSelection(private val doc: InfiniteDocument) {
     }
 
     /** The point a transform turns and scales about: the box as it was when the gesture began. */
+    /** Immutable gesture-start frame, used to keep resize snapping stable across pointer samples. */
+    val transformStartBox: Obb? get() = startBox
+
     val transformPivot: Pt? get() = startBox?.center
 
     private fun sweptAngle(from: Obb, pointer: Pt): Double {

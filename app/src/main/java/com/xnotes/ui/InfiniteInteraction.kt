@@ -42,6 +42,7 @@ import com.xnotes.core.tools.InkPalette
 import com.xnotes.core.tools.ShapeConfig
 import com.xnotes.core.tools.Tool
 import com.xnotes.core.tools.ToolConfig
+import kotlin.math.abs
 import kotlin.math.exp
 
 /** What the current gesture is doing. */
@@ -1313,10 +1314,69 @@ class InfiniteInteraction(
      * A resize in progress. The model is left alone and the renderer is handed the map, so a handle
      * drag costs a few uniforms however much is selected.
      */
+    /**
+     * Snap a lone upright shape while its selection handles are dragged. The immutable gesture
+     * frame is used on every sample, so snapping never compounds from the previous snapped frame.
+     * Side handles are constrained to their own axis and keep the opposite edge anchored.
+     */
+    private fun snappedShapeResizePointer(sel: CanvasSelection, handle: HandleId, pointer: Pt): Pt {
+        if (!shapeConfig().snapToAlign || handle == HandleId.START || handle == HandleId.END) return pointer
+        val shape = sel.items.singleOrNull() as? ShapeItem ?: return pointer
+        if (shape.shape.isEndpointShape) return pointer
+        val frame = sel.transformStartBox ?: return pointer
+        if (abs(frame.angle) > 1e-9) return pointer
+
+        val tolerance = 8.0 * devicePxPerDp() / viewport.zoom
+        if (!tolerance.isFinite() || tolerance <= 0.0) return pointer
+        val search = Rect(
+            frame.center.x - frame.halfW - tolerance,
+            frame.center.y - frame.halfH - tolerance,
+            frame.halfW * 2.0 + tolerance * 2.0,
+            frame.halfH * 2.0 + tolerance * 2.0,
+        )
+        val targets = itemsIn(search).filterIsInstance<ShapeItem>()
+            .filterNot { it === shape }
+            .map { it.bounds() }
+        if (targets.isEmpty()) return pointer
+
+        val direction = ResizeMath.handleDirection(handle)
+        val anchorLocal = when (handle) {
+            HandleId.TL -> Pt(frame.halfW, frame.halfH)
+            HandleId.T -> Pt(0.0, frame.halfH)
+            HandleId.TR -> Pt(-frame.halfW, frame.halfH)
+            HandleId.R -> Pt(-frame.halfW, 0.0)
+            HandleId.BR -> Pt(-frame.halfW, -frame.halfH)
+            HandleId.B -> Pt(0.0, -frame.halfH)
+            HandleId.BL -> Pt(frame.halfW, -frame.halfH)
+            HandleId.L -> Pt(frame.halfW, 0.0)
+            else -> return pointer
+        }
+        val anchor = frame.localToWorld(anchorLocal)
+        // Handles for framed shapes sit outside the visible frame. Pull the pointer back by the
+        // same margin used by ResizeMath, snap the actual frame edge, then restore that offset.
+        val localPointer = frame.worldToLocal(pointer)
+        val resizePointer = frame.localToWorld(
+            Pt(localPointer.x - direction.x * transformMargin, localPointer.y - direction.y * transformMargin),
+        )
+        val result = ShapeAlignment.snapDrag(
+            anchor, resizePointer, targets, tolerance, matchDimensions = true,
+        )
+        val snappedLocal = frame.worldToLocal(result.end)
+        val axisConstrained = when (handle) {
+            HandleId.L, HandleId.R -> Pt(snappedLocal.x, localPointer.y - direction.y * transformMargin)
+            HandleId.T, HandleId.B -> Pt(localPointer.x - direction.x * transformMargin, snappedLocal.y)
+            else -> snappedLocal
+        }
+        return frame.localToWorld(
+            Pt(axisConstrained.x + direction.x * transformMargin, axisConstrained.y + direction.y * transformMargin),
+        )
+    }
+
     private fun extendResize(vx: Double, vy: Double) {
         val sel = selection() ?: return
         val handle = grabHandle ?: return
-        val at = viewport.viewportToContent(Pt(vx, vy))
+        val rawAt = viewport.viewportToContent(Pt(vx, vy))
+        val at = snappedShapeResizePointer(sel, handle, rawAt)
         transformPointer = at
         if (liftedTransform) {
             val map = sel.previewResize(handle, at, transformMargin) ?: return
