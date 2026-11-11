@@ -239,7 +239,9 @@ class ShapeItem(
         }
         if (abs(twiceArea) < 1e-8) return
         val winding = if (twiceArea > 0.0) 1.0 else -1.0
-        val arcPen = Pen(Rgba(45, 115, 235, 235), width = 1.35, cosmetic = true)
+        // Angle feedback follows the outline colour so it reads as part of the selected shape.
+        val measurementColor = strokeRgba
+        val arcPen = Pen(measurementColor, width = 1.35, cosmetic = true)
         val font = FontSpec(6.5, FontFace.SANS, bold = true)
         val flags = TextFlags(wordWrap = false, alignLeft = false, alignTop = false, hAlign = HAlign.CENTER)
 
@@ -274,17 +276,16 @@ class ShapeItem(
             }
             r.strokePolyline(arc, arcPen)
 
-            // Keep the value just beyond the arc on its angular bisector. The small white
-            // disc is a quiet backing for legibility, not a badge covering the vertex itself.
+            // Place the degree value just beyond the arc, with no backing disc.
+            // Both the arc and its text use the shape's exact outline colour.
             val middle = startAngle + sweep / 2.0
             val labelRadius = radius + 9.0
             val labelCentre = Pt(
                 vertex.x + cos(middle) * labelRadius,
                 vertex.y + sin(middle) * labelRadius,
             )
-            r.fillCircle(labelCentre, 7.5, Rgba(255, 255, 255, 238))
             val rect = Rect(labelCentre.x - 11.0, labelCentre.y - 6.0, 22.0, 12.0)
-            r.drawText("${degrees}°", rect, font, Rgba(35, 91, 180), flags)
+            r.drawText("${degrees}°", rect, font, measurementColor, flags)
         }
     }
 
