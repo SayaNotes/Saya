@@ -5614,6 +5614,9 @@ class InteractionController(
                     r.translate(pr.left + moveOffset.x, pr.top + moveOffset.y)
                     state.applyPageTransform(r, state.document.pages[sel.pageIndex])
                     state.paintItem(sel.item, r)
+                    // Draw angle readouts in the normal selected-item overlay as well as the
+                    // under-text overlay, so a simple tap selection and live resize both show them.
+                    (sel.item as? ShapeItem)?.paintAngleMeasurements(r)
                 }
             }
 
