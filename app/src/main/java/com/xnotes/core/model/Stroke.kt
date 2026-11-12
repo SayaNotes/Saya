@@ -1,5 +1,6 @@
 package com.xnotes.core.model
 
+import kotlin.math.max
 import com.xnotes.core.geometry.Affine
 import com.xnotes.core.geometry.Geometry
 import com.xnotes.core.geometry.Pt
