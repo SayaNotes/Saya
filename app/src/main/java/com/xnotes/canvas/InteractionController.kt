@@ -4089,7 +4089,7 @@ class InteractionController(
             state.fromPageSpace(pageByStroke.getValue(stroke), point)
         } ?: return
         if (kotlin.math.abs(axis.angle) <= Math.toRadians(0.35)) return
-        val world = Affine.rotationAbout(axis.center, -axis.angle)
+        val world = Affine.rotateAbout(axis.center, -axis.angle)
         val items: List<CanvasItem> = members.map { it.item }
         val before = items.map { it.snapshotGeometry() }
         for (member in members) {
