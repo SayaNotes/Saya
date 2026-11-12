@@ -84,6 +84,7 @@ import com.xnotes.core.stroke.ShapeRecognizer
 import com.xnotes.core.stroke.RecognizedShape
 import com.xnotes.core.stroke.Sample
 import com.xnotes.core.stroke.StrokeSimplify
+import com.xnotes.core.stroke.StrokeStabilizer
 import com.xnotes.core.tools.EraseMode
 import com.xnotes.core.tools.InkPalette
 import com.xnotes.core.tools.ShapeConfig
@@ -318,6 +319,7 @@ class InteractionController(
     private var strokeStartTimeMs = 0L
     private var drawingPointerId = -1
     private var drawingIsStylus = false
+    private var strokeStabilizer: StrokeStabilizer? = null
     /** This stroke began by dismissing an active selection; a bare tap then leaves no dot. */
     private var strokeDismissedSelection = false
 
@@ -1382,6 +1384,7 @@ class InteractionController(
             )
         }
         val straight = drawTool == Tool.HIGHLIGHTER && cfg.straightLine
+        strokeStabilizer = StrokeStabilizer(cfg.stabilization)
         val stroke = Stroke(
             drawTool, cfg, speedScale = speedScale, straight = straight,
             smoothScale = smoothScaleFor(state.zoom),
@@ -1400,7 +1403,8 @@ class InteractionController(
         snapRunStartEdge = null
         snapCurrentEdge = null
         snapPenViewport = null
-        val first = state.toPageSpace(pageIndex, state.viewportToContent(magnetize(downViewport)))
+        val stableDown = strokeStabilizer?.filter(downViewport, timeMs) ?: downViewport
+        val first = state.toPageSpace(pageIndex, state.viewportToContent(magnetize(stableDown)))
         stroke.addSample(Sample(first.x, first.y, pressure)) // first sample: t = 0
         liveStroke = stroke
         strokePageIndex = pageIndex
@@ -1440,7 +1444,9 @@ class InteractionController(
         val stroke = liveStroke ?: return
         val pi = strokePageIndex ?: return
         if (state.pageRects.getOrNull(pi) == null) return
-        val vp = magnetize(Pt(vx, vy))
+        val rawViewport = Pt(vx, vy)
+        val stableViewport = strokeStabilizer?.filter(rawViewport, timeMs) ?: rawViewport
+        val vp = magnetize(stableViewport)
         val content = state.viewportToContent(vp)
         // The pen has walked onto another page: carry the stroke over rather than let it slide
         // under the paper. A straight line is one segment by definition and never hands over.
@@ -1590,6 +1596,7 @@ class InteractionController(
         // still have filed segments that need their undo step.
         pushStrokeEdit(null)
         strokeDismissedSelection = false
+        strokeStabilizer = null
         liveStroke = null
         strokePageIndex = null
         snapEngaged = false
@@ -5687,6 +5694,7 @@ class InteractionController(
         looseBefore = null
         endFollow()
         pushStrokeEdit(null) // a cancelled crossing still left segments on the pages behind it
+        strokeStabilizer = null
         liveStroke = null
         strokePageIndex = null
         snapEngaged = false

@@ -171,6 +171,7 @@ fun ToolConfigPopup(
 private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTool: (Tool) -> Unit, onDismiss: () -> Unit) {
     val base = remember(tool) { editor.toolConfig(tool) }
     var pressure by remember(tool) { mutableStateOf(base.pressureEnabled) }
+    var stabilization by remember(tool) { mutableStateOf(base.stabilization.toFloat()) }
     var sensitivity by remember(tool) { mutableStateOf(ToolConversions.minFactorToSensitivity(base.pressureMinFactor).toFloat()) }
     var multiplier by remember(tool) { mutableStateOf(ToolConversions.directionStrengthToMultiplier(base.directionStrength).toFloat()) }
     var taperTip by remember(tool) { mutableStateOf((base.taperMinFactor * 100).toFloat()) }
@@ -204,6 +205,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 stampSize = if (tool == Tool.STAMP) width.toDouble() else base.stampSize,
                 pressureEnabled = pressure,
                 pressureMinFactor = m,
+                stabilization = stabilization.toDouble(),
                 directionStrength = ds,
                 taperMinFactor = tmf,
                 neon = glow,
@@ -431,6 +433,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                 if (hasPressure) {
                     ToggleRow(stringResource(R.string.caption_pressure), pressure) { pressure = it; emit() }
                     SliderRow(stringResource(R.string.caption_sensitivity), sensitivity, 0f..100f, enabled = pressure) { sensitivity = it; emit() }
+                    SliderRow("Stabilization", stabilization, 0f..100f) { stabilization = it; emit() }
                 }
                 if (tool == Tool.STAMP) {
                     StyleCaption(stringResource(R.string.stamp_choose))

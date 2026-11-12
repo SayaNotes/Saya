@@ -61,6 +61,8 @@ data class ToolConfig(
     /** `ds` — calligraphic direction effect (0 = none). */
     val directionStrength: Double = 0.0,
     val rgba: Rgba = InkPalette.DEFAULT,
+    /** Per-stroke hand stabilization, 0 = off and 100 = strongest smoothing. */
+    val stabilization: Double = 0.0,
     // New fields go *after* `rgba` so the positional constructor stays stable.
     /** Velocity thinning (the speed pen): 0 = none; up the line thins as it moves faster. */
     val speedStrength: Double = 0.0,
