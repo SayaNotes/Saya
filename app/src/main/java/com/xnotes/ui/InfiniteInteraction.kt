@@ -724,7 +724,10 @@ class InfiniteInteraction(
             draft.restoreGeometry(twoFingerRotateDraftBefore ?: return)
             draft.applyTransform(Affine.rotateAbout(twoFingerRotateCenter, delta))
             onPendingShape(draft)
-        } else if (twoFingerRotateSelection) selection()?.applyLive(Affine.rotateAbout(twoFingerRotateCenter, delta))
+        } else if (twoFingerRotateSelection) {
+            selection()?.applyLive(Affine.rotateAbout(twoFingerRotateCenter, delta))
+            selection()?.refreshBox()
+        }
         requestRender()
     }
 
