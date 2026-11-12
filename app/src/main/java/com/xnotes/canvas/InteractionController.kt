@@ -107,7 +107,7 @@ import com.xnotes.core.model.sourcePoint
 
 /** The pointer state machine modes (spec 06 §1). */
 enum class PointerMode {
-    IDLE, DRAW, ERASE, BAND, LASSO_DRAW, SHOT, SHAPE, MOVE, RESIZE, TRANSFORM, PAN, PINCH, FLOW_TEXT,
+    IDLE, DRAW, ERASE, BAND, LASSO_DRAW, SHOT, SHAPE, MOVE, RESIZE, TRANSFORM, MULTI_TRANSFORM, PAN, PINCH, FLOW_TEXT,
     TEXT_DRAG, RULER_MOVE, RULER_TRANSFORM, RULER_ROTATE, PDF_TEXT, VERTEX, POLYGON, CONNECT, JOINT, SLIDE, TAPE, ROOM,
     ROOM_BUTTON, TABLE_LINE, TABLE_GRIP, TABLE_PICK, TABLE_DRAW,
 }
@@ -369,6 +369,9 @@ class InteractionController(
     private var pinchInitDist = 1.0
     private var pinchInitZoom = 1.0
     private var pinchAnchorContent = Pt.ZERO
+    private var multiStartCentroid = Pt.ZERO
+    private var multiStartDistance = 1.0
+    private var multiStartAngle = 0.0
 
     // RULER (transient screen-space straightedge; no model/undo state)
     val ruler = Ruler()
@@ -1133,6 +1136,14 @@ class InteractionController(
             if (erasingWithFinger && e.pointerCount >= 2) { endErase(); beginPinch(e) }
             return
         }
+        if (e.pointerCount >= 2 && hasSelection &&
+            e.getToolType(0) == MotionEvent.TOOL_TYPE_FINGER &&
+            e.getToolType(1) == MotionEvent.TOOL_TYPE_FINGER &&
+            mode in setOf(PointerMode.IDLE, PointerMode.PAN, PointerMode.MOVE, PointerMode.TRANSFORM)
+        ) {
+            beginMultiTransform(e)
+            return
+        }
         if (e.pointerCount >= 2) beginPinch(e)
     }
 
@@ -1188,6 +1199,7 @@ class InteractionController(
             PointerMode.DRAW -> extendDraw(e)
             PointerMode.PAN -> extendPan(vx, vy)
             PointerMode.PINCH -> updatePinch(e)
+            PointerMode.MULTI_TRANSFORM -> extendMultiTransform(e)
             PointerMode.RULER_MOVE -> { ruler.center = Pt(vx, vy) + rulerGrabOffset; requestRender() }
             PointerMode.RULER_TRANSFORM -> updateRulerTransform(e)
             PointerMode.RULER_ROTATE -> updateRulerRotate(e)
@@ -1235,6 +1247,12 @@ class InteractionController(
                 mode = PointerMode.IDLE
             }
             requestRender()
+            return
+        }
+        if (mode == PointerMode.MULTI_TRANSFORM && e.pointerCount <= 2) {
+            tapCandidate = false
+            dismissPressAt = null
+            endTransform()
             return
         }
         if (mode == PointerMode.PINCH && e.pointerCount <= 2) endPinch()
@@ -2970,6 +2988,54 @@ class InteractionController(
 
     /** Begin a resize ([handle] non-null) or rotate ([handle] null) of the whole selection. Snapshots
      *  every member and the oriented box so each move can restore-then-rebake without drift. */
+    /** Two fingers transform a current lasso/selection; no selection continues to use canvas pinch. */
+    private fun beginMultiTransform(e: MotionEvent) {
+        if (e.pointerCount < 2 || !hasSelection) return
+        val firstIndex = e.findPointerIndex(drawingPointerId).takeIf { it >= 0 } ?: 0
+        val firstContent = state.viewportToContent(Pt(e.getX(firstIndex).toDouble(), e.getY(firstIndex).toDouble()))
+        when (mode) {
+            PointerMode.MOVE -> endMove(firstContent)
+            PointerMode.TRANSFORM -> endTransform()
+            PointerMode.PAN -> mode = PointerMode.IDLE
+            else -> Unit
+        }
+        val a = Pt(e.getX(0).toDouble(), e.getY(0).toDouble())
+        val b = Pt(e.getX(1).toDouble(), e.getY(1).toDouble())
+        val centroid = (a + b) * 0.5
+        multiStartCentroid = state.viewportToContent(centroid)
+        multiStartDistance = a.distanceTo(b).coerceAtLeast(1.0)
+        multiStartAngle = atan2(b.y - a.y, b.x - a.x)
+        beginTransform(null, multiStartCentroid)
+        mode = PointerMode.MULTI_TRANSFORM
+        tapCandidate = false
+    }
+
+    private fun extendMultiTransform(e: MotionEvent) {
+        if (e.pointerCount < 2 || txItems.isEmpty()) return
+        val a = Pt(e.getX(0).toDouble(), e.getY(0).toDouble())
+        val b = Pt(e.getX(1).toDouble(), e.getY(1).toDouble())
+        val distance = a.distanceTo(b)
+        if (distance < 1.0) return
+        val centroid = state.viewportToContent((a + b) * 0.5)
+        val scale = (distance / multiStartDistance).coerceIn(0.05, 20.0)
+        val angle = atan2(b.y - a.y, b.x - a.x) - multiStartAngle
+        val pivot = multiStartCentroid
+        val world = Affine.translateBy(centroid.x - pivot.x, centroid.y - pivot.y).compose(
+            Affine.rotateAbout(pivot, angle).compose(Affine.scaleAbout(pivot, scale, scale)),
+        )
+        txItems.forEachIndexed { i, selected ->
+            selected.item.restoreGeometry(txSnaps[i])
+            if (state.pageRects.getOrNull(selected.pageIndex) != null) {
+                selected.item.applyTransform(state.affineToPageSpace(selected.pageIndex, world))
+            }
+        }
+        selObb = selectionBox()
+        for ((pageIndex, follow) in follows) {
+            if (state.pageRects.getOrNull(pageIndex) != null) follow.follow(state.affineToPageSpace(pageIndex, world))
+        }
+        requestRender()
+    }
+
     private fun beginTransform(handle: HandleId?, content: Pt) {
         selectedLassoBoundary = null
         txItems = selection.toList()
