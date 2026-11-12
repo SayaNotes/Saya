@@ -16,6 +16,10 @@ class MathStudioEngineTest {
         assertEquals(-2.0, roots[0], 1e-3)
         assertEquals(2.0, roots[1], 1e-3)
     }
+    @Test fun detectsRepeatedRootsWithoutSignChanges() {
+        val roots = MathStudioEngine.solveEquation("(x - 0.123)^4 = 0")
+        assertTrue(roots.any { kotlin.math.abs(it - 0.123) < 1e-3 })
+    }
     @Test fun computesNumericalCalculus() {
         assertEquals(6.0, MathStudioEngine.derivative("x^2", 3.0), 1e-4)
         assertEquals(0.5, MathStudioEngine.integrate("x", 0.0, 1.0), 1e-8)

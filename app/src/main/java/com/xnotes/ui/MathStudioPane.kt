@@ -142,11 +142,15 @@ private fun GraphPlot(points:List<MathStudioEngine.Point>,modifier:Modifier=Modi
         val minX=points.minOf{it.x};val maxX=points.maxOf{it.x};val minY=points.minOf{it.y};val maxY=points.maxOf{it.y}
         val spanY=(maxY-minY).takeIf{it>1e-9}?:1.0;val pad=18.dp.toPx();val w=(size.width-2*pad).coerceAtLeast(1f);val h=(size.height-2*pad).coerceAtLeast(1f)
         val zx=if(minX<=0&&maxX>=0)pad+(-minX).toFloat()/(maxX-minX).toFloat()*w else pad
-        val zy=if(minY<=0&&maxY>=0)pad+(maxY/spanY).toFloat()*h else pad+h
+        val zy=if(minY<=0&&maxY>=0)pad+(maxY/(maxY-minY)).toFloat()*h else pad+h
         drawLine(axis,Offset(zx,pad),Offset(zx,pad+h),1.dp.toPx());drawLine(axis,Offset(pad,zy),Offset(pad+w,zy),1.dp.toPx())
-        val path=Path();var started=false;var lastY=0f
+        val path=Path();var started=false;var lastY=0f;var lastX:Double?=null
+        val expectedStep=(maxX-minX)/320.0
         points.forEach{p->val px=pad+((p.x-minX)/(maxX-minX)).toFloat()*w;val py=pad+((maxY-p.y)/spanY).toFloat()*h
-            if(!started||abs(py-lastY)>h*1.5f){path.moveTo(px,py);started=true}else path.lineTo(px,py);lastY=py}
+            val hasGap=lastX!=null && p.x-lastX!!>expectedStep*1.5
+            if(!started||hasGap||abs(py-lastY)>h*1.5f){path.moveTo(px,py);started=true}else path.lineTo(px,py)
+            lastY=py;lastX=p.x
+        }
         drawPath(path,curve,style=Stroke(2.5.dp.toPx(),cap=StrokeCap.Round))
     }
 }
