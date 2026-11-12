@@ -208,6 +208,33 @@ class DocumentCodecTest {
         assertFalse(String(out.toByteArray(), Charsets.ISO_8859_1).contains("\"locked\""))
     }
 
+    @Test fun shapeCenterAndRadiusVisibilitySurviveRoundTripIndependently() {
+        val doc = Document(dpi = 150)
+        val page = Page(300.0, 400.0)
+        page.items += ShapeItem(ShapeKind.RECTANGLE, Pt(10.0, 10.0), Pt(90.0, 50.0), Rgba(1, 2, 3, 255)).apply {
+            showCenter = true
+            showRadius = false
+        }
+        page.items += ShapeItem(ShapeKind.TRIANGLE, Pt(110.0, 10.0), Pt(190.0, 90.0), Rgba(4, 5, 6, 255)).apply {
+            showCenter = false
+            showRadius = true
+        }
+        page.items += ShapeItem(ShapeKind.ELLIPSE, Pt(210.0, 10.0), Pt(290.0, 90.0), Rgba(7, 8, 9, 255)).apply {
+            showCenter = true
+            showRadius = true
+        }
+        doc.pages += page
+
+        val shapes = roundTrip(doc).pages.single().items.filterIsInstance<ShapeItem>()
+        assertEquals(3, shapes.size)
+        assertTrue(shapes[0].showCenter)
+        assertFalse(shapes[0].showRadius)
+        assertFalse(shapes[1].showCenter)
+        assertTrue(shapes[1].showRadius)
+        assertTrue(shapes[2].showCenter)
+        assertTrue(shapes[2].showRadius)
+    }
+
     @Test fun fullRoundTrip() {
         val doc = Document(dpi = 150)
         val page = Page(1240.0, 1754.0)
