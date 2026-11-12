@@ -628,43 +628,9 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
     override fun setSelectionMath(latex: String): Boolean = false
     override fun convertSelectionToMath() {}
 
-    override fun canBeautifyHandwriting(): Boolean =
-        !selection.isEmpty && selection.items.all { it is com.xnotes.core.model.Stroke && it.sampleCount >= 3 }
-
-    override fun beautifyHandwriting() {
-        if (!canBeautifyHandwriting()) return
-        val strokes = selection.items.filterIsInstance<com.xnotes.core.model.Stroke>()
-        val before = strokes.map { it.snapshotGeometry() }
-        var changed = false
-        for (stroke in strokes) {
-            val polished = com.xnotes.core.stroke.HandwritingPolish.beautify(stroke.samples)
-            if (polished.indices.any { i ->
-                    val a = stroke.samples[i]
-                    val b = polished[i]
-                    kotlin.math.abs(a.x - b.x) > 1e-5 || kotlin.math.abs(a.y - b.y) > 1e-5
-                }
-            ) {
-                stroke.setSamples(polished)
-                changed = true
-            }
-        }
-        if (!changed) {
-            showToast("No visible smoothing needed")
-            return
-        }
-        val after = strokes.map { it.snapshotGeometry() }
-        history.push(OnCanvas(document, com.xnotes.core.history.TransformItems(strokes, before, after), strokes))
-        markDirty()
-        refresh()
-        selection.refreshBox()
-        publishOverlay()
-        refreshSelectionMenu()
-        showToast("Handwriting beautified")
-    }
-
     private fun selectedHandwritingLines(): List<com.xnotes.core.stroke.HandwritingLine> {
         if (selection.isEmpty || selection.items.any { it !is com.xnotes.core.model.Stroke }) return emptyList()
-        return com.xnotes.core.stroke.HandwritingPolish.lineAxes(
+        return com.xnotes.core.stroke.HandwritingBaseline.lineAxes(
             selection.items.filterIsInstance<com.xnotes.core.model.Stroke>()
         ) { _, point -> point }
     }
