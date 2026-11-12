@@ -86,6 +86,7 @@ import com.xnotes.core.stroke.Sample
 import com.xnotes.core.stroke.StrokeSimplify
 import com.xnotes.core.stroke.StrokeStabilizer
 import com.xnotes.core.stroke.HandwritingPolish
+import com.xnotes.core.stroke.HandwritingLine
 import com.xnotes.core.tools.EraseMode
 import com.xnotes.core.tools.InkPalette
 import com.xnotes.core.tools.ShapeConfig
