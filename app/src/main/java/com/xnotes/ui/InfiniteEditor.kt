@@ -669,7 +669,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         if (!canMakeHandwritingStraighter()) return
         val strokes = selection.items.filterIsInstance<com.xnotes.core.model.Stroke>()
         val axis = com.xnotes.core.stroke.HandwritingPolish.principalAxis(strokes) { _, p -> p } ?: return
-        val transform = com.xnotes.core.geometry.Affine.rotationAbout(axis.center, -axis.angle)
+        val transform = com.xnotes.core.geometry.Affine.rotateAbout(axis.center, -axis.angle)
         val before = strokes.map { it.snapshotGeometry() }
         for (stroke in strokes) stroke.applyTransform(transform)
         val after = strokes.map { it.snapshotGeometry() }
