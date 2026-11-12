@@ -4176,12 +4176,20 @@ class InteractionController(
 
     fun canShowCenterRadiusSelection(): Boolean = centerRadiusShape() != null
 
-    fun selectionCenterRadiusEnabled(): Boolean = centerRadiusShape()?.showCenterRadius == true
+    fun selectionCenterEnabled(): Boolean = centerRadiusShape()?.showCenter == true
 
-    /** Toggle the guide without changing document content or adding an undo step. */
-    fun toggleSelectionCenterRadius() {
+    fun selectionRadiusEnabled(): Boolean = centerRadiusShape()?.showRadius == true
+
+    /** Toggle either transient guide without changing document content or adding an undo step. */
+    fun toggleSelectionCenter() {
         val shape = centerRadiusShape() ?: return
-        shape.showCenterRadius = !shape.showCenterRadius
+        shape.showCenter = !shape.showCenter
+        requestRender()
+    }
+
+    fun toggleSelectionRadius() {
+        val shape = centerRadiusShape() ?: return
+        shape.showRadius = !shape.showRadius
         requestRender()
     }
 
