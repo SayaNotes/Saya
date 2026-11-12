@@ -1726,12 +1726,17 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
 
                 // Shape labels are normally part of the document mesh. This tiny outlined label
                 // is built only for the overlay, so the live radius value never becomes content.
+                val radius = center.distanceTo(rim)
                 val middle = Pt((center.x + rim.x) / 2.0, (center.y + rim.y) / 2.0)
+                val labelCenter = Pt(
+                    middle.x - (rim.y - center.y) / radius * 8.0,
+                    middle.y + (rim.x - center.x) / radius * 8.0,
+                )
                 val radiusLabel = ShapeLabel(
-                    "R = %.1f".format(center.distanceTo(rim)),
+                    "R = %.1f".format(radius),
                     TextStyle(shape.strokeRgba, 7.0, FontFace.SANS, bold = true),
                     textMeasurer,
-                ).asGlyphs(Rect(middle.x - 24.0, middle.y - 7.0, 48.0, 14.0), { it }, 0.0)
+                ).asGlyphs(Rect(labelCenter.x - 24.0, labelCenter.y - 7.0, 48.0, 14.0), { it }, 0.0)
                 radiusLabel?.let { glyphs ->
                     ItemMesher.mesh(glyphs)?.let { labelMesh ->
                         parts += labelMesh.parts
