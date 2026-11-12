@@ -14,9 +14,9 @@ data class HandwritingLine(val strokes: List<Stroke>, val axis: HandwritingAxis)
 
 object HandwritingPolish {
     private const val MAX_AXIS_POINTS = 4096
-    private const val CORNER_COS = 0.6427876096865394 // cos(50°)
-    private const val SMOOTH_MIX = 0.55
-    private const val PASSES = 2
+    private const val CORNER_COS = 0.573576436351046 // cos(55°)
+    private const val SMOOTH_MIX = 0.82
+    private const val PASSES = 3
 
     /**
      * Estimate the selected handwriting's dominant baseline. [mapPoint] converts each stroke's
@@ -130,7 +130,7 @@ object HandwritingPolish {
      * Strong corners and endpoints are preserved; this never performs handwriting-to-text OCR.
      */
     fun beautify(samples: List<Sample>): List<Sample> {
-        if (samples.size < 5) return samples
+        if (samples.size < 3) return samples
         var current = samples.toList()
         repeat(PASSES) {
             val next = current.toMutableList()

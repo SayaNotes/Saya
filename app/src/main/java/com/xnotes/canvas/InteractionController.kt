@@ -4106,10 +4106,10 @@ class InteractionController(
 
     /** Only a selection made entirely of sampled ink can be polished without changing other objects. */
     fun canBeautifySelectedHandwriting(): Boolean =
-        selection.isNotEmpty() && selection.all { (it.item as? Stroke)?.sampleCount?.let { n -> n >= 5 } == true }
+        selection.isNotEmpty() && selection.all { (it.item as? Stroke)?.sampleCount?.let { n -> n >= 3 } == true }
 
-    fun beautifySelectedHandwriting() {
-        if (!canBeautifySelectedHandwriting()) return
+    fun beautifySelectedHandwriting(): Boolean {
+        if (!canBeautifySelectedHandwriting()) return false
         val items: List<CanvasItem> = selection.map { it.item }
         val strokes = items.filterIsInstance<Stroke>()
         val before = items.map { it.snapshotGeometry() }
@@ -4126,13 +4126,14 @@ class InteractionController(
                 changed = true
             }
         }
-        if (!changed) return
+        if (!changed) return false
         history.push(TransformItems(items, before, items.map { it.snapshotGeometry() }))
         state.document.dirty = true
         selObb = selectionBox()
         onContentChanged()
         refreshSelectionMenu()
         requestRender()
+        return true
     }
 
     private fun selectedHandwritingLines(): List<HandwritingLine> {

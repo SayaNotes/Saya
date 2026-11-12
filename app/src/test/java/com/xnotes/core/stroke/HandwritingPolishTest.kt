@@ -31,6 +31,19 @@ class HandwritingPolishTest {
         assertEquals(input.last(), output.last())
     }
 
+    @Test fun beautifyAlsoWorksForShortThreePointStroke() {
+        val input = listOf(
+            Sample(0.0, 0.0, 0.4, 0.0),
+            Sample(10.0, 4.0, 0.6, 10.0),
+            Sample(20.0, 0.0, 0.8, 20.0),
+        )
+        val output = HandwritingPolish.beautify(input)
+        assertEquals(3, output.size)
+        assertTrue(kotlin.math.abs(output[1].y) < kotlin.math.abs(input[1].y))
+        assertEquals(input[1].pressure, output[1].pressure, 0.0)
+        assertEquals(input[1].t, output[1].t, 0.0)
+    }
+
     @Test fun lineAxesKeepsSlopedLinesSeparateAndTogether() {
         fun stroke(x0: Double, y0: Double) = Stroke(
             Tool.PEN,

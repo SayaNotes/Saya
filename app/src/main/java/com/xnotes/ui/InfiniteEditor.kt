@@ -629,7 +629,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
     override fun convertSelectionToMath() {}
 
     override fun canBeautifyHandwriting(): Boolean =
-        !selection.isEmpty && selection.items.all { it is com.xnotes.core.model.Stroke && it.sampleCount >= 5 }
+        !selection.isEmpty && selection.items.all { it is com.xnotes.core.model.Stroke && it.sampleCount >= 3 }
 
     override fun beautifyHandwriting() {
         if (!canBeautifyHandwriting()) return
