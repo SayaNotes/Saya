@@ -587,6 +587,10 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
     var tool by mutableStateOf(Tool.DEFAULT)
         private set
 
+    /** Last selected lasso mode; switching to another tool must not reset it. */
+    var lastLassoTool by mutableStateOf(Tool.SELECT)
+        private set
+
     /** Reader mode: the note can be read, searched and followed through links, but not changed. */
     var readerMode by mutableStateOf(false)
         private set
@@ -6954,6 +6958,7 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
     }
 
     fun selectTool(t: Tool) {
+        if (t == Tool.SELECT || t == Tool.LASSO) lastLassoTool = t
         // The markup tool marks a PDF's text: a note without one gets Pan, and the next with one gets it back.
         markupResting = t == Tool.MARKUP && !hasPdf
         val armed = if (markupResting) Tool.PAN else t

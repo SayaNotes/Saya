@@ -155,6 +155,10 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
     var tool by mutableStateOf(Tool.PEN)
         private set
 
+    /** Last selected lasso mode; switching to another tool must not reset it. */
+    var lastLassoTool by mutableStateOf(Tool.SELECT)
+        private set
+
     /** The active ink colour, used by any tool without a colour override of its own. */
     var inkColor by mutableStateOf(InkPalette.DEFAULT)
         private set
@@ -432,6 +436,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
     private var toolBeforeSelect: Tool? = null
 
     fun armTool(next: Tool) {
+        if (next == Tool.SELECT || next == Tool.LASSO) lastLassoTool = next
         commitText()
         // Leaving the selection tools drops the selection, so its chrome cannot linger over ink.
         if (tool != next && (tool == Tool.SELECT || tool == Tool.LASSO)) interaction.clearSelection()

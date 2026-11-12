@@ -81,7 +81,7 @@ fun InfiniteToolbar(
             Tool.PAN to XnotesIcons.pan,
             Tool.ERASER to XnotesIcons.eraser,
             Tool.SHAPE to XnotesIcons.shape,
-            Tool.SELECT to XnotesIcons.select,
+            Tool.SELECT to XnotesIcons.lasso,
             Tool.LASSO to XnotesIcons.lasso,
             Tool.TAPE to XnotesIcons.tape,
         )
@@ -158,7 +158,7 @@ fun InfiniteToolbar(
                                         tool == Tool.SELECT && (editor.tool == Tool.SELECT || editor.tool == Tool.LASSO) -> selectOpen = editor.tool
                                         tool == Tool.TAPE && editor.tool == tool -> tapeOpen = true
                                         tool.isStroke && (armed || editor.tool == tool) -> penOpen = tool
-                                        else -> editor.armTool(tool)
+                                        else -> editor.armTool(if (tool == Tool.SELECT) editor.lastLassoTool else tool)
                                     }
                                 }
                                 // The very popups the paged toolbar opens, not lookalikes: same

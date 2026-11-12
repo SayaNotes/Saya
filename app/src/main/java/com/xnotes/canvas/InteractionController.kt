@@ -318,9 +318,6 @@ class InteractionController(
     private var strokeStartTimeMs = 0L
     private var drawingPointerId = -1
     private var drawingIsStylus = false
-    /** True only for a broad finger contact that the touchscreen reports as palm-sized. */
-    private var palmEraseActive = false
-
     /** This stroke began by dismissing an active selection; a bare tap then leaves no dot. */
     private var strokeDismissedSelection = false
 
@@ -725,7 +722,6 @@ class InteractionController(
         when (e.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 touchTakenBack = false
-                palmEraseActive = !readOnly && isPalmContact(e, 0, state.devicePxPerDp)
                 tapDown(e)
                 handleDown(e)
                 downView = state.snapshotView()
@@ -751,10 +747,9 @@ class InteractionController(
                 sideButtonEraseActive = false
                 sideButtonResumeTool = null
                 sideButtonHeldOnLastMove = false
-                palmEraseActive = false
                 tapUp(e)
             }
-            MotionEvent.ACTION_CANCEL -> { palmEraseActive = false; takeBackTouch() }
+            MotionEvent.ACTION_CANCEL -> takeBackTouch()
         }
         return true
     }
@@ -879,7 +874,6 @@ class InteractionController(
         val buttonHeld = stylusButtons.heldFor(e)
         val effectiveTool: Tool = when {
             readOnly -> Tool.PAN
-            palmEraseActive -> Tool.ERASER
             toolType == MotionEvent.TOOL_TYPE_ERASER -> Tool.ERASER
             buttonHeld && penButtonTool != null -> penButtonTool!!
             // While something is selected, the stylus grabs that selection (resize on a handle,
@@ -1740,13 +1734,11 @@ class InteractionController(
     // SCALE off: hold the eraser at a constant on-screen size by shrinking its content-space
     // radius as you zoom in (both the hit-test and the cursor circle derive from this).
     private fun eraserRadius(): Double {
-        if (palmEraseActive) return 30.0 / state.zoom
         val cfg = configFor(Tool.ERASER)
         return if (cfg.scale) cfg.baseWidth else cfg.baseWidth / state.zoom
     }
 
-    /** Palm contact always uses the fixed-size pixel/area eraser, independent of toolbar settings. */
-    private fun areaErase(): Boolean = palmEraseActive || configFor(Tool.ERASER).eraseMode == EraseMode.AREA
+    private fun areaErase(): Boolean = configFor(Tool.ERASER).eraseMode == EraseMode.AREA
 
     private fun beginErase(vx: Double, vy: Double) {
         eraseRemovals.clear()
@@ -6203,21 +6195,6 @@ class InteractionController(
         val STYLUS_BUTTON_MASK =
             MotionEvent.BUTTON_STYLUS_PRIMARY or MotionEvent.BUTTON_STYLUS_SECONDARY or
                 MotionEvent.BUTTON_SECONDARY or MotionEvent.BUTTON_TERTIARY
-
-        /**
-         * Android 11 has no standard palm tool type. Some touch controllers still report the
-         * contact ellipse, so only a clearly broad single-finger contact is treated as a palm.
-         * Zero/unsupported dimensions deliberately fail closed and leave ordinary finger input alone.
-         */
-        internal fun isPalmContact(e: MotionEvent, pointerIndex: Int, pxPerDp: Double): Boolean {
-            if (pointerIndex !in 0 until e.pointerCount ||
-                e.getToolType(pointerIndex) != MotionEvent.TOOL_TYPE_FINGER ||
-                !pxPerDp.isFinite() || pxPerDp <= 0.0
-            ) return false
-            val major = e.getTouchMajor(pointerIndex).toDouble()
-            val minor = e.getTouchMinor(pointerIndex).toDouble()
-            return major >= 40.0 * pxPerDp && minor >= 24.0 * pxPerDp
-        }
 
         /** A finger lifting that Android judged accidental, a resting palm say (FLAG_CANCELED, Android 13 on). */
         fun isCancelledLift(e: MotionEvent): Boolean = isCancelledLift(e.flags, Build.VERSION.SDK_INT)

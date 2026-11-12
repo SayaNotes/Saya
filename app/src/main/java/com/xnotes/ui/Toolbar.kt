@@ -422,10 +422,10 @@ private fun ToolButton(
                     setConfigForTool(null)
                 },
             ) {
-                if (editor.tool == Tool.SELECT) {
-                    setConfigForTool(Tool.SELECT)
+                if (editor.tool == Tool.SELECT || editor.tool == Tool.LASSO) {
+                    setConfigForTool(editor.tool)
                 } else {
-                    editor.selectTool(Tool.SELECT)
+                    editor.selectTool(editor.lastLassoTool)
                     setConfigForTool(null)
                 }
             }
