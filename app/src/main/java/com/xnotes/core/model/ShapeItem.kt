@@ -107,6 +107,9 @@ class ShapeItem(
     @Volatile
     override var labelHidden = false
 
+    /** Transient editor-only geometry guide; never written into the document file. */
+    var showCenterRadius: Boolean = false
+
     /** Where along an open shape's line its label sits, as a share of the line's length. */
     var labelAt: Double = 0.5
 
@@ -287,6 +290,68 @@ class ShapeItem(
             val rect = Rect(labelCentre.x - 11.0, labelCentre.y - 6.0, 22.0, 12.0)
             r.drawText("${degrees}°", rect, font, measurementColor, flags)
         }
+    }
+
+    /**
+     * Draw a transient centre-to-boundary radius guide for a selected closed shape.
+     * The area centroid is used for the centre; the radius reaches the farthest point
+     * on the actual flattened outline (not merely the bounding-box corner).
+     */
+    fun paintCenterRadiusMeasurements(r: Renderer) {
+        if (!showCenterRadius || !shape.isClosed || shape == ShapeKind.FILL) return
+        val contours = localGeometry().paths.flatMap { it.contours }.filter { it.closed }
+        if (contours.isEmpty()) return
+        val rings = contours.map { contour ->
+            PathFlattener.flatten(contour, 0.35).map(::toPage)
+        }.filter { it.size >= 3 }
+        if (rings.isEmpty()) return
+
+        var twiceArea = 0.0
+        var centroidX = 0.0
+        var centroidY = 0.0
+        for (ring in rings) {
+            for (i in ring.indices) {
+                val a = ring[i]
+                val b = ring[(i + 1) % ring.size]
+                val cross = a.x * b.y - b.x * a.y
+                twiceArea += cross
+                centroidX += (a.x + b.x) * cross
+                centroidY += (a.y + b.y) * cross
+            }
+        }
+        val centre = if (abs(twiceArea) > 1e-8) {
+            Pt(centroidX / (3.0 * twiceArea), centroidY / (3.0 * twiceArea))
+        } else {
+            val points = rings.flatten()
+            Pt(points.sumOf { it.x } / points.size, points.sumOf { it.y } / points.size)
+        }
+        val boundary = rings.flatten()
+        val rim = boundary.maxByOrNull { p ->
+            val dx = p.x - centre.x
+            val dy = p.y - centre.y
+            dx * dx + dy * dy
+        } ?: return
+        val radius = centre.distanceTo(rim)
+        if (!radius.isFinite() || radius <= 1e-6) return
+
+        val guide = Pen(strokeRgba, width = 1.15, cosmetic = true, dashed = true, dashOn = 4.0, dashGap = 3.0)
+        r.strokePolyline(listOf(centre, rim), guide)
+        r.fillCircle(rim, 2.5, strokeRgba)
+        r.strokeCircle(centre, 4.0, Pen(strokeRgba, width = 1.2, cosmetic = true))
+        r.strokePolyline(
+            listOf(Pt(centre.x - 6.0, centre.y), Pt(centre.x + 6.0, centre.y)),
+            Pen(strokeRgba, width = 1.0, cosmetic = true),
+        )
+        r.strokePolyline(
+            listOf(Pt(centre.x, centre.y - 6.0), Pt(centre.x, centre.y + 6.0)),
+            Pen(strokeRgba, width = 1.0, cosmetic = true),
+        )
+
+        val middle = Pt((centre.x + rim.x) / 2.0, (centre.y + rim.y) / 2.0)
+        val label = "R = %.1f".format(radius)
+        val font = FontSpec(7.0, FontFace.SANS, bold = true)
+        val flags = TextFlags(wordWrap = false, alignLeft = false, alignTop = false, hAlign = HAlign.CENTER)
+        r.drawText(label, Rect(middle.x - 22.0, middle.y - 7.0, 44.0, 14.0), font, strokeRgba, flags)
     }
 
     /** Everything but the label: fills, then the outline, glowing when neon. */
