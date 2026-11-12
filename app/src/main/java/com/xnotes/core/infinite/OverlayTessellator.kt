@@ -62,22 +62,29 @@ object OverlayTessellator {
      * A selected shape's centre/radius guide. Its widths stay constant on screen as zoom changes,
      * just like the selection chrome; the measured endpoints remain in content space.
      */
-    fun centerRadius(center: Pt, rim: Pt, zoom: Double, color: Rgba, tolerance: Double): List<MeshPart> {
+    fun centerRadius(
+        center: Pt, rim: Pt, zoom: Double, color: Rgba, tolerance: Double,
+        showCenter: Boolean = true, showRadius: Boolean = true,
+    ): List<MeshPart> {
         if (zoom <= 0.0 || center.distanceTo(rim) <= 1e-6) return emptyList()
         val line = MeshBuilder()
-        val on = 5.0 / zoom
-        val off = 3.5 / zoom
-        for (run in MeshBuilder.dashRuns(listOf(center, rim), on, off, closed = false)) {
-            line.polylineRibbon(run, 0.7 / zoom, closed = false, tolerance = tolerance)
+        if (showRadius) {
+            val on = 5.0 / zoom
+            val off = 3.5 / zoom
+            for (run in MeshBuilder.dashRuns(listOf(center, rim), on, off, closed = false)) {
+                line.polylineRibbon(run, 0.7 / zoom, closed = false, tolerance = tolerance)
+            }
         }
         val marks = MeshBuilder()
-        marks.circle(rim.x, rim.y, 2.5 / zoom, tolerance)
-        marks.circle(center.x, center.y, 4.0 / zoom, tolerance)
+        if (showRadius) marks.circle(rim.x, rim.y, 2.5 / zoom, tolerance)
+        if (showCenter) marks.circle(center.x, center.y, 4.0 / zoom, tolerance)
         val cross = MeshBuilder()
-        val arm = 6.0 / zoom
-        val half = 0.65 / zoom
-        cross.polylineRibbon(listOf(Pt(center.x - arm, center.y), Pt(center.x + arm, center.y)), half, closed = false, tolerance = tolerance)
-        cross.polylineRibbon(listOf(Pt(center.x, center.y - arm), Pt(center.x, center.y + arm)), half, closed = false, tolerance = tolerance)
+        if (showCenter) {
+            val arm = 6.0 / zoom
+            val half = 0.65 / zoom
+            cross.polylineRibbon(listOf(Pt(center.x - arm, center.y), Pt(center.x + arm, center.y)), half, closed = false, tolerance = tolerance)
+            cross.polylineRibbon(listOf(Pt(center.x, center.y - arm), Pt(center.x, center.y + arm)), half, closed = false, tolerance = tolerance)
+        }
         return buildList(3) {
             if (!line.isEmpty) add(MeshPart(line.build(), color, InkPass.OPAQUE))
             if (!marks.isEmpty) add(MeshPart(marks.build(), color, InkPass.OPAQUE))
