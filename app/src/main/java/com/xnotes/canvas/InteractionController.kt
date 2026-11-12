@@ -643,6 +643,7 @@ class InteractionController(
                     // Keep angle guides visible while a polygon is selected, including during
                     // move/resize/vertex editing; they remain transient overlay feedback.
                     (sel.item as? ShapeItem)?.paintAngleMeasurements(r)
+                    (sel.item as? ShapeItem)?.paintCenterRadiusMeasurements(r)
                 }
             }
         }
@@ -4089,6 +4090,23 @@ class InteractionController(
 
     // --- shape labels ---
 
+    /** The lone selected closed shape eligible for its transient centre/radius guide. */
+    private fun centerRadiusShape(): ShapeItem? =
+        (selection.singleOrNull()?.item as? ShapeItem)?.takeIf {
+            it.shape.isClosed && it.shape != com.xnotes.core.shapes.ShapeKind.FILL && !it.locked
+        }
+
+    fun canShowCenterRadiusSelection(): Boolean = centerRadiusShape() != null
+
+    fun selectionCenterRadiusEnabled(): Boolean = centerRadiusShape()?.showCenterRadius == true
+
+    /** Toggle the guide without changing document content or adding an undo step. */
+    fun toggleSelectionCenterRadius() {
+        val shape = centerRadiusShape() ?: return
+        shape.showCenterRadius = !shape.showCenterRadius
+        requestRender()
+    }
+
     /** True when the lone selection is a shape that can take a label. */
     fun canLabelSelection(): Boolean = (selection.singleOrNull()?.item as? Labelled)?.let { it.takesLabel && !it.locked } == true
 
@@ -5709,6 +5727,7 @@ class InteractionController(
                     // Draw angle readouts in the normal selected-item overlay as well as the
                     // under-text overlay, so a simple tap selection and live resize both show them.
                     (sel.item as? ShapeItem)?.paintAngleMeasurements(r)
+                    (sel.item as? ShapeItem)?.paintCenterRadiusMeasurements(r)
                 }
             }
 
