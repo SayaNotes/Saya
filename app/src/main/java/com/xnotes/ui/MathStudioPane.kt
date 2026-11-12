@@ -16,6 +16,11 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.xnotes.math.MathStudioEngine
+import com.xnotes.math.MathStudioAiClient
+import androidx.compose.ui.platform.LocalContext
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlin.math.abs
 
 private enum class StudioMode(val title:String){CALCULATE("Calculate"),SOLVE("Solve"),DERIVATIVE("Derivative"),INTEGRAL("Integral"),GRAPH("Graph")}
@@ -32,6 +37,12 @@ fun MathStudioPane(editor:Editor){
     var insertText by rememberSaveable{mutableStateOf("")}
     var graph by remember{mutableStateOf(emptyList<MathStudioEngine.Point>())}
     var error by remember{mutableStateOf<String?>(null)}
+    val context = LocalContext.current
+    val prefs = remember(context) { context.getSharedPreferences("saya_math_studio", 0) }
+    var endpoint by remember { mutableStateOf(prefs.getString("endpoint", "") ?: "") }
+    var aiAnswer by rememberSaveable { mutableStateOf("") }
+    var aiBusy by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     val selected=StudioMode.valueOf(mode)
     fun calculate(){
         error=null;graph=emptyList()
@@ -64,9 +75,29 @@ fun MathStudioPane(editor:Editor){
         if(selected==StudioMode.GRAPH&&graph.isNotEmpty())GraphPlot(graph,Modifier.fillMaxWidth().height(230.dp))
         if(insertText.isNotBlank())OutlinedButton({editor.insertMathStudioResult(insertText)},Modifier.fillMaxWidth()){Text("Insert solution into current notebook")}
         Card(Modifier.fillMaxWidth(),colors=CardDefaults.cardColors(containerColor=MaterialTheme.colorScheme.surfaceVariant)){
-            Column(Modifier.padding(14.dp),verticalArrangement=Arrangement.spacedBy(5.dp)){
+            Column(Modifier.padding(14.dp),verticalArrangement=Arrangement.spacedBy(9.dp)){
                 Text("AI tutor",style=MaterialTheme.typography.titleSmall)
-                Text("The on-device calculation engine is available now. Conversational AI explanations require a deployed secure backend and provider credentials; no secret key is stored in the APK.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Connect a deployed HTTPS proxy. Its provider key stays on the server and is never stored in this app.",style=MaterialTheme.typography.bodySmall,color=MaterialTheme.colorScheme.onSurfaceVariant)
+                OutlinedTextField(
+                    value=endpoint,
+                    onValueChange={endpoint=it;prefs.edit().putString("endpoint",it).apply()},
+                    modifier=Modifier.fillMaxWidth(),
+                    label={Text("Secure AI backend URL (HTTPS)")},
+                    singleLine=true,
+                )
+                Button(
+                    onClick={
+                        scope.launch {
+                            aiBusy=true; aiAnswer=""
+                            try { aiAnswer=withContext(Dispatchers.IO){MathStudioAiClient.explain(endpoint,expression,output)} }
+                            catch(t:Throwable){aiAnswer=t.message?:"AI explanation failed."}
+                            finally { aiBusy=false }
+                        }
+                    },
+                    enabled=endpoint.startsWith("https://") && !aiBusy && output.isNotBlank(),
+                    modifier=Modifier.fillMaxWidth(),
+                ){Text(if(aiBusy)"Thinking…" else "Explain with AI")}
+                if(aiAnswer.isNotBlank())Text(aiAnswer,style=MaterialTheme.typography.bodyMedium)
             }
         }
     }
