@@ -61,7 +61,7 @@ fun MathStudioPane(editor:Editor){
                         "pythagoras"->"Right triangle\nHypotenuse = ${fmt(kotlin.math.hypot(a,b))}"
                         "sphere"->"Sphere\nRadius = ${fmt(a)}\nVolume = ${fmt(4.0/3.0*Math.PI*a*a*a)}\nSurface area = ${fmt(4*Math.PI*a*a)}"
                         "cylinder"->"Cylinder\nVolume = ${fmt(Math.PI*a*a*b)}\nCurved surface area = ${fmt(2*Math.PI*a*b)}"
-                        else->error("Choose circle, triangle, rectangle, pythagoras, sphere or cylinder.")
+                        else->throw IllegalArgumentException("Choose circle, triangle, rectangle, pythagoras, sphere or cylinder.")
                     }
                 }
                 StudioMode.DERIVATIVE->{val x=at.toDouble();val d=MathStudioEngine.derivative(expression,x);"Numerical derivative\nf'(${fmt(x)}) ≈ ${fmt(d)}\n\nCentred finite difference: [f(x+h) − f(x−h)] / (2h)."}
