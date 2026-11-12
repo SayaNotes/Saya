@@ -1527,7 +1527,36 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
      * they meet, and the highlighter, which is composited at its own alpha — is meshed whole, as
      * are the taper pen and the straight-line tools, which have no settled run to speak of.
      */
+    private var pendingWetStroke: Stroke? = null
+    private var wetPublishPending = false
+    private val wetPublishFrame = android.view.Choreographer.FrameCallback {
+        wetPublishPending = false
+        val pending = pendingWetStroke
+        pendingWetStroke = null
+        publishWetStrokeNow(pending)
+    }
+
+    /**
+     * Pointer events can arrive faster than display frames. Keep only the newest live stroke and
+     * mesh it once per frame; the Stroke itself retains every captured sample, so this coalesces
+     * preview work only and never drops document input.
+     */
     private fun publishWetStroke(stroke: Stroke?) {
+        if (stroke == null) {
+            pendingWetStroke = null
+            if (wetPublishPending) choreographer.removeFrameCallback(wetPublishFrame)
+            wetPublishPending = false
+            publishWetStrokeNow(null)
+            return
+        }
+        pendingWetStroke = stroke
+        if (!wetPublishPending) {
+            wetPublishPending = true
+            choreographer.postFrameCallback(wetPublishFrame)
+        }
+    }
+
+    private fun publishWetStrokeNow(stroke: Stroke?) {
         // Pen back down under the wand: the held batch goes solid again, so a long stroke cannot
         // outlive a fade that had already started.
         if (wandEnabled && stroke != null && stroke !== wandLive) {

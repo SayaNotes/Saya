@@ -179,7 +179,7 @@ object ItemMesher {
         if (stroke.isEmpty) return null
         if (stroke.tool == Tool.STAMP) return meshStamps(stroke, measurer)
         if (stroke.tool == Tool.DASHED) return meshDashed(stroke, tolerance)
-        val mesh = MeshClip.clip(StrokeTessellator.tessellate(stroke.geometry(), tolerance), stroke.cuts)
+        val mesh = MeshClip.clip(StrokeTessellator.tessellate(stroke.geometryForRendering(), tolerance), stroke.cuts)
         if (mesh.isEmpty) return null
         if (stroke.config.neon && stroke.tool != Tool.HIGHLIGHTER) {
             return neonStroke(stroke, mesh, tolerance)
@@ -196,7 +196,7 @@ object ItemMesher {
     private fun meshStamps(stroke: Stroke, measurer: TextMeasurer?): MeshedItem? {
         val measure = measurer ?: return null
         val glyph = stroke.config.stampGlyph.ifBlank { return null }
-        val geometry = stroke.geometry()
+        val geometry = stroke.geometryForRendering()
         if (geometry.pointCount == 0) return null
         val size = stroke.config.stampSize.coerceIn(8.0, 96.0)
         val spacing = stroke.config.stampSpacing.coerceIn(8.0, 160.0)
@@ -287,7 +287,7 @@ object ItemMesher {
         val half = stroke.config.baseWidth / 2.0
         val mesh = MeshClip.clip(
             StrokeTessellator.tessellateDashed(
-                stroke.geometry(),
+                stroke.geometryForRendering(),
                 stroke.config.dashLength,
                 stroke.config.dashGap,
                 half,
@@ -333,7 +333,7 @@ object ItemMesher {
      * stroke has fallen below a pixel on screen and should be faded rather than fattened.
      */
     private fun narrowestHalfWidth(stroke: Stroke): Double {
-        val widths = stroke.geometry().halfWidths
+        val widths = stroke.geometryForRendering().halfWidths
         if (widths.isEmpty()) return 0.0
         var min = Double.MAX_VALUE
         for (w in widths) if (w > 0f && w < min) min = w.toDouble()

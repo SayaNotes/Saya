@@ -246,6 +246,9 @@ class Stroke(
         return buildGeometry(pts, Int.MAX_VALUE, finished).also { cachedGeometry = it }
     }
 
+    /** Geometry for a live render: exact for short strokes, bounded for long live previews. */
+    fun geometryForRendering(): StrokeGeometry = paintGeometry()
+
     /**
      * The live preview for styles that cannot use the opaque wet raster (taper, translucent
      * highlighter and neon). Their full geometry was being rebuilt from every captured sample on
@@ -255,7 +258,7 @@ class Stroke(
      * stroke. Cache it between samples, not between frames.
      */
     private fun paintGeometry(): StrokeGeometry {
-        if (finished || (wet != null && wetCacheable)) return geometry()
+        if (finished || (wet != null && wetCacheable && pts.n <= LIVE_PREVIEW_MAX_SAMPLES)) return geometry()
         cachedPreviewGeometry?.let { return it }
         return buildGeometry(pts, LIVE_PREVIEW_MAX_SAMPLES, finished = false).also {
             cachedPreviewGeometry = it
