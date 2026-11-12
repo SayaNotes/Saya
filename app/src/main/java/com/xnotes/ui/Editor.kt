@@ -8132,9 +8132,13 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
 
     override fun selectionCanShowCenterRadius() = controller.canShowCenterRadiusSelection()
 
-    override fun selectionCenterRadiusEnabled() = controller.selectionCenterRadiusEnabled()
+    override fun selectionCenterEnabled() = controller.selectionCenterEnabled()
 
-    override fun toggleSelectionCenterRadius() = controller.toggleSelectionCenterRadius()
+    override fun selectionRadiusEnabled() = controller.selectionRadiusEnabled()
+
+    override fun toggleSelectionCenter() = controller.toggleSelectionCenter()
+
+    override fun toggleSelectionRadius() = controller.toggleSelectionRadius()
 
     override fun selectionCount() = ShapeCount.of(controller.countedShape())
 
