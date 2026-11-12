@@ -48,7 +48,7 @@ import kotlin.math.abs
 import kotlin.math.exp
 
 /** What the current gesture is doing. */
-enum class CanvasPointerMode { IDLE, PAN, PINCH, DRAW, ERASE, SHAPE, BAND, LASSO, MOVE, RESIZE, ROTATE, VERTEX, POLYGON, CONNECT, JOINT, SLIDE, TAPE }
+enum class CanvasPointerMode { IDLE, PAN, PINCH, DRAW, ERASE, SHAPE, BAND, LASSO, MOVE, RESIZE, ROTATE, TWO_FINGER_ROTATE, VERTEX, POLYGON, CONNECT, JOINT, SLIDE, TAPE }
 
 /**
  * Gestures on the infinite canvas.
@@ -185,6 +185,11 @@ class InfiniteInteraction(
 
     // The shape being dragged out with the shape tool.
     private var pendingShape: ShapeItem? = null
+    private var twoFingerRotateStartAngle = 0.0
+    private var twoFingerRotateCenter = Pt.ZERO
+    private var twoFingerRotateDraft: ShapeItem? = null
+    private var twoFingerRotateDraftBefore: com.xnotes.core.model.GeometrySnapshot? = null
+    private var twoFingerRotateSelection = false
 
     // Tape being laid: the press, the farthest the drag has gone from it, and a freehand band's path.
     private var pendingTape: TapeItem? = null
@@ -665,12 +670,82 @@ class InfiniteInteraction(
         if (mode == CanvasPointerMode.LASSO && lassoErasing && drawingIsStylus) return
         if (mode == CanvasPointerMode.TAPE && drawingIsStylus) return
         if (e.pointerCount >= 2) {
+            if (beginTwoFingerShapeRotation(e)) return
             if (mode == CanvasPointerMode.DRAW) abandonStroke()
             if (mode == CanvasPointerMode.TAPE) abandonTape()
             // A finger erase yields to a pinch: commit what it already removed rather than lose it.
             if (mode == CanvasPointerMode.ERASE) endErase()
             beginPinch(e)
         }
+    }
+
+    /** Twisting is reserved for a shape under both contacts; other pinches still pan/zoom. */
+    private fun beginTwoFingerShapeRotation(e: MotionEvent): Boolean {
+        if (e.pointerCount < 2) return false
+        val a = Pt(e.getX(0).toDouble(), e.getY(0).toDouble())
+        val b = Pt(e.getX(1).toDouble(), e.getY(1).toDouble())
+        val ca = viewport.viewportToContent(a)
+        val cb = viewport.viewportToContent(b)
+        if (mode == CanvasPointerMode.SHAPE) {
+            val draft = pendingShape ?: return false
+            val bounds = draft.bounds()
+            if (!bounds.contains(ca) || !bounds.contains(cb)) return false
+            twoFingerRotateDraft = draft
+            twoFingerRotateDraftBefore = draft.snapshotGeometry()
+            twoFingerRotateCenter = bounds.center
+            twoFingerRotateStartAngle = kotlin.math.atan2(b.y - a.y, b.x - a.x)
+            twoFingerRotateSelection = false
+            mode = CanvasPointerMode.TWO_FINGER_ROTATE
+            setInteractive(true, true)
+            requestRender()
+            return true
+        }
+        val sel = selection() ?: return false
+        if (sel.items.singleOrNull() !is ShapeItem) return false
+        val box = sel.box ?: return false
+        if (!box.contains(ca) || !box.contains(cb)) return false
+        sel.beginTransform(rigid = true, pin = true)
+        twoFingerRotateCenter = box.center
+        twoFingerRotateStartAngle = kotlin.math.atan2(b.y - a.y, b.x - a.x)
+        twoFingerRotateSelection = true
+        mode = CanvasPointerMode.TWO_FINGER_ROTATE
+        setInteractive(true, true)
+        return true
+    }
+
+    private fun updateTwoFingerShapeRotation(e: MotionEvent) {
+        if (e.pointerCount < 2) return
+        val a = Pt(e.getX(0).toDouble(), e.getY(0).toDouble())
+        val b = Pt(e.getX(1).toDouble(), e.getY(1).toDouble())
+        val raw = kotlin.math.atan2(b.y - a.y, b.x - a.x) - twoFingerRotateStartAngle
+        val delta = when { raw > Math.PI -> raw - 2.0 * Math.PI; raw < -Math.PI -> raw + 2.0 * Math.PI; else -> raw }
+        val draft = twoFingerRotateDraft
+        if (draft != null) {
+            draft.restoreGeometry(twoFingerRotateDraftBefore ?: return)
+            draft.applyTransform(Affine.rotateAbout(twoFingerRotateCenter, delta))
+            onPendingShape(draft)
+        } else if (twoFingerRotateSelection) selection()?.applyLive(Affine.rotateAbout(twoFingerRotateCenter, delta))
+        requestRender()
+    }
+
+    private fun finishTwoFingerShapeRotation() {
+        val draft = twoFingerRotateDraft
+        if (draft != null) {
+            twoFingerRotateDraft = null
+            twoFingerRotateDraftBefore = null
+            twoFingerRotateSelection = false
+            endShape()
+        } else if (twoFingerRotateSelection) {
+            val sel = selection()
+            onLiftSelection(emptyList(), LiftTransform.NONE)
+            onCommitSelection(sel?.buildCommand(movedOnly = false))
+            sel?.refreshBox()
+            twoFingerRotateSelection = false
+            onSelectionChanged()
+        }
+        mode = CanvasPointerMode.IDLE
+        setInteractive(false, true)
+        requestRender()
     }
 
     private fun handleMove(e: MotionEvent) {
@@ -685,6 +760,7 @@ class InfiniteInteraction(
         when (mode) {
             CanvasPointerMode.PAN -> extendPan(e.getX(0).toDouble(), e.getY(0).toDouble())
             CanvasPointerMode.PINCH -> updatePinch(e)
+            CanvasPointerMode.TWO_FINGER_ROTATE -> updateTwoFingerShapeRotation(e)
             CanvasPointerMode.DRAW -> extendDraw(e)
             CanvasPointerMode.ERASE -> extendErase(e)
             CanvasPointerMode.SHAPE -> extendShape(e.getX(0).toDouble(), e.getY(0).toDouble())
@@ -704,6 +780,10 @@ class InfiniteInteraction(
     }
 
     private fun handlePointerUp(e: MotionEvent) {
+        if (mode == CanvasPointerMode.TWO_FINGER_ROTATE) {
+            if (e.pointerCount == 2) finishTwoFingerShapeRotation()
+            return
+        }
         if (mode != CanvasPointerMode.PINCH) return
         // Dropping to one finger continues as a pan from wherever that finger is, so a pinch that
         // relaxes into a drag does not jump.
@@ -794,6 +874,14 @@ class InfiniteInteraction(
         if (mode == CanvasPointerMode.JOINT) abandonJoint()
         if (mode == CanvasPointerMode.SLIDE) abandonSlide()
         if (mode == CanvasPointerMode.POLYGON) showPolygonDraft(null)
+        if (mode == CanvasPointerMode.TWO_FINGER_ROTATE) {
+            twoFingerRotateDraft?.let { d -> twoFingerRotateDraftBefore?.let(d::restoreGeometry); onPendingShape(null) }
+            twoFingerRotateDraft = null; twoFingerRotateDraftBefore = null
+            if (twoFingerRotateSelection) {
+                selection()?.restoreStart(); selection()?.unfollow(); twoFingerRotateSelection = false
+                onSelectionChanged()
+            }
+        }
         if ((mode == CanvasPointerMode.ROTATE || mode == CanvasPointerMode.RESIZE) && liftedTransform) {
             selection()?.previewBack()
             if (bakedInLift.isNotEmpty()) selection()?.applyLiveTo(bakedInLift, Affine.IDENTITY)
