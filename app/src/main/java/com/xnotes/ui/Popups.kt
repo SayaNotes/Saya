@@ -4,6 +4,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
 
 import androidx.compose.ui.layout.layout
@@ -234,7 +235,7 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
     ) {
         AnimatedVisibility(
             visible = true,
-            enter = slideInVertically(initialOffsetY = { it }, animationSpec = tween(220)) + fadeIn(tween(180)),
+            enter = slideInVertically(initialOffsetY = { it / 12 }, animationSpec = tween(150, easing = FastOutSlowInEasing)) + fadeIn(tween(135, easing = FastOutSlowInEasing)),
         ) {
         Column(
             Modifier.widthIn(max = 680.dp).fillMaxWidth()
