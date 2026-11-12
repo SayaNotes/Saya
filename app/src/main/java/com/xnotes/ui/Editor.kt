@@ -1111,6 +1111,7 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
         onSelectionChanged = { selected -> hasSelection = selected; refreshTextBar() },
         onToolChanged = { t ->
             tool = t
+            if (t == Tool.SELECT || t == Tool.LASSO) lastLassoTool = t
             if (t != Tool.TEXT) {
                 endTableEdit()
                 tableMenu = null

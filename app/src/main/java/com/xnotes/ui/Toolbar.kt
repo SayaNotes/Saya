@@ -134,7 +134,8 @@ fun Toolbar(
             Tool.ERASER to XnotesIcons.eraser,
             Tool.PAN to XnotesIcons.pan,
             Tool.SELECT to XnotesIcons.select,
-            Tool.LASSO to XnotesIcons.lasso,
+            // Both rectangular and freehand modes share the rectangular-select arrow glyph.
+            Tool.LASSO to XnotesIcons.select,
             Tool.SCREENSHOT to XnotesIcons.scissors,
             Tool.SHAPE to XnotesIcons.shape,
             Tool.TEXT to XnotesIcons.text,
