@@ -152,7 +152,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
     private val toolConfigs = HashMap<Tool, ToolConfig>()
 
     /** The armed tool, mirrored into Compose so the toolbar can show which one it is. */
-    var tool by mutableStateOf(Tool.PEN)
+    var tool by mutableStateOf(Tool.TAPER)
         private set
 
     /** Last selected lasso mode; switching to another tool must not reset it. */
