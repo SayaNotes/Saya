@@ -74,7 +74,7 @@ fun MathStudioPane(editor:Editor){
                 StudioMode.INTEGRAL->{val a=lower.toDouble();val b=upper.toDouble();val v=MathStudioEngine.integrate(expression,a,b);"Definite integral\n∫[${fmt(a)}, ${fmt(b)}] $expression dx ≈ ${fmt(v)}\n\nComposite Simpson's rule (1,000 subintervals)."}
                 StudioMode.GRAPH->{val a=lower.toDouble();val b=upper.toDouble();graph=MathStudioEngine.graph(expression,a,b);"Graph of y = $expression\nx from ${fmt(a)} to ${fmt(b)} · ${graph.size} samples"}
             }
-            insertText="## Math Studio\n\n$output"
+            insertText="Math Studio\n\n$output"
         }catch(t:Throwable){error=t.message?:"Unable to calculate.";output="Check the expression and try again.";insertText=""}
     }
     Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(22.dp),verticalArrangement=Arrangement.spacedBy(14.dp)){
@@ -116,8 +116,10 @@ fun MathStudioPane(editor:Editor){
                     onClick={
                         scope.launch {
                             aiBusy=true; aiAnswer=""
-                            try { aiAnswer=withContext(Dispatchers.IO){MathStudioAiClient.explain(endpoint,expression,output,accessToken)} }
-                            catch(t:Throwable){aiAnswer=t.message?:"AI explanation failed."}
+                            try {
+                                aiAnswer=withContext(Dispatchers.IO){MathStudioAiClient.explain(endpoint,expression,output,accessToken)}
+                                insertText="Math Studio\n\n$output\n\nAI tutor explanation\n\n$aiAnswer"
+                            } catch(t:Throwable){aiAnswer=t.message?:"AI explanation failed."}
                             finally { aiBusy=false }
                         }
                     },
