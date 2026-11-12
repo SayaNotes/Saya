@@ -35,6 +35,8 @@ import com.xnotes.core.tools.ToolConfig
  * The arrays and the count they belong to are held together in one immutable [Samples], swapped
  * whole on every edit, so a stroke can be read from another thread while the pen draws on it.
  */
+private const val LIVE_PREVIEW_MAX_SAMPLES = 512
+
 class Stroke(
     val tool: Tool,
     /** Scaled in place when the stroke is resized (var so [applyTransform] can swap a width-scaled
@@ -77,6 +79,9 @@ class Stroke(
      *  race costs at worst one redundant rebuild. */
     @Volatile
     private var cachedGeometry: StrokeGeometry? = null
+    /** Bounded live preview for styles without the opaque incremental wet raster path. */
+    @Volatile
+    private var cachedPreviewGeometry: StrokeGeometry? = null
     private var cachedRawBounds: Rect? = null
     private var cachedBounds: Rect? = null
     private var cachedClipped: Rect? = null
@@ -234,23 +239,42 @@ class Stroke(
 
     val isEmpty get() = pts.n == 0
 
-    /** Lazily-built ribbon geometry; rebuilt only when samples change. */
+    /** Lazily-built full ribbon geometry; used for committed ink, bounds, hit-testing and export. */
     fun geometry(): StrokeGeometry {
         wet?.let { return it.geometry() }
         cachedGeometry?.let { return it }
-        // Unpack to the doubles the engine works in. It allocates these three arrays anyway, so
-        // reading the float storage here costs nothing over passing a list of boxed samples.
-        val s = pts
-        val n = s.n
-        val rx = DoubleArray(n)
-        val ry = DoubleArray(n)
-        val rp = DoubleArray(n)
-        for (i in 0 until n) {
-            rx[i] = s.ox + s.xa[i]
-            ry[i] = s.oy + s.ya[i]
-            rp[i] = s.pa[i].toDouble()
+        return buildGeometry(pts, Int.MAX_VALUE, finished).also { cachedGeometry = it }
+    }
+
+    /**
+     * The live preview for styles that cannot use the opaque wet raster (taper, translucent
+     * highlighter and neon). Their full geometry was being rebuilt from every captured sample on
+     * every frame, so the cost grew with stroke length and eventually blocked tool switching.
+     * Keep the preview bounded while the pen is down; pen-up invalidates it and builds the exact
+     * full-resolution saved geometry, so this never discards document samples or changes the final
+     * stroke. Cache it between samples, not between frames.
+     */
+    private fun paintGeometry(): StrokeGeometry {
+        if (finished || (wet != null && wetCacheable)) return geometry()
+        cachedPreviewGeometry?.let { return it }
+        return buildGeometry(pts, LIVE_PREVIEW_MAX_SAMPLES, finished = false).also {
+            cachedPreviewGeometry = it
         }
-        val rt = s.ta?.let { src -> DoubleArray(n) { src[it].toDouble() } }
+    }
+
+    private fun buildGeometry(s: Samples, maxSamples: Int, finished: Boolean): StrokeGeometry {
+        val n = s.n
+        val count = minOf(n, maxSamples)
+        val rx = DoubleArray(count)
+        val ry = DoubleArray(count)
+        val rp = DoubleArray(count)
+        val rt = s.ta?.let { src -> DoubleArray(count) { i -> src[sourceIndex(i, count, n)].toDouble() } }
+        for (i in 0 until count) {
+            val source = sourceIndex(i, count, n)
+            rx[i] = s.ox + s.xa[source]
+            ry[i] = s.oy + s.ya[source]
+            rp[i] = s.pa[source].toDouble()
+        }
         return StrokeEngine.build(
             rx, ry, rp, rt,
             config.baseWidth,
@@ -265,12 +289,17 @@ class Stroke(
             holdEnds = tool == Tool.PEN || tool == Tool.HIGHLIGHTER,
             finished = finished,
             smoothScale = smoothScale,
-        ).also { cachedGeometry = it }
+        )
     }
+
+    private fun sourceIndex(previewIndex: Int, previewCount: Int, sourceCount: Int): Int =
+        if (previewCount >= sourceCount || previewCount <= 1) previewIndex
+        else (previewIndex.toLong() * (sourceCount - 1L) / (previewCount - 1L)).toInt()
 
     fun invalidate() {
         wet = null
         cachedGeometry = null
+        cachedPreviewGeometry = null
         cachedRawBounds = null
         cachedBounds = null
         cachedClipped = null
@@ -289,11 +318,12 @@ class Stroke(
             wet = null
         }
         cachedGeometry = null
+        cachedPreviewGeometry = null
     }
 
     /** True once [geometry] has been built and not since released; lets the canvas skip pages
      *  that never rendered instead of walking their items. */
-    val hasGeometry get() = wet != null || cachedGeometry != null
+    val hasGeometry get() = wet != null || cachedGeometry != null || cachedPreviewGeometry != null
 
     fun addSample(s: Sample) {
         val cur = pts
@@ -330,6 +360,7 @@ class Stroke(
         // hair as the stroke crosses from one to the other.
         ribbon.append(xAt(n), yAt(n), pAt(n), tAt(n))
         cachedGeometry = null
+        cachedPreviewGeometry = null
         cachedRawBounds = null
         cachedBounds = null
     }
@@ -389,7 +420,7 @@ class Stroke(
     }
 
     private fun paintInk(r: Renderer) {
-        val g = geometry()
+        val g = paintGeometry()
         val color = renderColor
         when {
             tool == Tool.STAMP -> paintStamps(r, g, color)
@@ -624,6 +655,10 @@ class Stroke(
         // cost what its moving tail costs rather than a walk of every point it has laid down.
         wet?.let { return it.bounds() }
         cachedBounds?.let { return it }
+        if (!finished) {
+            val pad = max(config.baseWidth * 2.0, if (tool == Tool.STAMP) config.stampSize else 0.0)
+            return rawBounds().outset(pad).also { cachedBounds = it }
+        }
         val g = geometry()
         if (g.pointCount == 0) {
             val b = if (pts.n == 0) Rect(0.0, 0.0, 0.0, 0.0) else rawBounds()
@@ -654,6 +689,7 @@ class Stroke(
         pts = Samples(s.ox + dx, s.oy + dy, s.xa, s.ya, s.pa, s.ta, s.n)
         wet = null
         cachedGeometry = null
+        cachedPreviewGeometry = null
         cachedRawBounds = cachedRawBounds?.translate(dx, dy)
         cachedBounds = cachedBounds?.translate(dx, dy)
         if (cuts.isNotEmpty()) {
