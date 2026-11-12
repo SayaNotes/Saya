@@ -44,6 +44,7 @@ class CenterRadiusGuideTest {
     @Test fun theGuideIsTransientAndOffByDefault() {
         val shape = ShapeItem(ShapeKind.CIRCLE, Pt(0.0, 0.0), Pt(100.0, 100.0), ink)
         assertTrue(shape.centerRadiusGuide() != null)
-        assertFalse(shape.showCenterRadius)
+        assertFalse(shape.showCenter)
+        assertFalse(shape.showRadius)
     }
 }
