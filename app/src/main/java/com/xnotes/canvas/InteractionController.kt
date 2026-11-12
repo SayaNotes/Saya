@@ -4104,42 +4104,6 @@ class InteractionController(
         requestRender()
     }
 
-    /** Any selected sampled-ink strokes can be polished; unrelated selected objects are left alone. */
-    fun canBeautifySelectedHandwriting(): Boolean =
-        selection.any { (it.item as? Stroke)?.sampleCount?.let { n -> n >= 3 } == true }
-
-    fun beautifySelectedHandwriting(): Boolean {
-        val strokes = selection.mapNotNull { it.item as? Stroke }.filter { it.sampleCount >= 3 }
-        if (strokes.isEmpty()) return false
-        val items: List<CanvasItem> = strokes
-        val before = items.map { it.snapshotGeometry() }
-        var changed = false
-        for (stroke in strokes) {
-            // Pin one immutable sample view for both the algorithm and its change check. Re-reading
-            // [Stroke.samples] inside the index loop created a new view for every point.
-            val original = stroke.samples
-            val polished = HandwritingPolish.beautify(original)
-            val moved = original.indices.any { i ->
-                val beforeSample = original[i]
-                val afterSample = polished[i]
-                kotlin.math.abs(beforeSample.x - afterSample.x) > 1e-5 ||
-                    kotlin.math.abs(beforeSample.y - afterSample.y) > 1e-5
-            }
-            if (moved) {
-                stroke.setSamples(polished)
-                changed = true
-            }
-        }
-        if (!changed) return false
-        history.push(TransformItems(items, before, items.map { it.snapshotGeometry() }))
-        state.document.dirty = true
-        selObb = selectionBox()
-        onContentChanged()
-        refreshSelectionMenu()
-        requestRender()
-        return true
-    }
-
     private fun selectedHandwritingLines(): List<HandwritingLine> {
         if (selection.isEmpty() || selection.any { it.item !is Stroke }) return emptyList()
         val members = selection.toList()
