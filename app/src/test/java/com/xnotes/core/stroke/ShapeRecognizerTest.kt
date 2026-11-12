@@ -198,8 +198,8 @@ class ShapeRecognizerTest {
         }
         val rec = ShapeRecognizer.recognizePoints(arc)
         assertNotNull(rec)
-        assertEquals(ShapeKind.CURVE, rec!!.kind)
-        assertTrue("curve outline should be sampled densely enough to look smooth", rec.vertices!!.size >= 32)
+        assertEquals(ShapeKind.SPLINE, rec!!.kind)
+        assertTrue("curve outline should contain enough control points for a smooth spline", rec.vertices!!.size >= 12)
         assertEquals(arc.first().x, rec.vertices!!.first().x, 1.0)
         assertEquals(arc.last().x, rec.vertices!!.last().x, 1.0)
     }

@@ -35,7 +35,7 @@ data class RecognizedShape(
  * Shapes recognized:
  *  - open straight stroke -> [ShapeKind.LINE]
  *  - open multi-segment zig-zag -> [ShapeKind.POLYLINE] (vertices preserved)
- *  - open smooth arc -> [ShapeKind.CURVE] (fitted cubic, sampled as an editable outline)
+ *  - open smooth arc -> [ShapeKind.SPLINE] (fitted cubic sampled as a smooth editable spline)
  *  - closed round blob -> [ShapeKind.ELLIPSE] (snapped to a circle when nearly round)
  *  - closed n-gon with sharp corners -> [ShapeKind.RECTANGLE] when it is an upright box,
  *    else [ShapeKind.POLYGON] (vertices preserved, including 3-corner triangles)
@@ -83,7 +83,7 @@ object ShapeRecognizer {
     /** One-cubic fit tolerance as a fraction of the stroke's diagonal. */
     private const val CURVE_FIT_ERROR_FRAC = 0.025
     private const val CURVE_FIT_MIN_ERROR = 1.5
-    private const val CURVE_SAMPLES = 48
+    private const val CURVE_SAMPLES = 16
 
     /** Recognize from raw stroke samples (the page-local positions are what matter). */
     fun recognize(samples: List<Sample>): RecognizedShape? = recognizePoints(samples.map { it.pos })
@@ -124,7 +124,7 @@ object ShapeRecognizer {
             )
             if (fitted != null) {
                 val box = Rect.bounding(fitted)
-                return RecognizedShape(ShapeKind.CURVE, box.topLeft, Pt(box.right, box.bottom), fitted)
+                return RecognizedShape(ShapeKind.SPLINE, box.topLeft, Pt(box.right, box.bottom), fitted)
             }
             return null
         }
