@@ -354,10 +354,14 @@ class ShapeItem(
         )
 
         val middle = Pt((centre.x + rim.x) / 2.0, (centre.y + rim.y) / 2.0)
+        val labelCentre = Pt(
+            middle.x - (rim.y - centre.y) / radius * 8.0,
+            middle.y + (rim.x - centre.x) / radius * 8.0,
+        )
         val label = "R = %.1f".format(radius)
         val font = FontSpec(7.0, FontFace.SANS, bold = true)
         val flags = TextFlags(wordWrap = false, alignLeft = false, alignTop = false, hAlign = HAlign.CENTER)
-        r.drawText(label, Rect(middle.x - 22.0, middle.y - 7.0, 44.0, 14.0), font, strokeRgba, flags)
+        r.drawText(label, Rect(labelCentre.x - 22.0, labelCentre.y - 7.0, 44.0, 14.0), font, strokeRgba, flags)
     }
 
     /** Everything but the label: fills, then the outline, glowing when neon. */
