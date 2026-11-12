@@ -3,6 +3,7 @@ package com.xnotes.ui
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateDpAsState
@@ -237,7 +238,9 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
     ) {
         AnimatedVisibility(
             visible = true,
-            enter = slideInVertically(initialOffsetY = { it / 12 }, animationSpec = tween(150, easing = FastOutSlowInEasing)) + fadeIn(tween(135, easing = FastOutSlowInEasing)),
+            enter = fadeIn(tween(135, easing = FastOutSlowInEasing)) +
+                scaleIn(initialScale = 0.94f, animationSpec = tween(170, easing = FastOutSlowInEasing)) +
+                slideInVertically(initialOffsetY = { it / 16 }, animationSpec = tween(155, easing = FastOutSlowInEasing)),
         ) {
         Column(
             Modifier.widthIn(max = 680.dp).fillMaxWidth()
