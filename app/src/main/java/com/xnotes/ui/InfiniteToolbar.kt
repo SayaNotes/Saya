@@ -81,8 +81,9 @@ fun InfiniteToolbar(
             Tool.PAN to XnotesIcons.pan,
             Tool.ERASER to XnotesIcons.eraser,
             Tool.SHAPE to XnotesIcons.shape,
-            Tool.SELECT to XnotesIcons.lasso,
-            Tool.LASSO to XnotesIcons.lasso,
+            // Both rectangular and freehand modes share the rectangular-select arrow glyph.
+            Tool.SELECT to XnotesIcons.select,
+            Tool.LASSO to XnotesIcons.select,
             Tool.TAPE to XnotesIcons.tape,
         )
     }
