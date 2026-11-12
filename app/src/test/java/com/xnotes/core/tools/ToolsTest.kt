@@ -98,7 +98,7 @@ class ToolsTest {
         assertFalse(Tool.SELECT.isStroke)
         assertEquals(0.35, Tool.HIGHLIGHTER.alphaScale, 1e-9)
         assertEquals(1.0, Tool.PEN.alphaScale, 1e-9)
-        assertEquals(Tool.PAN, Tool.DEFAULT)
+        assertEquals(Tool.TAPER, Tool.DEFAULT)
     }
 
     @Test fun shapeKinds() {
