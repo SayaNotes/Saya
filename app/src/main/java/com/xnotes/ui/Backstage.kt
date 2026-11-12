@@ -694,6 +694,11 @@ private fun BackstageMain(
     onSyncFocused: () -> Unit,
 ) {
     val palette = LocalPalette.current
+    val tabMotion = remember { Animatable(1f) }
+    LaunchedEffect(view) {
+        tabMotion.snapTo(0.97f)
+        tabMotion.animateTo(1f, tween(155, easing = FastOutSlowInEasing))
+    }
     Column(modifier) {
         Box(Modifier.weight(1f).fillMaxWidth().padding(start = PANE_GUTTER, end = PANE_GUTTER, top = 4.dp, bottom = 12.dp)) {
             // Keep only the destination tab composed during navigation. Crossfade kept the
