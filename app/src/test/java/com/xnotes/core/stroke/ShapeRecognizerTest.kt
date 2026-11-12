@@ -204,6 +204,17 @@ class ShapeRecognizerTest {
         assertEquals(arc.last().x, rec.vertices!!.last().x, 1.0)
     }
 
+    @Test fun smoothMultiInflectionStrokeIsRecognizedAsSpline() {
+        val wave = (0..80).map { i ->
+            val t = i / 80.0
+            Pt(40.0 + 320.0 * t, 180.0 + 42.0 * kotlin.math.sin(2.0 * PI * t))
+        }
+        val rec = ShapeRecognizer.recognizePoints(wave)
+        assertNotNull(rec)
+        assertEquals(ShapeKind.SPLINE, rec!!.kind)
+        assertTrue(rec.vertices!!.size >= 12)
+    }
+
     // --- properties ---
 
     @Test fun recognitionIsDeterministic() {

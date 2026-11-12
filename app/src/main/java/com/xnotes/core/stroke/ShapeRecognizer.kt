@@ -122,9 +122,12 @@ object ShapeRecognizer {
                 maxError = (diag * CURVE_FIT_ERROR_FRAC).coerceAtLeast(CURVE_FIT_MIN_ERROR),
                 samples = CURVE_SAMPLES,
             )
-            if (fitted != null) {
-                val box = Rect.bounding(fitted)
-                return RecognizedShape(ShapeKind.SPLINE, box.topLeft, Pt(box.right, box.bottom), fitted)
+            // A single cubic is ideal for a simple arc. For a smooth multi-inflection curve,
+            // retain evenly spaced samples and let the editable Catmull-Rom spline trace them.
+            val curvePoints = fitted ?: resample(points, CURVE_SAMPLES)
+            if (curvePoints.size >= ShapeKind.SPLINE.let { 3 }) {
+                val box = Rect.bounding(curvePoints)
+                return RecognizedShape(ShapeKind.SPLINE, box.topLeft, Pt(box.right, box.bottom), curvePoints)
             }
             return null
         }
