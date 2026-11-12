@@ -900,11 +900,19 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
 
     override fun selectionCanShowCenterRadius(): Boolean = centerRadiusShape() != null
 
-    override fun selectionCenterRadiusEnabled(): Boolean = centerRadiusShape()?.showCenterRadius == true
+    override fun selectionCenterEnabled(): Boolean = centerRadiusShape()?.showCenter == true
 
-    override fun toggleSelectionCenterRadius() {
+    override fun selectionRadiusEnabled(): Boolean = centerRadiusShape()?.showRadius == true
+
+    override fun toggleSelectionCenter() {
         val shape = centerRadiusShape() ?: return
-        shape.showCenterRadius = !shape.showCenterRadius
+        shape.showCenter = !shape.showCenter
+        publishOverlay()
+    }
+
+    override fun toggleSelectionRadius() {
+        val shape = centerRadiusShape() ?: return
+        shape.showRadius = !shape.showRadius
         publishOverlay()
     }
 
@@ -1716,31 +1724,33 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
             val b = OverlayTessellator.selectionBounds(box, zoom)
             bounds = bounds?.union(b) ?: b
         }
-        (selection.items.singleOrNull() as? ShapeItem)?.takeIf { it.showCenterRadius }?.let { shape ->
+        (selection.items.singleOrNull() as? ShapeItem)?.takeIf { it.showCenter || it.showRadius }?.let { shape ->
             shape.centerRadiusGuide()?.let { (center, rim) ->
                 parts += OverlayTessellator.centerRadius(
                     center, rim, zoom, shape.strokeRgba, StrokeTessellator.DEFAULT_TOLERANCE,
+                    showCenter = shape.showCenter, showRadius = shape.showRadius,
                 )
                 val guideBounds = Rect.bounding(listOf(center, rim)).outset(12.0 / zoom)
                 bounds = bounds?.union(guideBounds) ?: guideBounds
 
-                // Shape labels are normally part of the document mesh. This tiny outlined label
-                // is built only for the overlay, so the live radius value never becomes content.
-                val radius = center.distanceTo(rim)
-                val middle = Pt((center.x + rim.x) / 2.0, (center.y + rim.y) / 2.0)
-                val labelCenter = Pt(
-                    middle.x - (rim.y - center.y) / radius * 8.0,
-                    middle.y + (rim.x - center.x) / radius * 8.0,
-                )
-                val radiusLabel = ShapeLabel(
-                    "R = %.1f".format(radius),
-                    TextStyle(shape.strokeRgba, 7.0, FontFace.SANS, bold = true),
-                    textMeasurer,
-                ).asGlyphs(Rect(labelCenter.x - 24.0, labelCenter.y - 7.0, 48.0, 14.0), { it }, 0.0)
-                radiusLabel?.let { glyphs ->
-                    ItemMesher.mesh(glyphs)?.let { labelMesh ->
-                        parts += labelMesh.parts
-                        bounds = bounds?.union(labelMesh.bounds) ?: labelMesh.bounds
+                if (shape.showRadius) {
+                    // The live measurement label is overlay-only and never becomes document content.
+                    val radius = center.distanceTo(rim)
+                    val middle = Pt((center.x + rim.x) / 2.0, (center.y + rim.y) / 2.0)
+                    val labelCenter = Pt(
+                        middle.x - (rim.y - center.y) / radius * 8.0,
+                        middle.y + (rim.x - center.x) / radius * 8.0,
+                    )
+                    val radiusLabel = ShapeLabel(
+                        "R = %.1f".format(radius),
+                        TextStyle(shape.strokeRgba, 7.0, FontFace.SANS, bold = true),
+                        textMeasurer,
+                    ).asGlyphs(Rect(labelCenter.x - 24.0, labelCenter.y - 7.0, 48.0, 14.0), { it }, 0.0)
+                    radiusLabel?.let { glyphs ->
+                        ItemMesher.mesh(glyphs)?.let { labelMesh ->
+                            parts += labelMesh.parts
+                            bounds = bounds?.union(labelMesh.bounds) ?: labelMesh.bounds
+                        }
                     }
                 }
             }
