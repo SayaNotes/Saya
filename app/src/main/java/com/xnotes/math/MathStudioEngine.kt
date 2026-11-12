@@ -12,6 +12,23 @@ object MathStudioEngine {
         val sides=equation.split('=')
         require(sides.size==2 && sides.all { it.isNotBlank() }) { "Enter an equation such as x^2 - 4 = 0." }
         fun f(x:Double)=evaluate(sides[0],x)-evaluate(sides[1],x)
+        val c = runCatching { f(0.0) }.getOrNull()
+        val p = runCatching { f(1.0) }.getOrNull()
+        val m = runCatching { f(-1.0) }.getOrNull()
+        val atTwo = runCatching { f(2.0) }.getOrNull()
+        if (c != null && p != null && m != null && atTwo != null) {
+            val a = (p + m - 2.0 * c) / 2.0
+            val b = (p - m) / 2.0
+            val expected = 4.0 * a + 2.0 * b + c
+            if (abs(atTwo - expected) <= 1e-7 * max(1.0, abs(atTwo))) {
+                if (abs(a) < 1e-10) return if (abs(b) < 1e-10) emptyList() else listOf(-c / b)
+                val discriminant = b * b - 4.0 * a * c
+                if (discriminant < -1e-10) return emptyList()
+                if (abs(discriminant) <= 1e-10) return listOf(-b / (2.0 * a))
+                val root = sqrt(discriminant)
+                return listOf((-b - root) / (2.0 * a), (-b + root) / (2.0 * a)).sorted()
+            }
+        }
         val roots=mutableListOf<Double>(); var px=-1000.0; var py=runCatching { f(px) }.getOrNull()
         for(i in 1..8000) {
             val x=-1000.0+2000.0*i/8000.0; val y=runCatching { f(x) }.getOrNull()

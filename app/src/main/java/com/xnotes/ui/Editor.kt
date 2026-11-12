@@ -7189,7 +7189,11 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
     override val hostShapeOrder: List<String> get() = settings.prefs.shapeOrder
 
     override fun updateToolConfig(tool: Tool, config: com.xnotes.core.tools.ToolConfig) {
-        controller.setToolConfig(tool, config.copy(rgba = controller.inkColor))
+        val updated = config.copy(rgba = controller.inkColor)
+        controller.setToolConfig(tool, updated)
+        infiniteOrNull?.setToolConfig(tool, updated)
+        settings = settings.copy(tools = settings.tools + (tool to updated))
+        saveSettingsSoon()
     }
 
     val recentColors: List<Rgba> get() = settings.recentColors
