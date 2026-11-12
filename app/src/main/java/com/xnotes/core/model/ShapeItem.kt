@@ -309,7 +309,7 @@ class ShapeItem(
         // approximation for circles/ellipses. Flattening cubic paths at a display tolerance can
         // introduce a small directional bias, which is visible in a centre/radius measurement.
         val rings = when (shape) {
-            ShapeKind.CIRCLE, ShapeKind.ELLIPSE -> listOf(ellipsePolygon(256).map(::toPage))
+            ShapeKind.CIRCLE, ShapeKind.ELLIPSE -> listOf(ellipsePolygon(32).map(::toPage))
             else -> {
                 val corners = geometry.corners
                 if (corners.size >= 3) {
