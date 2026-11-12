@@ -5824,7 +5824,15 @@ class InteractionController(
         roomButton = null
         if (mode == PointerMode.MOVE) moveOffset = Pt.ZERO
         clearAlignmentGuides()
-        if (mode == PointerMode.MOVE || mode == PointerMode.TRANSFORM || mode == PointerMode.VERTEX || mode == PointerMode.JOINT) {
+        if (mode == PointerMode.MULTI_TRANSFORM) {
+            for ((i, selected) in txItems.withIndex()) {
+                txSnaps.getOrNull(i)?.let(selected.item::restoreGeometry)
+            }
+            selObb = selectionBox()
+        }
+        if (mode == PointerMode.MOVE || mode == PointerMode.TRANSFORM ||
+            mode == PointerMode.MULTI_TRANSFORM || mode == PointerMode.VERTEX || mode == PointerMode.JOINT
+        ) {
             for ((_, f) in follows) f.restore()
         }
         looseBefore = null
