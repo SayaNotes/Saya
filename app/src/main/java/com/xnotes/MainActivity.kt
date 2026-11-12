@@ -18,10 +18,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -1789,20 +1787,14 @@ private fun EditorPane(
                     Row(modifier = Modifier.fillMaxSize()) {
                         AnimatedVisibility(
                             visible = editor.sidebarVisible,
+                            // Slide/fade without animating the Row's width: resizing the canvas on
+                            // every animation frame would repeatedly relayout its page viewport.
                             enter = fadeIn(tween(145, easing = FastOutSlowInEasing)) +
-                                expandHorizontally(
-                                    expandFrom = Alignment.Start,
-                                    animationSpec = tween(175, easing = FastOutSlowInEasing),
-                                ) +
                                 slideInHorizontally(
                                     initialOffsetX = { -it / 10 },
                                     animationSpec = tween(155, easing = FastOutSlowInEasing),
                                 ),
                             exit = fadeOut(tween(110, easing = FastOutSlowInEasing)) +
-                                shrinkHorizontally(
-                                    shrinkTowards = Alignment.Start,
-                                    animationSpec = tween(145, easing = FastOutSlowInEasing),
-                                ) +
                                 slideOutHorizontally(
                                     targetOffsetX = { -it / 12 },
                                     animationSpec = tween(135, easing = FastOutSlowInEasing),
