@@ -4134,32 +4134,35 @@ class InteractionController(
         requestRender()
     }
 
-    fun canStraightenSelectedHandwriting(): Boolean {
-        if (selection.isEmpty() || selection.any { it.item !is Stroke }) return false
+    private fun selectedHandwritingLines(): List<HandwritingLine> {
+        if (selection.isEmpty() || selection.any { it.item !is Stroke }) return emptyList()
         val members = selection.toList()
-        val strokes = members.map { it.item as Stroke }
         val pageByStroke = members.associate { (it.item as Stroke) to it.pageIndex }
-        val axis = HandwritingPolish.principalAxis(strokes) { stroke, point ->
-            state.fromPageSpace(pageByStroke.getValue(stroke), point)
-        } ?: return false
-        return kotlin.math.abs(axis.angle) > Math.toRadians(0.35)
+        return members.groupBy { it.pageIndex }.values.flatMap { pageMembers ->
+            HandwritingPolish.lineAxes(pageMembers.map { it.item as Stroke }) { stroke, point ->
+                state.fromPageSpace(pageByStroke.getValue(stroke), point)
+            }
+        }
     }
 
-    /** Rotate only the selected handwriting by its dominant baseline tilt; all ink remains vector strokes. */
+    fun canStraightenSelectedHandwriting(): Boolean =
+        selectedHandwritingLines().any { kotlin.math.abs(it.axis.angle) > Math.toRadians(0.35) }
+
+    /** Correct each selected writing line independently, preserving the relative placement of separate lines. */
     fun straightenSelectedHandwriting() {
-        if (selection.isEmpty() || selection.any { it.item !is Stroke }) return
+        val lines = selectedHandwritingLines()
+        val changedLines = lines.filter { kotlin.math.abs(it.axis.angle) > Math.toRadians(0.35) }
+        if (changedLines.isEmpty()) return
         val members = selection.toList()
-        val strokes = members.map { it.item as Stroke }
-        val pageByStroke = members.associate { (it.item as Stroke) to it.pageIndex }
-        val axis = HandwritingPolish.principalAxis(strokes) { stroke, point ->
-            state.fromPageSpace(pageByStroke.getValue(stroke), point)
-        } ?: return
-        if (kotlin.math.abs(axis.angle) <= Math.toRadians(0.35)) return
-        val world = Affine.rotateAbout(axis.center, -axis.angle)
         val items: List<CanvasItem> = members.map { it.item }
         val before = items.map { it.snapshotGeometry() }
-        for (member in members) {
-            member.item.applyTransform(state.affineToPageSpace(member.pageIndex, world))
+        val pageByStroke = members.associate { (it.item as Stroke) to it.pageIndex }
+        for (line in changedLines) {
+            val world = Affine.rotateAbout(line.axis.center, -line.axis.angle)
+            for (stroke in line.strokes) {
+                val pageIndex = pageByStroke.getValue(stroke)
+                stroke.applyTransform(state.affineToPageSpace(pageIndex, world))
+            }
         }
         history.push(TransformItems(items, before, items.map { it.snapshotGeometry() }))
         state.document.dirty = true

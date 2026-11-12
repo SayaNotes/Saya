@@ -658,20 +658,25 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         refreshSelectionMenu()
     }
 
-    override fun canMakeHandwritingStraighter(): Boolean {
-        if (selection.isEmpty || selection.items.any { it !is com.xnotes.core.model.Stroke }) return false
-        val strokes = selection.items.filterIsInstance<com.xnotes.core.model.Stroke>()
-        val axis = com.xnotes.core.stroke.HandwritingPolish.principalAxis(strokes) { _, p -> p } ?: return false
-        return kotlin.math.abs(axis.angle) > Math.toRadians(0.35)
+    private fun selectedHandwritingLines(): List<com.xnotes.core.stroke.HandwritingLine> {
+        if (selection.isEmpty || selection.items.any { it !is com.xnotes.core.model.Stroke }) return emptyList()
+        return com.xnotes.core.stroke.HandwritingPolish.lineAxes(
+            selection.items.filterIsInstance<com.xnotes.core.model.Stroke>()
+        ) { _, point -> point }
     }
 
+    override fun canMakeHandwritingStraighter(): Boolean =
+        selectedHandwritingLines().any { kotlin.math.abs(it.axis.angle) > Math.toRadians(0.35) }
+
     override fun makeHandwritingStraighter() {
-        if (!canMakeHandwritingStraighter()) return
+        val lines = selectedHandwritingLines().filter { kotlin.math.abs(it.axis.angle) > Math.toRadians(0.35) }
+        if (lines.isEmpty()) return
         val strokes = selection.items.filterIsInstance<com.xnotes.core.model.Stroke>()
-        val axis = com.xnotes.core.stroke.HandwritingPolish.principalAxis(strokes) { _, p -> p } ?: return
-        val transform = com.xnotes.core.geometry.Affine.rotateAbout(axis.center, -axis.angle)
         val before = strokes.map { it.snapshotGeometry() }
-        for (stroke in strokes) stroke.applyTransform(transform)
+        for (line in lines) {
+            val transform = com.xnotes.core.geometry.Affine.rotateAbout(line.axis.center, -line.axis.angle)
+            for (stroke in line.strokes) stroke.applyTransform(transform)
+        }
         val after = strokes.map { it.snapshotGeometry() }
         history.push(OnCanvas(document, com.xnotes.core.history.TransformItems(strokes, before, after), strokes))
         markDirty()

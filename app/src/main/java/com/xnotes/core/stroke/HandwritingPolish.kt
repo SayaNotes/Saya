@@ -10,6 +10,7 @@ import kotlin.math.max
 
 /** A robust dominant writing axis estimated from a bounded sample of the selected strokes. */
 data class HandwritingAxis(val center: Pt, val angle: Double)
+data class HandwritingLine(val strokes: List<Stroke>, val axis: HandwritingAxis)
 
 object HandwritingPolish {
     private const val MAX_AXIS_POINTS = 4096
@@ -69,6 +70,49 @@ object HandwritingPolish {
         while (angle > PI / 4.0) angle -= PI / 2.0
         while (angle < -PI / 4.0) angle += PI / 2.0
         return HandwritingAxis(Pt(meanX, meanY), angle)
+    }
+
+    /**
+     * Groups selected strokes into separate writing lines and estimates each line's baseline.
+     * This avoids rotating a multi-line paragraph as one rigid block.
+     */
+    fun lineAxes(
+        strokes: List<Stroke>,
+        mapPoint: (Stroke, Pt) -> Pt,
+    ): List<HandwritingLine> {
+        data class Bounds(val stroke: Stroke, val centerY: Double, val height: Double)
+        val bounds = strokes.mapNotNull { stroke ->
+            if (stroke.sampleCount < 2) return@mapNotNull null
+            var minY = Double.POSITIVE_INFINITY
+            var maxY = Double.NEGATIVE_INFINITY
+            for (i in 0 until stroke.sampleCount) {
+                val point = mapPoint(stroke, Pt(stroke.xAt(i), stroke.yAt(i)))
+                minY = minOf(minY, point.y)
+                maxY = maxOf(maxY, point.y)
+            }
+            Bounds(stroke, (minY + maxY) / 2.0, maxY - minY)
+        }.sortedBy { it.centerY }
+        if (bounds.isEmpty()) return emptyList()
+        val heights = bounds.map { it.height }.filter { it > 1.0 }.sorted()
+        val typicalHeight = heights.getOrNull((heights.size * 3 / 4).coerceAtMost(heights.lastIndex)) ?: 20.0
+        val lineTolerance = (typicalHeight * 0.85).coerceIn(6.0, 48.0)
+        val clusters = mutableListOf<MutableList<Bounds>>()
+        val centers = mutableListOf<Double>()
+        for (entry in bounds) {
+            val nearest = centers.indices.minByOrNull { kotlin.math.abs(centers[it] - entry.centerY) }
+            if (nearest != null && kotlin.math.abs(centers[nearest] - entry.centerY) <= lineTolerance) {
+                val cluster = clusters[nearest]
+                cluster.add(entry)
+                centers[nearest] = cluster.map { it.centerY }.average()
+            } else {
+                clusters.add(mutableListOf(entry))
+                centers.add(entry.centerY)
+            }
+        }
+        return clusters.mapNotNull { cluster ->
+            val members = cluster.map { it.stroke }
+            principalAxis(members, mapPoint)?.let { HandwritingLine(members, it) }
+        }
     }
 
     /**
