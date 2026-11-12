@@ -648,7 +648,10 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
                 changed = true
             }
         }
-        if (!changed) return
+        if (!changed) {
+            showToast("No visible smoothing needed")
+            return
+        }
         val after = strokes.map { it.snapshotGeometry() }
         history.push(OnCanvas(document, com.xnotes.core.history.TransformItems(strokes, before, after), strokes))
         markDirty()
@@ -656,6 +659,7 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         selection.refreshBox()
         publishOverlay()
         refreshSelectionMenu()
+        showToast("Handwriting beautified")
     }
 
     private fun selectedHandwritingLines(): List<com.xnotes.core.stroke.HandwritingLine> {
