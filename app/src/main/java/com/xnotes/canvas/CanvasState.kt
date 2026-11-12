@@ -1726,6 +1726,7 @@ class CanvasState(
         cacheGen++
         sharpGen++
         for (page in pages) {
+            highlighterItemsByPage.remove(page)
             if (page !in caches) continue
             staleInk.add(page)
             scheduleInk(page, clampedRes(page))
@@ -1741,6 +1742,7 @@ class CanvasState(
         if (regions.isEmpty()) return
         cacheGen++
         for ((page, rect) in regions) {
+            highlighterItemsByPage.remove(page)
             val padded = rect.outset(SHARP_EDIT_PAD)
             repairSharpInk(page, padded)
             if (pendingSharp) pendingSharpEdits.add(page to padded)

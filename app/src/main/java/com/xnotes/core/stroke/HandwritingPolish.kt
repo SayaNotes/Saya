@@ -3,10 +3,8 @@ package com.xnotes.core.stroke
 import com.xnotes.core.geometry.Pt
 import com.xnotes.core.model.Stroke
 import kotlin.math.PI
-import kotlin.math.acos
 import kotlin.math.atan2
 import kotlin.math.ceil
-import kotlin.math.cos
 import kotlin.math.hypot
 import kotlin.math.max
 

@@ -110,8 +110,8 @@ object ShapeRecognizer {
             val maxDev = points.maxOf { Geometry.distancePointToSegment(it, first, last) }
             if (maxDev / chord <= LINE_DEV_FRAC) return RecognizedShape(ShapeKind.LINE, first, last)
         }
-        // Otherwise a multi-segment zig-zag with sharp corners and straight runs; a smooth arc
-        // has no sharp corners, so it falls through to null and stays ink.
+        // Otherwise a multi-segment zig-zag with sharp corners and straight runs. Smooth open
+        // paths are fitted as editable curves below rather than being discarded as plain ink.
         val path = resample(points, RESAMPLE_N)
         val peaks = cornerPeaks(path, wrap = false)
         if (peaks.isEmpty()) {
