@@ -1257,6 +1257,13 @@ private fun ExplorerSection(
     var kindFilter by remember(root) { mutableStateOf<EntryKind?>(null) }
     // Set from the sidebar: what was opened lately, from every folder, in place of the folder.
     var showRecent by remember(root) { mutableStateOf(false) }
+    // A lightweight single-layer entrance keeps Recent ↔ Home feeling connected without
+    // cross-composing two full explorer trees or rebuilding the previous screen.
+    val recentHomeMotion = remember { Animatable(1f) }
+    LaunchedEffect(showRecent) {
+        recentHomeMotion.snapTo(0.97f)
+        recentHomeMotion.animateTo(1f, tween(145, easing = FastOutSlowInEasing))
+    }
     var includeSubfolders by remember(root) { mutableStateOf(true) }
     var timelineMonth by remember(root) { mutableStateOf<YearMonth?>(null) }
     var columnsPick by remember(root) { mutableStateOf<BrowseEntry?>(null) }
@@ -1807,7 +1814,10 @@ private fun ExplorerSection(
     val pinchable = layout == ExplorerLayout.GRID || layout == ExplorerLayout.GALLERY || layout == ExplorerLayout.TIMELINE
     val filesNow = rememberUpdatedState(arranged.orEmpty())
     val pinnedNow = rememberUpdatedState(pinned)
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().graphicsLayer {
+        alpha = recentHomeMotion.value
+        translationY = (1f - recentHomeMotion.value) * 12f
+    }) {
         if (shelves) {
             Column(Modifier.fillMaxSize()) {
                 Row(
