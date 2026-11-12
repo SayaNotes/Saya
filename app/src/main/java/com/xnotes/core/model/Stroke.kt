@@ -36,7 +36,7 @@ import com.xnotes.core.tools.ToolConfig
  * The arrays and the count they belong to are held together in one immutable [Samples], swapped
  * whole on every edit, so a stroke can be read from another thread while the pen draws on it.
  */
-private const val LIVE_PREVIEW_MAX_SAMPLES = 512
+private const val LIVE_PREVIEW_MAX_SAMPLES = 256
 
 class Stroke(
     val tool: Tool,
