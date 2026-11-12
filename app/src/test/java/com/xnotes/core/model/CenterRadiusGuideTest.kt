@@ -32,7 +32,8 @@ class CenterRadiusGuideTest {
         val shape = ShapeItem(ShapeKind.RECTANGLE, Pt(0.0, 0.0), Pt(100.0, 50.0), ink)
         shape.rotation = Math.PI / 4.0
         val (center, rim) = shape.centerRadiusGuide() ?: error("rotated guide missing")
-        assertEquals(Pt(50.0, 25.0), center)
+        assertEquals(50.0, center.x, 1e-6)
+        assertEquals(25.0, center.y, 1e-6)
         assertEquals(sqrt(3125.0), center.distanceTo(rim), 1e-6)
     }
 
