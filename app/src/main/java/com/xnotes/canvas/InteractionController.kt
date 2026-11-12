@@ -4115,13 +4115,17 @@ class InteractionController(
         val before = items.map { it.snapshotGeometry() }
         var changed = false
         for (stroke in strokes) {
-            val polished = HandwritingPolish.beautify(stroke.samples)
-            if (polished.indices.any { i ->
-                    val a = stroke.samples[i]
-                    val b = polished[i]
-                    kotlin.math.abs(a.x - b.x) > 1e-5 || kotlin.math.abs(a.y - b.y) > 1e-5
-                }
-            ) {
+            // Pin one immutable sample view for both the algorithm and its change check. Re-reading
+            // [Stroke.samples] inside the index loop created a new view for every point.
+            val original = stroke.samples
+            val polished = HandwritingPolish.beautify(original)
+            val moved = original.indices.any { i ->
+                val beforeSample = original[i]
+                val afterSample = polished[i]
+                kotlin.math.abs(beforeSample.x - afterSample.x) > 1e-5 ||
+                    kotlin.math.abs(beforeSample.y - afterSample.y) > 1e-5
+            }
+            if (moved) {
                 stroke.setSamples(polished)
                 changed = true
             }
