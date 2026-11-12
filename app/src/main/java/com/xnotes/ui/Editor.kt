@@ -884,7 +884,7 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
             it.recentColors = recentColors
             it.toolbarColorCount = toolbarColorCount
             it.toolbarLayout = canvasToolbarLayout
-            it.pad.frontBuffering = !settings.prefs.disableFrontBuffering
+            it.pad.frontBuffering = settings.prefs.enableFrontBuffering
             it.pickColor(activeColorIndex)
             // A style tuned on the canvas is the same style, so persist every per-tool setting.
             val canvasForStylePersistence = it
@@ -2714,25 +2714,6 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
         view.requestRender()
     }
 
-    /** Insert a Math Studio result as an editable, undoable text object on the current page. */
-    fun insertMathStudioResult(markdown: String) {
-        val text = markdown.trim().take(12000)
-        if (text.isEmpty()) return
-        val index = state.currentPageIndex().coerceIn(0, state.document.pages.lastIndex)
-        val page = state.document.pages[index]
-        val width = page.width * 0.82
-        val item = TextItem(Pt(0.0, 0.0), width = width, text = text, rgba = toolbarInk(), measurer = textMeasurer)
-        val bounds = item.bounds()
-        item.translate((page.width - bounds.w) / 2.0, (page.height - bounds.h) / 2.0)
-        page.items.add(item)
-        state.appendToCache(page, item)
-        history.push(AddItem(page, item))
-        state.document.dirty = true
-        refreshContent()
-        controller.selectPlaced(index, listOf(item))
-        view.requestRender()
-    }
-
     /** Open the stored file a document link names, found by its name anywhere under the top folder. */
     private fun openDocumentLink(path: String) {
         val root = browseRoot ?: return
@@ -3069,8 +3050,8 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
         )
         infiniteOrNull?.applyZoomRange(p.canvasMinZoomPercent, p.canvasMaxZoomPercent)
         // Both surfaces' pads: the switch is about the device, not about one of them.
-        pad.frontBuffering = !p.disableFrontBuffering
-        infiniteOrNull?.pad?.frontBuffering = !p.disableFrontBuffering
+        pad.frontBuffering = p.enableFrontBuffering
+        infiniteOrNull?.pad?.frontBuffering = p.enableFrontBuffering
         state.pageColorOverride = if (p.defaultTemplate == "color") p.pageColor else null
         val theme = "$palette|${state.pageColorOverride}"
         if (thumbnailTheme != theme) {

@@ -144,7 +144,6 @@ dependencies {
     implementation(libs.latex.renderer)
     implementation(libs.onnxruntime.android)
     implementation(libs.bundles.commonmark)
-    implementation(libs.okhttp)
     debugImplementation(libs.androidx.ui.tooling)
 
     testImplementation(libs.junit)

@@ -150,11 +150,16 @@ class SettingsTest {
         assertEquals("toggle_pan", back.stylusButtonTap)
     }
 
-    @Test fun frontBufferingIsOnUntilItIsTurnedOff() {
-        // Settings written before the switch existed, which is every install that has one.
-        assertFalse(Settings.fromJson(JSONObject()).prefs.disableFrontBuffering)
-        val back = Settings.fromJson(Settings(prefs = Preferences(disableFrontBuffering = true)).toJson()).prefs
-        assertTrue(back.disableFrontBuffering)
+    @Test fun experimentalFrontBufferingIsOptInAndLegacySettingsStaySafe() {
+        assertFalse(Settings.fromJson(JSONObject()).prefs.enableFrontBuffering)
+        val legacyEnabled = JSONObject().put("prefs", JSONObject().put("disable_front_buffering", false))
+        val legacyDisabled = JSONObject().put("prefs", JSONObject().put("disable_front_buffering", true))
+        assertFalse(Settings.fromJson(legacyEnabled).prefs.enableFrontBuffering)
+        assertFalse(Settings.fromJson(legacyDisabled).prefs.enableFrontBuffering)
+        val enabled = Settings.fromJson(
+            Settings(prefs = Preferences(enableFrontBuffering = true)).toJson(),
+        ).prefs
+        assertTrue(enabled.enableFrontBuffering)
     }
 
     @Test fun headingBookmarksAreOnUntilTurnedOff() {

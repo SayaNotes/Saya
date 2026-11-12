@@ -191,7 +191,7 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /** Which pane the backstage shows on the right. */
-enum class BackstageView { HOME, MATH_STUDIO, PREFERENCES, TRASH }
+enum class BackstageView { HOME, PREFERENCES, TRASH }
 
 /** Whether the Home explorer is awaiting a new file/folder name. */
 private enum class CreateMode { NONE, FILE, CANVAS, FOLDER }
@@ -572,7 +572,6 @@ private fun BackstageSidebar(modifier: Modifier, editor: Editor, nav: SidebarNav
             SidebarLabel("LIBRARY")
             nav.recent?.let { on -> Command(XnotesIcons.clock, stringResource(R.string.recent), selected = on) { nav.onRecent() } }
             Command(XnotesIcons.home, stringResource(R.string.home), selected = nav.homeSelected) { nav.onHome() }
-            Command(XnotesIcons.search, "Math Studio", selected = nav.view == BackstageView.MATH_STUDIO) { nav.onSelectView(BackstageView.MATH_STUDIO) }
             if (nav.trashCount >= 0) {
                 Command(XnotesIcons.trash, stringResource(R.string.trash), selected = nav.view == BackstageView.TRASH, count = nav.trashCount.takeIf { it > 0 }?.toString()) {
                     nav.onSelectView(BackstageView.TRASH)
@@ -624,7 +623,6 @@ private fun BackstageRail(modifier: Modifier, editor: Editor, nav: SidebarNav) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
             nav.recent?.let { on -> RailItem(XnotesIcons.clock, stringResource(R.string.recent), selected = on, labelled = true) { nav.onRecent() } }
             RailItem(XnotesIcons.home, stringResource(R.string.home), selected = nav.homeSelected, labelled = true) { nav.onHome() }
-            RailItem(XnotesIcons.search, "Math Studio", selected = nav.view == BackstageView.MATH_STUDIO, labelled = true) { nav.onSelectView(BackstageView.MATH_STUDIO) }
             if (nav.trashCount >= 0) RailItem(XnotesIcons.trash, stringResource(R.string.trash), selected = nav.view == BackstageView.TRASH, labelled = true) { nav.onSelectView(BackstageView.TRASH) }
             FolderRailItems(editor, nav)
             if (nav.pins.isNotEmpty()) Spacer(Modifier.height(8.dp))
@@ -712,7 +710,6 @@ private fun BackstageMain(
                 }) {
                     when (view) {
                         BackstageView.HOME -> HomePane(editor, calls, createMode, onCreateMode, sidebarOpen, onShowSidebar, onHideSidebar, link)
-                        BackstageView.MATH_STUDIO -> MathStudioPane(editor)
                         BackstageView.PREFERENCES -> PreferencesPane(editor, compact, sidebarOpen, onShowSidebar, onBackToHome, onImportCodeTheme, onImportFont, focusSync, onSyncFocused, onBackup)
                         BackstageView.TRASH -> TrashPane(editor, sidebarOpen, onShowSidebar, onOpenPreferences)
                     }

@@ -4104,14 +4104,14 @@ class InteractionController(
         requestRender()
     }
 
-    /** Only a selection made entirely of sampled ink can be polished without changing other objects. */
+    /** Any selected sampled-ink strokes can be polished; unrelated selected objects are left alone. */
     fun canBeautifySelectedHandwriting(): Boolean =
-        selection.isNotEmpty() && selection.all { (it.item as? Stroke)?.sampleCount?.let { n -> n >= 3 } == true }
+        selection.any { (it.item as? Stroke)?.sampleCount?.let { n -> n >= 3 } == true }
 
     fun beautifySelectedHandwriting(): Boolean {
-        if (!canBeautifySelectedHandwriting()) return false
-        val items: List<CanvasItem> = selection.map { it.item }
-        val strokes = items.filterIsInstance<Stroke>()
+        val strokes = selection.mapNotNull { it.item as? Stroke }.filter { it.sampleCount >= 3 }
+        if (strokes.isEmpty()) return false
+        val items: List<CanvasItem> = strokes
         val before = items.map { it.snapshotGeometry() }
         var changed = false
         for (stroke in strokes) {

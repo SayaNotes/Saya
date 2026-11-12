@@ -710,8 +710,8 @@ fun PreferencesPane(
                     color = palette.textDim.toComposeColor(),
                     fontSize = 12.sp,
                 )
-                CheckRow(stringResource(R.string.pref_disable_front_buffering), prefs.disableFrontBuffering) {
-                    update(prefs.copy(disableFrontBuffering = it))
+                CheckRow(stringResource(R.string.pref_enable_front_buffering), prefs.enableFrontBuffering) {
+                    update(prefs.copy(enableFrontBuffering = it))
                 }
                 Text(
                     stringResource(R.string.pref_front_buffering_help),

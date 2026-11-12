@@ -431,8 +431,8 @@
     <string name="pref_pdf_heading_bookmarks">Bookmarks from headings</string>
     <string name="pref_performance">Performance</string>
     <string name="pref_cache_help">Higher feels smoother when you pan and zoom but uses more memory. Your ink and PDFs look just as crisp either way.</string>
-    <string name="pref_disable_front_buffering">Disable front buffering</string>
-    <string name="pref_front_buffering_help">Front buffering paints the pen\'s ink straight into the frame the screen is showing, which is what makes it feel instant. A few panels do not hand that over cleanly, and there the ink can flicker or fall behind the nib. Turn it off on those and every stroke goes through the ordinary canvas.</string>
+    <string name="pref_enable_front_buffering">Enable experimental front buffering</string>
+    <string name="pref_front_buffering_help">Experimental single-buffered GL rendering. It can reduce pen latency on compatible displays, but some panels may flicker or stall. Leave this off unless you have tested it successfully on your device.</string>
     <string name="pref_code_highlighting">Code highlighting</string>
     <string name="pref_default_code_language">Default code language</string>
     <string name="pref_code_language_help">\"Paste as Code\" highlights the pasted block in this language.</string>
