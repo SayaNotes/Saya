@@ -52,16 +52,22 @@ fun MathStudioPane(editor:Editor){
                 StudioMode.CALCULATE->{val v=MathStudioEngine.evaluate(expression);"Result\n$expression = ${fmt(v)}\n\nStandard operator precedence is applied."}
                 StudioMode.SOLVE->{val roots=MathStudioEngine.solveEquation(expression);if(roots.isEmpty())"No real roots were found in the searched range." else "Solutions\n"+roots.joinToString("\n"){"x = ${fmt(it)}"}+"\n\nLinear and quadratic equations are solved analytically; other equations use numerical bisection."}
                 StudioMode.GEOMETRY->{
-                    val a=lower.toDouble();val b=upper.toDouble()
-                    require(a>0 && (b>0 || expression.trim().lowercase()=="sphere")) { "Enter positive dimensions." }
-                    when(expression.trim().lowercase()){
+                    val shape=expression.trim().lowercase()
+                    val a=lower.toDoubleOrNull() ?: throw IllegalArgumentException("Enter a valid first dimension.")
+                    val b=upper.toDoubleOrNull() ?: 0.0
+                    require(a.isFinite() && a>0) { "Dimensions must be positive numbers." }
+                    fun second()=b.also { require(it.isFinite() && it>0) { "Enter a positive second dimension." } }
+                    when(shape){
                         "circle"->"Circle\nRadius = ${fmt(a)}\nArea = ${fmt(Math.PI*a*a)}\nCircumference = ${fmt(2*Math.PI*a)}"
-                        "triangle"->"Right-triangle base/height area\nBase = ${fmt(a)}, height = ${fmt(b)}\nArea = ${fmt(a*b/2)}"
-                        "rectangle"->"Rectangle\nArea = ${fmt(a*b)}\nPerimeter = ${fmt(2*(a+b))}"
-                        "pythagoras"->"Right triangle\nHypotenuse = ${fmt(kotlin.math.hypot(a,b))}"
-                        "sphere"->"Sphere\nRadius = ${fmt(a)}\nVolume = ${fmt(4.0/3.0*Math.PI*a*a*a)}\nSurface area = ${fmt(4*Math.PI*a*a)}"
-                        "cylinder"->"Cylinder\nVolume = ${fmt(Math.PI*a*a*b)}\nCurved surface area = ${fmt(2*Math.PI*a*b)}"
-                        else->throw IllegalArgumentException("Choose circle, triangle, rectangle, pythagoras, sphere or cylinder.")
+                        "triangle"->{val h=second();"Triangle (base × perpendicular height)\nBase = ${fmt(a)}, height = ${fmt(h)}\nArea = ½ × base × height = ${fmt(a*h/2)}"}
+                        "rectangle"->{val h=second();"Rectangle\nArea = base × height = ${fmt(a*h)}\nPerimeter = 2(base + height) = ${fmt(2*(a+h))}"}
+                        "square"->"Square\nSide = ${fmt(a)}\nArea = side² = ${fmt(a*a)}\nPerimeter = 4 × side = ${fmt(4*a)}\nDiagonal = side × √2 = ${fmt(a*kotlin.math.sqrt(2.0))}"
+                        "pythagoras"->{val h=second();"Right triangle\na = ${fmt(a)}, b = ${fmt(h)}\nc = √(a² + b²) = ${fmt(kotlin.math.hypot(a,h))}"}
+                        "sphere"->"Sphere\nRadius = ${fmt(a)}\nVolume = ⁴⁄₃πr³ = ${fmt(4.0/3.0*Math.PI*a*a*a)}\nSurface area = 4πr² = ${fmt(4*Math.PI*a*a)}"
+                        "cylinder"->{val h=second();"Cylinder\nRadius = ${fmt(a)}, height = ${fmt(h)}\nVolume = πr²h = ${fmt(Math.PI*a*a*h)}\nCurved surface area = 2πrh = ${fmt(2*Math.PI*a*h)}\nTotal surface area = 2πr(r+h) = ${fmt(2*Math.PI*a*(a+h))}"}
+                        "cone"->{val h=second();val slant=kotlin.math.hypot(a,h);"Right cone\nRadius = ${fmt(a)}, height = ${fmt(h)}\nSlant height = √(r²+h²) = ${fmt(slant)}\nVolume = ⅓πr²h = ${fmt(Math.PI*a*a*h/3)}\nCurved surface area = πrl = ${fmt(Math.PI*a*slant)}"}
+                        "cube"->"Cube\nSide = ${fmt(a)}\nVolume = side³ = ${fmt(a*a*a)}\nTotal surface area = 6side² = ${fmt(6*a*a)}\nSpace diagonal = side√3 = ${fmt(a*kotlin.math.sqrt(3.0))}"
+                        else->throw IllegalArgumentException("Choose circle, triangle, rectangle, square, pythagoras, sphere, cylinder, cone or cube.")
                     }
                 }
                 StudioMode.DERIVATIVE->{val x=at.toDouble();val d=MathStudioEngine.derivative(expression,x);"Numerical derivative\nf'(${fmt(x)}) ≈ ${fmt(d)}\n\nCentred finite difference: [f(x+h) − f(x−h)] / (2h)."}
@@ -77,7 +83,7 @@ fun MathStudioPane(editor:Editor){
         Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.spacedBy(5.dp)){
             StudioMode.entries.forEach{m->FilterChip(selected==m,onClick={mode=m.name;error=null},label={Text(m.title,fontSize=11.sp)})}
         }
-        OutlinedTextField(expression,{expression=it},Modifier.fillMaxWidth(),label={Text(when(selected){StudioMode.SOLVE->"Equation, e.g. x^2 - 4 = 0";StudioMode.GEOMETRY->"Shape: circle, triangle, rectangle, pythagoras, sphere, cylinder";else->"Expression in x"})},supportingText={Text("Use ^, pi or π, and sin(x), cos(x), sqrt(x), ln(x), log(x), abs(x).")},maxLines=3)
+        OutlinedTextField(expression,{expression=it},Modifier.fillMaxWidth(),label={Text(when(selected){StudioMode.SOLVE->"Equation, e.g. x^2 - 4 = 0";StudioMode.GEOMETRY->"Shape: circle, triangle, rectangle, square, pythagoras, sphere, cylinder, cone, cube";else->"Expression in x"})},supportingText={Text("Use ^, pi or π, and sin(x), cos(x), sqrt(x), ln(x), log(x), abs(x).")},maxLines=3)
         if(selected==StudioMode.DERIVATIVE)OutlinedTextField(at,{at=it},Modifier.fillMaxWidth(),label={Text("Evaluate at x")})
         if(selected==StudioMode.INTEGRAL||selected==StudioMode.GRAPH||selected==StudioMode.GEOMETRY)Row(horizontalArrangement=Arrangement.spacedBy(8.dp)){
             OutlinedTextField(lower,{lower=it},Modifier.weight(1f),label={Text(if(selected==StudioMode.GEOMETRY)"Radius / side a" else "From / min x")})
