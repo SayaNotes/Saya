@@ -156,10 +156,6 @@ interface SelectionMenuHost : SwatchHost {
     /** Recognize the selected handwriting as a formula and replace it with a formula box (async). */
     fun convertSelectionToMath()
 
-    /** True when every selected item is handwriting ink that can be gently smoothed. */
-    fun canBeautifyHandwriting(): Boolean
-    fun beautifyHandwriting()
-
     /** True when selected handwriting has a measurable baseline tilt. */
     fun canMakeHandwritingStraighter(): Boolean
     fun makeHandwritingStraighter()
@@ -390,12 +386,6 @@ fun SelectionMenu(
                                 onClick = { overflowOpen = false; host.convertSelectionToMath() },
                             )
                         }
-                    }
-                    if (host.canBeautifyHandwriting()) {
-                        DropdownMenuItem(
-                            text = { Text("Beautify handwriting") },
-                            onClick = { overflowOpen = false; host.beautifyHandwriting() },
-                        )
                     }
                     if (host.canMakeHandwritingStraighter()) {
                         DropdownMenuItem(
