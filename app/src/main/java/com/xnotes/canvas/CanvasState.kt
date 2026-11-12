@@ -1728,6 +1728,8 @@ class CanvasState(
      * untouched — undo/redo never edits it, so it must not flash either.
      */
     fun refreshAllInk() {
+        highlighterItemsByPage.clear()
+        tapeItemsByPage.clear()
         refreshInk(caches.keys.toList())
     }
 
