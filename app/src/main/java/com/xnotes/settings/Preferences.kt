@@ -88,7 +88,7 @@ data class Preferences(
     val canvasMaxZoomPercent: Int = 6400,
     /** Long-edge cap (px) for the on-screen page cache; higher holds more of the page ready at deep zoom. */
     val maxCacheResolution: Int = 2048,
-    /** Whether wet ink keeps off the front buffer, so every stroke takes the ordinary canvas path. */
+    /** Experimental single-buffered GL renderer; opt-in because some displays handle it unreliably. */
     val enableFrontBuffering: Boolean = false,
     /** Open in fullscreen; null ⇒ auto (on unless the display has a camera cutout). */
     val startFullscreen: Boolean? = true,
