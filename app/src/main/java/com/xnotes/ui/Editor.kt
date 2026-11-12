@@ -879,8 +879,14 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
             it.toolbarLayout = canvasToolbarLayout
             it.pad.frontBuffering = !settings.prefs.disableFrontBuffering
             it.pickColor(activeColorIndex)
-            // A style tuned on the canvas is the same style, so it persists through this editor.
-            it.onToolStyleChanged = { settingsDirty = true }
+            // A style tuned on the canvas is the same style, so persist every per-tool setting.
+            val canvasForStylePersistence = it
+            it.onToolStyleChanged = {
+                settings = settings.copy(
+                    tools = ToolDefaults.persistedTools.associateWith { tool -> canvasForStylePersistence.toolConfig(tool) },
+                )
+                saveSettingsSoon()
+            }
             it.onSwatchColorChanged = { index, color -> adoptSwatchColor(index, color) }
             it.onSwatchRecolored = { index, color ->
                 recolorSwatch(index, color)
