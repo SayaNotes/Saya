@@ -549,7 +549,7 @@ class CanvasView @JvmOverloads constructor(
                             val hc = st.highlighterCacheFor(item, page)
                             val faint = if (st.fade?.fades(item) == true) com.xnotes.core.audio.InkFade.ALPHA else 1.0
                             // Composited over the finished page, so tape laid over it has to be cut out by hand.
-                            val covers = coveringTapes(st, page.items, k, item.bounds())
+                            val covers = coveringTapes(st, page, k, item.bounds())
                             r.withSave {
                                 if (covers != null) r.clipOutPolygons(covers)
                                 r.drawRasterBlended(hc.surface, hc.cover, item.renderColor.a / 255.0 * faint, item.blendMode)
@@ -683,11 +683,10 @@ class CanvasView @JvmOverloads constructor(
      * The bodies of the covered tapes laid after item [index] of [items] over [bounds], or null for
      * none. A lifted tape is drawn over everything with the selection, so it needs no cut.
      */
-    private fun coveringTapes(st: CanvasState, items: List<com.xnotes.core.model.CanvasItem>, index: Int, bounds: Rect): List<List<Pt>>? {
+    private fun coveringTapes(st: CanvasState, page: Page, index: Int, bounds: Rect): List<List<Pt>>? {
         var out: ArrayList<List<Pt>>? = null
-        for (k in index + 1 until items.size) {
-            val t = items[k] as? TapeItem ?: continue
-            if (t.peeled || st.isLiftedItem(t) || !t.bounds().intersects(bounds)) continue
+        for ((k, t) in st.tapesFor(page)) {
+            if (k <= index || t.peeled || st.isLiftedItem(t) || !t.bounds().intersects(bounds)) continue
             (out ?: ArrayList<List<Pt>>().also { out = it }).addAll(t.shape.body)
         }
         return out

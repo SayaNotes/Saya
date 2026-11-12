@@ -526,12 +526,18 @@ class CanvasState(
      * paths below invalidate this small index before the next draw.
      */
     private val highlighterItemsByPage = HashMap<Page, List<Pair<Int, Stroke>>>()
+    private val tapeItemsByPage = HashMap<Page, List<Pair<Int, TapeItem>>>()
 
     fun highlightersFor(page: Page): List<Pair<Int, Stroke>> =
         highlighterItemsByPage.getOrPut(page) {
             page.items.mapIndexedNotNull { index, item ->
                 (item as? Stroke)?.takeIf { it.tool == Tool.HIGHLIGHTER }?.let { index to it }
             }
+        }
+
+    fun tapesFor(page: Page): List<Pair<Int, TapeItem>> =
+        tapeItemsByPage.getOrPut(page) {
+            page.items.mapIndexedNotNull { index, item -> (item as? TapeItem)?.let { index to it } }
         }
 
     /**
@@ -1533,6 +1539,7 @@ class CanvasState(
     /** Append a single just-committed stroke into an existing cache (cheap), else rebuild. */
     fun appendToCache(page: Page, item: CanvasItem) {
         highlighterItemsByPage.remove(page)
+        tapeItemsByPage.remove(page)
         if (item.isHighlighterInk()) return // composited live over the page, never cached
         appendToSharpInk(page, item) // keep the sharp viewport crisp without a full re-render
         if (pendingSharp) pendingSharpEdits.add(page to item.paintBounds().outset(SHARP_EDIT_PAD))
@@ -1561,6 +1568,7 @@ class CanvasState(
      */
     fun repairRegion(page: Page, dirtyRect: Rect): Boolean {
         highlighterItemsByPage.remove(page)
+        tapeItemsByPage.remove(page)
         repairSharpInk(page, dirtyRect) // erase from the sharp ink layer in place, no re-render
         if (pendingSharp) pendingSharpEdits.add(page to dirtyRect)
         val entry = caches[page] ?: return false
@@ -1620,6 +1628,7 @@ class CanvasState(
 
     fun invalidatePage(page: Page) {
         highlighterItemsByPage.remove(page)
+        tapeItemsByPage.remove(page)
         caches.remove(page)
         staleInk.remove(page)
         if (roomView?.page === page && roomView?.live == false) roomView = null
@@ -1667,6 +1676,7 @@ class CanvasState(
     fun invalidateAllCaches() {
         roomView = null
         highlighterItemsByPage.clear()
+        tapeItemsByPage.clear()
         caches.clear()
         staleInk.clear()
         bgCaches.clear()
@@ -1727,6 +1737,7 @@ class CanvasState(
         sharpGen++
         for (page in pages) {
             highlighterItemsByPage.remove(page)
+            tapeItemsByPage.remove(page)
             if (page !in caches) continue
             staleInk.add(page)
             scheduleInk(page, clampedRes(page))
@@ -1743,6 +1754,7 @@ class CanvasState(
         cacheGen++
         for ((page, rect) in regions) {
             highlighterItemsByPage.remove(page)
+            tapeItemsByPage.remove(page)
             val padded = rect.outset(SHARP_EDIT_PAD)
             repairSharpInk(page, padded)
             if (pendingSharp) pendingSharpEdits.add(page to padded)
@@ -1792,12 +1804,13 @@ class CanvasState(
 
     fun dropCachesExcept(visible: Set<Page>) {
         highlighterItemsByPage.keys.retainAll(visible)
+        tapeItemsByPage.keys.retainAll(visible)
         caches.keys.retainAll(visible)
         staleInk.retainAll(visible)
         bgCaches.keys.retainAll(visible)
         if (hlCaches.isNotEmpty()) {
             val keep = HashSet<Stroke>()
-            for (p in visible) for (it in p.items) if (it is Stroke && it.tool == Tool.HIGHLIGHTER) keep.add(it)
+            for (p in visible) for ((_, stroke) in highlightersFor(p)) keep.add(stroke)
             hlCaches.keys.retainAll(keep)
         }
         releaseGeometryExcept(visible)
