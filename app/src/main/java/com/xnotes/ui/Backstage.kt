@@ -691,11 +691,23 @@ private fun BackstageMain(
     val palette = LocalPalette.current
     Column(modifier) {
         Box(Modifier.weight(1f).fillMaxWidth().padding(start = PANE_GUTTER, end = PANE_GUTTER, top = 4.dp, bottom = 12.dp)) {
-            Crossfade(targetState = view, animationSpec = tween(160), label = "backstage-tab") { targetView ->
-                when (targetView) {
-                    BackstageView.HOME -> HomePane(editor, calls, createMode, onCreateMode, sidebarOpen, onShowSidebar, onHideSidebar, link)
-                    BackstageView.PREFERENCES -> PreferencesPane(editor, compact, sidebarOpen, onShowSidebar, onBackToHome, onImportCodeTheme, onImportFont, focusSync, onSyncFocused, onBackup)
-                    BackstageView.TRASH -> TrashPane(editor, sidebarOpen, onShowSidebar, onOpenPreferences)
+            // Keep only the destination tab composed during navigation. Crossfade kept the
+            // old and new full panes alive together, briefly doubling Home's explorer work.
+            key(view) {
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn(tween(135, easing = FastOutSlowInEasing)) +
+                        slideInHorizontally(
+                            initialOffsetX = { it / 36 },
+                            animationSpec = tween(155, easing = FastOutSlowInEasing),
+                        ),
+                    label = "backstage-tab",
+                ) {
+                    when (view) {
+                        BackstageView.HOME -> HomePane(editor, calls, createMode, onCreateMode, sidebarOpen, onShowSidebar, onHideSidebar, link)
+                        BackstageView.PREFERENCES -> PreferencesPane(editor, compact, sidebarOpen, onShowSidebar, onBackToHome, onImportCodeTheme, onImportFont, focusSync, onSyncFocused, onBackup)
+                        BackstageView.TRASH -> TrashPane(editor, sidebarOpen, onShowSidebar, onOpenPreferences)
+                    }
                 }
             }
         }
