@@ -297,14 +297,15 @@ class ShapeItem(
      * The area centroid is used for the centre; the radius reaches the farthest point
      * on the actual flattened outline (not merely the bounding-box corner).
      */
-    fun paintCenterRadiusMeasurements(r: Renderer) {
-        if (!showCenterRadius || !shape.isClosed || shape == ShapeKind.FILL) return
+    /** The page-space area centre and farthest outline point for this closed shape. */
+    fun centerRadiusGuide(): Pair<Pt, Pt>? {
+        if (!shape.isClosed || shape == ShapeKind.FILL) return null
         val contours = localGeometry().paths.flatMap { it.contours }.filter { it.closed }
-        if (contours.isEmpty()) return
+        if (contours.isEmpty()) return null
         val rings = contours.map { contour ->
             PathFlattener.flatten(contour, 0.35).map(::toPage)
         }.filter { it.size >= 3 }
-        if (rings.isEmpty()) return
+        if (rings.isEmpty()) return null
 
         var twiceArea = 0.0
         var centroidX = 0.0
@@ -325,15 +326,20 @@ class ShapeItem(
             val points = rings.flatten()
             Pt(points.sumOf { it.x } / points.size, points.sumOf { it.y } / points.size)
         }
-        val boundary = rings.flatten()
-        val rim = boundary.maxByOrNull { p ->
+        val rim = rings.flatten().maxByOrNull { p ->
             val dx = p.x - centre.x
             val dy = p.y - centre.y
             dx * dx + dy * dy
-        } ?: return
+        } ?: return null
         val radius = centre.distanceTo(rim)
-        if (!radius.isFinite() || radius <= 1e-6) return
+        return if (radius.isFinite() && radius > 1e-6) centre to rim else null
+    }
 
+    /** Paint the centre marker and farthest-point radius guide as transient selection feedback. */
+    fun paintCenterRadiusMeasurements(r: Renderer) {
+        if (!showCenterRadius) return
+        val (centre, rim) = centerRadiusGuide() ?: return
+        val radius = centre.distanceTo(rim)
         val guide = Pen(strokeRgba, width = 1.15, cosmetic = true, dashed = true, dashOn = 4.0, dashGap = 3.0)
         r.strokePolyline(listOf(centre, rim), guide)
         r.fillCircle(rim, 2.5, strokeRgba)
