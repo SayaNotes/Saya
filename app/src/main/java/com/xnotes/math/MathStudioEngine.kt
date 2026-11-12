@@ -36,7 +36,7 @@ object MathStudioEngine {
             if(previousY!=null && y!=null) {
                 if(abs(previousY)<1e-8) roots.add(px)
                 if(previousY*y<0) {
-                    var lo=px; var hi=x; var flo=previousY
+                    var lo=px; var hi=x; var flo: Double = previousY
                     repeat(64) { val mid=(lo+hi)/2; val fm=runCatching { f(mid) }.getOrNull() ?: return@repeat
                         if(abs(fm)<1e-12) { lo=mid; hi=mid } else if(flo*fm<=0) hi=mid else { lo=mid; flo=fm }
                     }
