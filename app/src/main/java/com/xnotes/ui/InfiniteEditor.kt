@@ -1723,6 +1723,21 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
                 )
                 val guideBounds = Rect.bounding(listOf(center, rim)).outset(12.0 / zoom)
                 bounds = bounds?.union(guideBounds) ?: guideBounds
+
+                // Shape labels are normally part of the document mesh. This tiny outlined label
+                // is built only for the overlay, so the live radius value never becomes content.
+                val middle = Pt((center.x + rim.x) / 2.0, (center.y + rim.y) / 2.0)
+                val radiusLabel = ShapeLabel(
+                    "R = %.1f".format(center.distanceTo(rim)),
+                    TextStyle(shape.strokeRgba, 7.0, FontFace.SANS, bold = true),
+                    textMeasurer,
+                ).asGlyphs(Rect(middle.x - 24.0, middle.y - 7.0, 48.0, 14.0), { it }, 0.0)
+                radiusLabel?.let { glyphs ->
+                    ItemMesher.mesh(glyphs)?.let { labelMesh ->
+                        parts += labelMesh.parts
+                        bounds = bounds?.union(labelMesh.bounds) ?: labelMesh.bounds
+                    }
+                }
             }
         }
         if (parts.isEmpty()) {
