@@ -191,6 +191,15 @@ interface SelectionMenuHost : SwatchHost {
      */
     fun refillSelection(color: Rgba?, preview: Boolean = false)
 
+    /** Whether the lone selected closed shape can show its geometric centre and radius. */
+    fun selectionCanShowCenterRadius(): Boolean
+
+    /** Whether the centre/radius guide is currently enabled on the lone selected shape. */
+    fun selectionCenterRadiusEnabled(): Boolean
+
+    /** Toggle the transient centre/radius guide without modifying document content. */
+    fun toggleSelectionCenterRadius()
+
     /** A lone selected star's points or polygon's sides and the counts it can take; null otherwise. */
     fun selectionCount(): ShapeCount?
 
@@ -380,6 +389,12 @@ fun SelectionMenu(
                         DropdownMenuItem(
                             text = { Text(if (host.selectionLink != null) "Edit link" else "Add link") },
                             onClick = { overflowOpen = false; linkDialogOpen = true },
+                        )
+                    }
+                    if (host.selectionCanShowCenterRadius()) {
+                        DropdownMenuItem(
+                            text = { Text(if (host.selectionCenterRadiusEnabled()) "Hide centre and radius" else "Show centre and radius") },
+                            onClick = { overflowOpen = false; host.toggleSelectionCenterRadius() },
                         )
                     }
                     if (host.canLabelSelection()) {
