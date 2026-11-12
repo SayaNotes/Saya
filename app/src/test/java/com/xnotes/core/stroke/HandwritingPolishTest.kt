@@ -46,13 +46,13 @@ class HandwritingPolishTest {
 
     @Test fun beautifySmoothsRoundedTurnsButKeepsSharpCusps() {
         val roundedTurn = listOf(
-            Sample(0.0, 0.0), Sample(10.0, 0.0), Sample(10.0, 10.0),
+            Sample(0.0, 0.0, 1.0), Sample(10.0, 0.0, 1.0), Sample(10.0, 10.0, 1.0),
         )
         val smoothed = HandwritingPolish.beautify(roundedTurn)
         assertTrue(smoothed[1] != roundedTurn[1])
 
         val sharpCusp = listOf(
-            Sample(0.0, 0.0), Sample(10.0, 0.0), Sample(5.0, 8.660254),
+            Sample(0.0, 0.0, 1.0), Sample(10.0, 0.0, 1.0), Sample(5.0, 8.660254, 1.0),
         )
         val protected = HandwritingPolish.beautify(sharpCusp)
         assertEquals(sharpCusp, protected)
