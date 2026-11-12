@@ -1,6 +1,7 @@
 package com.xnotes.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.scaleIn
@@ -2130,7 +2131,7 @@ internal fun DropdownMenu(
                         scaleIn(initialScale = 0.965f, animationSpec = tween(155, easing = FastOutSlowInEasing)) +
                         slideInVertically(initialOffsetY = { it / 24 }, animationSpec = tween(145, easing = FastOutSlowInEasing)),
                 ) {
-                    Column { content() }
+                    Column(Modifier.animateContentSize(tween(145, easing = FastOutSlowInEasing))) { content() }
                 }
             } else {
                 content()
