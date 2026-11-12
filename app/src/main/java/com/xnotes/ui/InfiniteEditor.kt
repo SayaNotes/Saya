@@ -893,6 +893,21 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
         publishOverlay()
     }
 
+    private fun centerRadiusShape(): ShapeItem? =
+        (selection.items.singleOrNull() as? ShapeItem)?.takeIf {
+            it.shape.isClosed && it.shape != com.xnotes.core.shapes.ShapeKind.FILL && !it.locked
+        }
+
+    override fun selectionCanShowCenterRadius(): Boolean = centerRadiusShape() != null
+
+    override fun selectionCenterRadiusEnabled(): Boolean = centerRadiusShape()?.showCenterRadius == true
+
+    override fun toggleSelectionCenterRadius() {
+        val shape = centerRadiusShape() ?: return
+        shape.showCenterRadius = !shape.showCenterRadius
+        publishOverlay()
+    }
+
     override fun selectionCount(): ShapeCount? = ShapeCount.of(selection.items.singleOrNull() as? ShapeItem)
 
     override fun canLabelSelection(): Boolean = (selection.items.singleOrNull() as? Labelled)?.let { it.takesLabel && !it.locked } == true
@@ -1700,6 +1715,15 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
             )
             val b = OverlayTessellator.selectionBounds(box, zoom)
             bounds = bounds?.union(b) ?: b
+        }
+        (selection.items.singleOrNull() as? ShapeItem)?.takeIf { it.showCenterRadius }?.let { shape ->
+            shape.centerRadiusGuide()?.let { (center, rim) ->
+                parts += OverlayTessellator.centerRadius(
+                    center, rim, zoom, shape.strokeRgba, StrokeTessellator.DEFAULT_TOLERANCE,
+                )
+                val guideBounds = Rect.bounding(listOf(center, rim)).outset(12.0 / zoom)
+                bounds = bounds?.union(guideBounds) ?: guideBounds
+            }
         }
         if (parts.isEmpty()) {
             scene.setWet(null, InkPalette.DEFAULT, InkPass.OPAQUE, Rect(0.0, 0.0, 0.0, 0.0))
