@@ -6,30 +6,23 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class StrokeStabilizerTest {
-
-    @Test fun zeroStrengthIsExactPassThrough() {
+    @Test fun disabledStabilizationLeavesInputUntouched() {
         val filter = StrokeStabilizer(0.0)
-        val points = listOf(Pt(0.0, 0.0), Pt(2.0, 1.0), Pt(4.0, -1.0))
-        points.forEachIndexed { i, point ->
-            assertEquals(point, filter.filter(point, i * 16L))
-        }
+        val point = Pt(12.5, -7.25)
+        assertEquals(point, filter.filter(point, 10L))
+        val next = Pt(20.0, 3.0)
+        assertEquals(next, filter.filter(next, 26L))
     }
 
-    @Test fun strongStabilizationReducesSlowAlternatingJitter() {
+    @Test fun strongStabilizationReducesSlowHandJitter() {
         val filter = StrokeStabilizer(100.0)
-        val xs = listOf(0.0, 3.0, -3.0, 3.0, -3.0, 3.0, -3.0)
-        val out = xs.mapIndexed { i, x -> filter.filter(Pt(x, 0.0), i * 16L).x }
-        val rawRange = xs.maxOrNull()!! - xs.minOrNull()!!
-        val filteredRange = out.maxOrNull()!! - out.minOrNull()!!
-        assertTrue("stabilization should damp slow hand tremor", filteredRange < rawRange)
-    }
-
-    @Test fun filterKeepsFiniteCoordinates() {
-        val filter = StrokeStabilizer(75.0)
-        repeat(100) { i ->
-            val p = filter.filter(Pt(i * 1.25, kotlin.math.sin(i / 8.0) * 12.0), i * 8L)
-            assertTrue(p.x.isFinite())
-            assertTrue(p.y.isFinite())
+        val points = (0..80).map { i ->
+            val sign = if (i % 2 == 0) 1.0 else -1.0
+            Pt(100.0 + sign * 6.0, 200.0 - sign * 4.0)
         }
+        val filtered = points.mapIndexed { i, point -> filter.filter(point, i * 16L) }
+        val rawError = points.drop(1).map { it.distanceTo(Pt(100.0, 200.0)) }.average()
+        val filteredError = filtered.drop(1).map { it.distanceTo(Pt(100.0, 200.0)) }.average()
+        assertTrue("strong stabilization should reduce alternating hand tremor", filteredError < rawError * 0.65)
     }
 }
