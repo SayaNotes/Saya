@@ -105,7 +105,7 @@ import com.xnotes.core.model.sourcePoint
 
 /** The pointer state machine modes (spec 06 §1). */
 enum class PointerMode {
-    IDLE, DRAW, ERASE, BAND, LASSO_DRAW, SHOT, SHAPE, MOVE, RESIZE, TRANSFORM, TWO_FINGER_ROTATE, PAN, PINCH, FLOW_TEXT,
+    IDLE, DRAW, ERASE, BAND, LASSO_DRAW, SHOT, SHAPE, MOVE, RESIZE, TRANSFORM, PAN, PINCH, FLOW_TEXT,
     TEXT_DRAG, RULER_MOVE, RULER_TRANSFORM, RULER_ROTATE, PDF_TEXT, VERTEX, POLYGON, CONNECT, JOINT, SLIDE, TAPE, ROOM,
     ROOM_BUTTON, TABLE_LINE, TABLE_GRIP, TABLE_PICK, TABLE_DRAW,
 }
@@ -557,10 +557,6 @@ class InteractionController(
     private var txCenter = Pt.ZERO
     private var txGrabAngle = 0.0
     private var txStartAngle = 0.0
-    private var twoFingerRotateStartAngle = 0.0
-    private var twoFingerRotateCenter = Pt.ZERO
-    private var twoFingerRotateDraft: ShapeItem? = null
-    private var twoFingerRotateDraftBefore: GeometrySnapshot? = null
 
     // LONG-PRESS GRAB
     private val handler by lazy { Handler(Looper.getMainLooper()) } // lazy: see [choreographer]
@@ -1132,78 +1128,7 @@ class InteractionController(
             if (erasingWithFinger && e.pointerCount >= 2) { endErase(); beginPinch(e) }
             return
         }
-        if (e.pointerCount >= 2) {
-            if (beginTwoFingerShapeRotation(e)) return
-            beginPinch(e)
-        }
-    }
-
-    /** Rotate a shape only when both fingers land on it; all other two-finger gestures remain navigation. */
-    private fun beginTwoFingerShapeRotation(e: MotionEvent): Boolean {
-        if (e.pointerCount < 2) return false
-        val a = Pt(e.getX(0).toDouble(), e.getY(0).toDouble())
-        val b = Pt(e.getX(1).toDouble(), e.getY(1).toDouble())
-        val mid = (a + b) * 0.5
-        val angle = atan2(b.y - a.y, b.x - a.x)
-        if (mode == PointerMode.SHAPE) {
-            val draft = pendingShape ?: return false
-            val pi = shapePageIndex ?: return false
-            val pa = state.toPageSpace(pi, state.viewportToContent(a))
-            val pb = state.toPageSpace(pi, state.viewportToContent(b))
-            val bounds = draft.bounds()
-            if (!bounds.contains(pa) || !bounds.contains(pb)) return false
-            twoFingerRotateDraft = draft
-            twoFingerRotateDraftBefore = draft.snapshotGeometry()
-            twoFingerRotateCenter = bounds.center
-            twoFingerRotateStartAngle = angle
-            mode = PointerMode.TWO_FINGER_ROTATE
-            requestRender()
-            return true
-        }
-        if (selection.singleOrNull()?.item !is ShapeItem) return false
-        val box = selObb ?: return false
-        val ca = state.viewportToContent(a)
-        val cb = state.viewportToContent(b)
-        if (!box.contains(ca) || !box.contains(cb)) return false
-        beginTransform(null, state.viewportToContent(mid))
-        twoFingerRotateCenter = txStartObb?.center ?: box.center
-        twoFingerRotateStartAngle = angle
-        mode = PointerMode.TWO_FINGER_ROTATE
-        return true
-    }
-
-    private fun updateTwoFingerShapeRotation(e: MotionEvent) {
-        if (e.pointerCount < 2) return
-        val a = Pt(e.getX(0).toDouble(), e.getY(0).toDouble())
-        val b = Pt(e.getX(1).toDouble(), e.getY(1).toDouble())
-        val raw = atan2(b.y - a.y, b.x - a.x) - twoFingerRotateStartAngle
-        val delta = when { raw > Math.PI -> raw - 2.0 * Math.PI; raw < -Math.PI -> raw + 2.0 * Math.PI; else -> raw }
-        val draft = twoFingerRotateDraft
-        if (draft != null) {
-            draft.restoreGeometry(twoFingerRotateDraftBefore ?: return)
-            draft.applyTransform(Affine.rotateAbout(twoFingerRotateCenter, delta))
-            requestRender()
-            return
-        }
-        val obb = txStartObb ?: return
-        txItems.forEachIndexed { index, selected -> selected.item.restoreGeometry(txSnaps[index]) }
-        val world = Affine.rotateAbout(twoFingerRotateCenter, delta)
-        for (selected in txItems) {
-            if (state.pageRects.getOrNull(selected.pageIndex) != null)
-                selected.item.applyTransform(state.affineToPageSpace(selected.pageIndex, world))
-        }
-        selObb = obb.copy(angle = obb.angle + delta)
-        for ((pi, follow) in follows) if (state.pageRects.getOrNull(pi) != null)
-            follow.follow(state.affineToPageSpace(pi, world))
-        requestRender()
-    }
-
-    private fun finishTwoFingerShapeRotation() {
-        if (twoFingerRotateDraft != null) {
-            twoFingerRotateDraft = null
-            twoFingerRotateDraftBefore = null
-            endShape()
-        } else endTransform()
+        if (e.pointerCount >= 2) beginPinch(e)
     }
 
     /**
@@ -1258,7 +1183,6 @@ class InteractionController(
             PointerMode.DRAW -> extendDraw(e)
             PointerMode.PAN -> extendPan(vx, vy)
             PointerMode.PINCH -> updatePinch(e)
-            PointerMode.TWO_FINGER_ROTATE -> updateTwoFingerShapeRotation(e)
             PointerMode.RULER_MOVE -> { ruler.center = Pt(vx, vy) + rulerGrabOffset; requestRender() }
             PointerMode.RULER_TRANSFORM -> updateRulerTransform(e)
             PointerMode.RULER_ROTATE -> updateRulerRotate(e)
@@ -1309,7 +1233,6 @@ class InteractionController(
             return
         }
         if (mode == PointerMode.PINCH && e.pointerCount <= 2) endPinch()
-        else if (mode == PointerMode.TWO_FINGER_ROTATE && e.pointerCount <= 2) finishTwoFingerShapeRotation()
     }
 
     private fun handleUp(e: MotionEvent) {
@@ -1361,7 +1284,6 @@ class InteractionController(
             PointerMode.TABLE_PICK -> endTablePick()
             PointerMode.TABLE_DRAW -> endTable()
             PointerMode.TRANSFORM -> endTransform()
-            PointerMode.TWO_FINGER_ROTATE -> finishTwoFingerShapeRotation()
             PointerMode.VERTEX -> endVertex(e.eventTime)
             PointerMode.POLYGON -> endPolygonTap(content, e.eventTime)
             PointerMode.SHAPE -> endShape()
