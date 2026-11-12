@@ -4105,12 +4105,14 @@ class InteractionController(
     fun toggleSelectionCenter() {
         val shape = centerRadiusShape() ?: return
         shape.showCenter = !shape.showCenter
+        onContentChanged()
         requestRender()
     }
 
     fun toggleSelectionRadius() {
         val shape = centerRadiusShape() ?: return
         shape.showRadius = !shape.showRadius
+        onContentChanged()
         requestRender()
     }
 
