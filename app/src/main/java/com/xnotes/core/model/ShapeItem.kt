@@ -337,7 +337,7 @@ class ShapeItem(
         val guide = Pen(strokeRgba, width = 1.15, cosmetic = true, dashed = true, dashOn = 4.0, dashGap = 3.0)
         r.strokePolyline(listOf(centre, rim), guide)
         r.fillCircle(rim, 2.5, strokeRgba)
-        r.strokeCircle(centre, 4.0, Pen(strokeRgba, width = 1.2, cosmetic = true))
+        r.strokeEllipse(centre, 4.0, 4.0, Pen(strokeRgba, width = 1.2, cosmetic = true))
         r.strokePolyline(
             listOf(Pt(centre.x - 6.0, centre.y), Pt(centre.x + 6.0, centre.y)),
             Pen(strokeRgba, width = 1.0, cosmetic = true),
