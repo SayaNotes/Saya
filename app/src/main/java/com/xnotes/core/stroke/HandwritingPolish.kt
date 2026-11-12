@@ -5,7 +5,6 @@ import com.xnotes.core.model.Stroke
 import kotlin.math.PI
 import kotlin.math.atan2
 import kotlin.math.ceil
-import kotlin.math.hypot
 import kotlin.math.max
 
 /** A robust dominant writing axis estimated from a bounded sample of the selected strokes. */
@@ -14,9 +13,6 @@ data class HandwritingLine(val strokes: List<Stroke>, val axis: HandwritingAxis)
 
 object HandwritingPolish {
     private const val MAX_AXIS_POINTS = 4096
-    private const val CORNER_COS = -0.1736481776669303 // cos(100°); retain only very sharp cusps
-    private const val SMOOTH_MIX = 0.82
-    private const val PASSES = 3
 
     /**
      * Estimate the selected handwriting's dominant baseline. [mapPoint] converts each stroke's
@@ -125,40 +121,5 @@ object HandwritingPolish {
         }
     }
 
-    /**
-     * Gently smooths local tremor while retaining the user's own stroke path, pressure and timing.
-     * Strong corners and endpoints are preserved; this never performs handwriting-to-text OCR.
-     */
-    fun beautify(samples: List<Sample>): List<Sample> {
-        if (samples.size < 3) return samples
-        var current = samples.toList()
-        repeat(PASSES) {
-            val next = current.toMutableList()
-            for (i in 1 until current.lastIndex) {
-                val before = current[i - 1]
-                val point = current[i]
-                val after = current[i + 1]
-                val ax = point.x - before.x
-                val ay = point.y - before.y
-                val bx = after.x - point.x
-                val by = after.y - point.y
-                val al = hypot(ax, ay)
-                val bl = hypot(bx, by)
-                if (al < 1e-6 || bl < 1e-6) continue
-                val cosine = ((ax * bx + ay * by) / (al * bl)).coerceIn(-1.0, 1.0)
-                if (cosine < CORNER_COS) continue
 
-                val targetX = (before.x + 2.0 * point.x + after.x) / 4.0
-                val targetY = (before.y + 2.0 * point.y + after.y) / 4.0
-                next[i] = Sample(
-                    point.x + (targetX - point.x) * SMOOTH_MIX,
-                    point.y + (targetY - point.y) * SMOOTH_MIX,
-                    point.pressure,
-                    point.t,
-                )
-            }
-            current = next
-        }
-        return current
-    }
 }
