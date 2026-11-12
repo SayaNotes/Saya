@@ -32,10 +32,11 @@ object MathStudioEngine {
         val roots=mutableListOf<Double>(); var px=-1000.0; var py=runCatching { f(px) }.getOrNull()
         for(i in 1..8000) {
             val x=-1000.0+2000.0*i/8000.0; val y=runCatching { f(x) }.getOrNull()
-            if(py!=null && y!=null) {
-                if(abs(py)<1e-8) roots.add(px)
-                if(py*y<0) {
-                    var lo=px; var hi=x; var flo=py
+            val previousY = py
+            if(previousY!=null && y!=null) {
+                if(abs(previousY)<1e-8) roots.add(px)
+                if(previousY*y<0) {
+                    var lo=px; var hi=x; var flo=previousY
                     repeat(64) { val mid=(lo+hi)/2; val fm=runCatching { f(mid) }.getOrNull() ?: return@repeat
                         if(abs(fm)<1e-12) { lo=mid; hi=mid } else if(flo*fm<=0) hi=mid else { lo=mid; flo=fm }
                     }
