@@ -190,13 +190,18 @@ class ShapeRecognizerTest {
         assertNull(ShapeRecognizer.recognizePoints(circle(10.0, 10.0, 6.0, 40, 0.5)))
     }
 
-    @Test fun openArcIsNotAShape() {
-        // Half circle: ends sit a diameter apart (open) and it bows far from its chord (not a line).
+    @Test fun openArcIsRecognizedAsAnEditableCurve() {
+        // Half circle: open, smooth and too curved for a line; it should become a fitted curve.
         val arc = (0..40).map { i ->
             val a = PI * i / 40.0
             Pt(200.0 + 150.0 * cos(a), 200.0 + 150.0 * sin(a))
         }
-        assertNull(ShapeRecognizer.recognizePoints(arc))
+        val rec = ShapeRecognizer.recognizePoints(arc)
+        assertNotNull(rec)
+        assertEquals(ShapeKind.CURVE, rec!!.kind)
+        assertTrue("curve outline should be sampled densely enough to look smooth", rec.vertices!!.size >= 32)
+        assertEquals(arc.first().x, rec.vertices!!.first().x, 1.0)
+        assertEquals(arc.last().x, rec.vertices!!.last().x, 1.0)
     }
 
     // --- properties ---

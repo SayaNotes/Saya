@@ -35,6 +35,7 @@ data class RecognizedShape(
  * Shapes recognized:
  *  - open straight stroke -> [ShapeKind.LINE]
  *  - open multi-segment zig-zag -> [ShapeKind.POLYLINE] (vertices preserved)
+ *  - open smooth arc -> [ShapeKind.CURVE] (fitted cubic, sampled as an editable outline)
  *  - closed round blob -> [ShapeKind.ELLIPSE] (snapped to a circle when nearly round)
  *  - closed n-gon with sharp corners -> [ShapeKind.RECTANGLE] when it is an upright box,
  *    else [ShapeKind.POLYGON] (vertices preserved, including 3-corner triangles)
@@ -79,6 +80,11 @@ object ShapeRecognizer {
     /** More inferred corners than this means a noisy blob, not a drawn polygon. */
     private const val MAX_POLY_VERTS = 12
 
+    /** One-cubic fit tolerance as a fraction of the stroke's diagonal. */
+    private const val CURVE_FIT_ERROR_FRAC = 0.025
+    private const val CURVE_FIT_MIN_ERROR = 1.5
+    private const val CURVE_SAMPLES = 48
+
     /** Recognize from raw stroke samples (the page-local positions are what matter). */
     fun recognize(samples: List<Sample>): RecognizedShape? = recognizePoints(samples.map { it.pos })
 
@@ -108,7 +114,21 @@ object ShapeRecognizer {
         // has no sharp corners, so it falls through to null and stays ink.
         val path = resample(points, RESAMPLE_N)
         val peaks = cornerPeaks(path, wrap = false)
-        if (peaks.isEmpty() || peaks.size > MAX_POLY_VERTS) return null
+        if (peaks.isEmpty()) {
+            // A smooth open path is a curve, not a failed polygon. Fit one cubic only when it
+            // follows the original samples closely; complex/multi-inflection scribbles stay ink.
+            val fitted = CubicFit.fitSampled(
+                points,
+                maxError = (diag * CURVE_FIT_ERROR_FRAC).coerceAtLeast(CURVE_FIT_MIN_ERROR),
+                samples = CURVE_SAMPLES,
+            )
+            if (fitted != null) {
+                val box = Rect.bounding(fitted)
+                return RecognizedShape(ShapeKind.CURVE, box.topLeft, Pt(box.right, box.bottom), fitted)
+            }
+            return null
+        }
+        if (peaks.size > MAX_POLY_VERTS) return null
         val vertIdx = listOf(0) + peaks + listOf(path.size - 1)
         if (!edgesStraight(path, vertIdx, wrap = false, diag)) return null
         val verts = vertIdx.map { path[it] }
