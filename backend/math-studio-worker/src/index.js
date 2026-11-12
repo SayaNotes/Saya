@@ -8,6 +8,7 @@ export default {
     };
     if (request.method === "OPTIONS") return new Response(null, { headers: cors });
     if (request.method !== "POST") return new Response(JSON.stringify({ error: "POST required" }), { status: 405, headers: cors });
+    if (env.MATH_STUDIO_ACCESS_TOKEN && request.headers.get("Authorization") !== "Bearer " + env.MATH_STUDIO_ACCESS_TOKEN) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: cors });
     if (!env.OPENAI_API_KEY) return new Response(JSON.stringify({ error: "Server AI key is not configured" }), { status: 503, headers: cors });
     try {
       const body = await request.json();

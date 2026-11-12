@@ -40,6 +40,7 @@ fun MathStudioPane(editor:Editor){
     val context = LocalContext.current
     val prefs = remember(context) { context.getSharedPreferences("saya_math_studio", 0) }
     var endpoint by remember { mutableStateOf(prefs.getString("endpoint", "") ?: "") }
+    var accessToken by remember { mutableStateOf(prefs.getString("access_token", "") ?: "") }
     var aiAnswer by rememberSaveable { mutableStateOf("") }
     var aiBusy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -98,11 +99,18 @@ fun MathStudioPane(editor:Editor){
                     label={Text("Secure AI backend URL (HTTPS)")},
                     singleLine=true,
                 )
+                OutlinedTextField(
+                    value=accessToken,
+                    onValueChange={accessToken=it;prefs.edit().putString("access_token",it).apply()},
+                    modifier=Modifier.fillMaxWidth(),
+                    label={Text("Backend access token")},
+                    singleLine=true,
+                )
                 Button(
                     onClick={
                         scope.launch {
                             aiBusy=true; aiAnswer=""
-                            try { aiAnswer=withContext(Dispatchers.IO){MathStudioAiClient.explain(endpoint,expression,output)} }
+                            try { aiAnswer=withContext(Dispatchers.IO){MathStudioAiClient.explain(endpoint,expression,output,accessToken)} }
                             catch(t:Throwable){aiAnswer=t.message?:"AI explanation failed."}
                             finally { aiBusy=false }
                         }

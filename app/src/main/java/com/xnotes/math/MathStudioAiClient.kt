@@ -6,7 +6,7 @@ import java.net.URL
 
 /** Talks only to a user-deployed HTTPS proxy; provider secrets never enter the Android app. */
 object MathStudioAiClient {
-    fun explain(endpoint: String, problem: String, calculation: String): String {
+    fun explain(endpoint: String, problem: String, calculation: String, accessToken: String): String {
         val url = URL(endpoint.trim())
         require(url.protocol.equals("https", ignoreCase = true)) { "The AI endpoint must use HTTPS." }
         val connection = (url.openConnection() as HttpURLConnection).apply {
@@ -16,6 +16,7 @@ object MathStudioAiClient {
             doOutput = true
             setRequestProperty("Content-Type", "application/json; charset=utf-8")
             setRequestProperty("Accept", "application/json")
+            if (accessToken.isNotBlank()) setRequestProperty("Authorization", "Bearer $accessToken")
         }
         try {
             val body = JSONObject().put("problem", problem).put("calculation", calculation)

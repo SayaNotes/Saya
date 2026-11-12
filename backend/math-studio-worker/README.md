@@ -9,9 +9,10 @@ OpenAI API key is stored as a Cloudflare Worker secret and is never placed in th
 1. Install Wrangler and authenticate with Cloudflare.
 2. From this directory run `wrangler deploy`.
 3. Set the provider secret: `wrangler secret put OPENAI_API_KEY`.
-4. Optionally configure the model: `wrangler secret put OPENAI_MODEL` is not required; use a Worker
+4. Set an app-to-worker token: `wrangler secret put MATH_STUDIO_ACCESS_TOKEN`, then enter the same token in Math Studio.
+5. Optionally configure the model: `wrangler secret put OPENAI_MODEL` is not required; use a Worker
    variable named `OPENAI_MODEL` if you want to override the default.
-5. Copy the deployed Worker HTTPS URL into Math Studio's **Secure AI backend URL** field.
+6. Copy the deployed Worker HTTPS URL into Math Studio's **Secure AI backend URL** field.
 
 The Worker accepts POST JSON with `problem` and `calculation`, and returns `{"answer":"..."}`.
 Do not put an OpenAI key in Android resources, BuildConfig, preferences, or source code.
