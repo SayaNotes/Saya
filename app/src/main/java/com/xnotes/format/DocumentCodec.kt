@@ -564,6 +564,8 @@ class DocumentCodec(
             // A spline's points are not the line its stand-in draws, so they are always written.
             s.path?.takeIf { s.isFree && (own || s.shape == ShapeKind.SPLINE || !FreePath.isVertexList(it)) }?.let { j.name("path").value(FreePath.toSvg(it)) }
         }
+        if (s.showCenter) j.name("show_center").value(true)
+        if (s.showRadius) j.name("show_radius").value(true)
         if (s.n != s.shape.defaultN) j.name("n").value(s.n)
         if (s.headStart != s.shape.defaultHeadStart) j.name("head_start").value(s.headStart.id)
         if (s.headEnd != s.shape.defaultHeadEnd) j.name("head_end").value(s.headEnd.id)
@@ -1196,6 +1198,8 @@ class DocumentCodec(
         var textStrike = false
         var textAlign = "left"
         var shape: String? = null
+        var showCenter = false
+        var showRadius = false
         var geom: String? = null
         var flipGeom: String? = null
         var flip: String? = null
@@ -1293,6 +1297,8 @@ class DocumentCodec(
                 "strike" -> s.textStrike = boolOr(p, false)
                 "align" -> s.textAlign = stringOr(p, "left")
                 "shape" -> s.shape = stringOr(p, "")
+                "show_center" -> s.showCenter = boolOr(p, false)
+                "show_radius" -> s.showRadius = boolOr(p, false)
                 "geom" -> s.geom = stringOrNull(p)
                 "flip_geom" -> s.flipGeom = stringOrNull(p)
                 "flip" -> s.flip = stringOrNull(p)
@@ -1452,6 +1458,8 @@ class DocumentCodec(
         }
         if (!shape.isFree && !shape.shape.isEndpointShape) shape.flip = Flip.fromId(s.flip)
         if (s.n > 0) shape.n = s.n
+        shape.showCenter = s.showCenter
+        shape.showRadius = s.showRadius
         s.adj?.let { shape.adj = it }
         s.headStart?.let { shape.headStart = Head.fromId(it) }
         s.headEnd?.let { shape.headEnd = Head.fromId(it) }
