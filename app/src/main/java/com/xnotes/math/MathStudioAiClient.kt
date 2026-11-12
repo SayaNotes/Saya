@@ -25,8 +25,11 @@ object MathStudioAiClient {
             val stream = if (code in 200..299) connection.inputStream else connection.errorStream
             val response = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
             if (code !in 200..299) throw IllegalStateException("AI service returned HTTP $code: ${response.take(300)}")
-            val answer = JSONObject(response).optString("answer")
-            require(answer.isNotBlank()) { "The AI service returned an empty explanation." }
+            val payload = JSONObject(response)
+            val answer = payload.optString("answer")
+            if (answer.isBlank()) throw IllegalStateException(
+                payload.optString("error").ifBlank { "The AI service returned an empty explanation." },
+            )
             return answer
         } finally {
             connection.disconnect()

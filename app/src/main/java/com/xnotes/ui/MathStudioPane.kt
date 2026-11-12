@@ -40,7 +40,7 @@ fun MathStudioPane(editor:Editor){
     val context = LocalContext.current
     val prefs = remember(context) { context.getSharedPreferences("saya_math_studio", 0) }
     var endpoint by remember { mutableStateOf(prefs.getString("endpoint", "") ?: "") }
-    var accessToken by remember { mutableStateOf(prefs.getString("access_token", "") ?: "") }
+    var accessToken by remember { mutableStateOf("") }
     var aiAnswer by rememberSaveable { mutableStateOf("") }
     var aiBusy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
@@ -107,7 +107,7 @@ fun MathStudioPane(editor:Editor){
                 )
                 OutlinedTextField(
                     value=accessToken,
-                    onValueChange={accessToken=it;prefs.edit().putString("access_token",it).apply()},
+                    onValueChange={accessToken=it},
                     modifier=Modifier.fillMaxWidth(),
                     label={Text("Backend access token")},
                     singleLine=true,
