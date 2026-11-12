@@ -37,7 +37,8 @@ class CenterRadiusGuideTest {
     @Test fun openShapesDoNotOfferACentreRadiusGuide() {
         val shape = ShapeItem(ShapeKind.LINE, Pt(0.0, 0.0), Pt(100.0, 50.0), ink)
         assertNull(shape.centerRadiusGuide())
-        assertFalse(shape.showCenterRadius)
+        assertFalse(shape.showCenter)
+        assertFalse(shape.showRadius)
     }
 
     @Test fun theGuideIsTransientAndOffByDefault() {
