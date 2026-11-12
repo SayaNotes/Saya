@@ -374,6 +374,11 @@ private fun BackstageContent(
     onBackup: (Boolean) -> Unit,
 ) {
     val palette = LocalPalette.current
+    val tabMotion = remember { Animatable(1f) }
+    LaunchedEffect(view) {
+        tabMotion.snapTo(0.97f)
+        tabMotion.animateTo(1f, tween(155, easing = FastOutSlowInEasing))
+    }
     // Keep the library shell consistently OLED-black while moving between Home and Settings.
     val homeBackdrop = palette.bg.toComposeColor()
     var createMode by remember { mutableStateOf(CreateMode.NONE) }
@@ -694,15 +699,10 @@ private fun BackstageMain(
             // Keep only the destination tab composed during navigation. Crossfade kept the
             // old and new full panes alive together, briefly doubling Home's explorer work.
             key(view) {
-                AnimatedVisibility(
-                    visible = true,
-                    enter = fadeIn(tween(135, easing = FastOutSlowInEasing)) +
-                        slideInHorizontally(
-                            initialOffsetX = { it / 36 },
-                            animationSpec = tween(155, easing = FastOutSlowInEasing),
-                        ),
-                    label = "backstage-tab",
-                ) {
+                Box(Modifier.fillMaxSize().graphicsLayer {
+                    alpha = tabMotion.value
+                    translationX = (1f - tabMotion.value) * 12f
+                }) {
                     when (view) {
                         BackstageView.HOME -> HomePane(editor, calls, createMode, onCreateMode, sidebarOpen, onShowSidebar, onHideSidebar, link)
                         BackstageView.PREFERENCES -> PreferencesPane(editor, compact, sidebarOpen, onShowSidebar, onBackToHome, onImportCodeTheme, onImportFont, focusSync, onSyncFocused, onBackup)
