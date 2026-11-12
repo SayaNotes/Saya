@@ -14,7 +14,7 @@ data class HandwritingLine(val strokes: List<Stroke>, val axis: HandwritingAxis)
 
 object HandwritingPolish {
     private const val MAX_AXIS_POINTS = 4096
-    private const val CORNER_COS = 0.573576436351046 // cos(55°)
+    private const val CORNER_COS = -0.1736481776669303 // cos(100°); retain only very sharp cusps
     private const val SMOOTH_MIX = 0.82
     private const val PASSES = 3
 
