@@ -300,11 +300,24 @@ class ShapeItem(
     /** The page-space area centre and farthest outline point for this closed shape. */
     fun centerRadiusGuide(): Pair<Pt, Pt>? {
         if (!shape.isClosed || shape == ShapeKind.FILL) return null
-        val contours = localGeometry().paths.flatMap { it.contours }.filter { it.closed }
-        if (contours.isEmpty()) return null
-        val rings = contours.map { contour ->
-            PathFlattener.flatten(contour, 0.35).map(::toPage)
-        }.filter { it.size >= 3 }
+        val geometry = localGeometry()
+        // Use the exact model vertices for polygonal kinds and a dense, symmetric ellipse
+        // approximation for circles/ellipses. Flattening cubic paths at a display tolerance can
+        // introduce a small directional bias, which is visible in a centre/radius measurement.
+        val rings = when (shape) {
+            ShapeKind.CIRCLE, ShapeKind.ELLIPSE -> listOf(ellipsePolygon(256).map(::toPage))
+            else -> {
+                val corners = geometry.corners
+                if (corners.size >= 3) {
+                    listOf(corners.map(::toPage))
+                } else {
+                    geometry.paths.flatMap { it.contours }
+                        .filter { it.closed }
+                        .map { contour -> PathFlattener.flatten(contour, 0.05).map(::toPage) }
+                        .filter { it.size >= 3 }
+                }
+            }
+        }
         if (rings.isEmpty()) return null
 
         var twiceArea = 0.0
