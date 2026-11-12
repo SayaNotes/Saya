@@ -1,11 +1,8 @@
 name: Build Debug APK
 
-# Build the current feature branch on updates; manual dispatch remains available.
+# Manual only. Editing or pushing source must not start a build.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - fix/final-polish-nov-2026
 
 permissions:
   contents: read
@@ -57,4 +54,3 @@ jobs:
           path: app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
           retention-days: 14
-

@@ -1,10 +1,8 @@
 name: Saya Android Build
 
+# Manual only. No push-triggered builds.
 on:
   workflow_dispatch:
-  push:
-    branches:
-      - release/v1.0.1
 
 permissions:
   contents: read

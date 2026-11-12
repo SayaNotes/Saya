@@ -1,9 +1,7 @@
 name: Android debug APK
 
+# Builds are intentionally manual; push events must never start an APK build.
 on:
-  push:
-    branches:
-      - release/v1.0.1
   workflow_dispatch:
 
 permissions:
