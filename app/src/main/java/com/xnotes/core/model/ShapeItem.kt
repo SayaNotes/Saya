@@ -107,10 +107,10 @@ class ShapeItem(
     @Volatile
     override var labelHidden = false
 
-    /** Transient editor-only centre marker; never written into the document file. */
+    /** Persistent centre marker visibility, stored with this shape in the note. */
     var showCenter: Boolean = false
 
-    /** Transient editor-only radius measurement; never written into the document file. */
+    /** Persistent centre-to-outline radius line visibility, stored with this shape. */
     var showRadius: Boolean = false
 
     /** Where along an open shape's line its label sits, as a share of the line's length. */
@@ -220,6 +220,7 @@ class ShapeItem(
     override fun paint(r: Renderer) {
         paintBody(r)
         paintLabel(r)
+        paintCenterRadiusMeasurements(r)
     }
 
     /**
@@ -351,35 +352,16 @@ class ShapeItem(
         return if (radius.isFinite() && radius > 1e-6) centre to rim else null
     }
 
-    /** Paint independently enabled centre and radius measurements as transient selection feedback. */
+    /** Paint the persistent centre marker and simple centre-to-outline line as part of the shape. */
     fun paintCenterRadiusMeasurements(r: Renderer) {
         if (!showCenter && !showRadius) return
         val (centre, rim) = centerRadiusGuide() ?: return
-        val radius = centre.distanceTo(rim)
         if (showRadius) {
-            val guide = Pen(strokeRgba, width = 1.15, cosmetic = true, dashed = true, dashOn = 4.0, dashGap = 3.0)
-            r.strokePolyline(listOf(centre, rim), guide)
-            r.fillCircle(rim, 2.5, strokeRgba)
-            val middle = Pt((centre.x + rim.x) / 2.0, (centre.y + rim.y) / 2.0)
-            val labelCentre = Pt(
-                middle.x - (rim.y - centre.y) / radius * 8.0,
-                middle.y + (rim.x - centre.x) / radius * 8.0,
-            )
-            val label = "R = %.1f".format(radius)
-            val font = FontSpec(7.0, FontFace.SANS, bold = true)
-            val flags = TextFlags(wordWrap = false, alignLeft = false, alignTop = false, hAlign = HAlign.CENTER)
-            r.drawText(label, Rect(labelCentre.x - 22.0, labelCentre.y - 7.0, 44.0, 14.0), font, strokeRgba, flags)
+            r.strokePolyline(listOf(centre, rim), Pen(strokeRgba, width = 1.15, cosmetic = true))
         }
         if (showCenter) {
-            r.strokeEllipse(centre, 4.0, 4.0, Pen(strokeRgba, width = 1.2, cosmetic = true))
-            r.strokePolyline(
-                listOf(Pt(centre.x - 6.0, centre.y), Pt(centre.x + 6.0, centre.y)),
-                Pen(strokeRgba, width = 1.0, cosmetic = true),
-            )
-            r.strokePolyline(
-                listOf(Pt(centre.x, centre.y - 6.0), Pt(centre.x, centre.y + 6.0)),
-                Pen(strokeRgba, width = 1.0, cosmetic = true),
-            )
+            r.fillCircle(centre, 2.2, strokeRgba)
+            r.strokeEllipse(centre, 4.0, 4.0, Pen(strokeRgba, width = 1.0, cosmetic = true))
         }
     }
 
