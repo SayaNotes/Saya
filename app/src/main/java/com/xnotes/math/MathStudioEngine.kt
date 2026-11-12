@@ -44,7 +44,36 @@ object MathStudioEngine {
             }
             px=x; py=y
         }
-        return roots.sorted().fold(mutableListOf()) { acc,v -> if(acc.isEmpty() || abs(acc.last()-v)>1e-4) acc.add(v); acc }
+        // Newton refinement from a coarse set of seeds also detects even-multiplicity
+        // roots, which do not change sign and therefore cannot be found by bisection alone.
+        for (seedIndex in 0..160) {
+            var x = -1000.0 + 2000.0 * seedIndex / 160.0
+            repeat(80) {
+                val y = runCatching { f(x) }.getOrNull() ?: return@repeat
+                if (abs(y) <= 1e-8 * max(1.0, abs(x))) {
+                    roots.add(x)
+                    return@repeat
+                }
+                val h = 1e-5 * max(1.0, abs(x))
+                val left = runCatching { f(x - h) }.getOrNull()
+                val right = runCatching { f(x + h) }.getOrNull()
+                if (left == null || right == null) return@repeat
+                val slope = (right - left) / (2.0 * h)
+                if (!slope.isFinite() || abs(slope) < 1e-12) return@repeat
+                val step = (y / slope).coerceIn(-100.0, 100.0)
+                val next = x - step
+                if (!next.isFinite() || next !in -1000.0..1000.0) return@repeat
+                if (abs(next - x) < 1e-11) {
+                    if (abs(y) < 1e-6) roots.add(next)
+                    return@repeat
+                }
+                x = next
+            }
+        }
+        return roots.filter { it.isFinite() }.sorted().fold(mutableListOf()) { acc, v ->
+            if (acc.isEmpty() || abs(acc.last() - v) > 1e-4) acc.add(v)
+            acc
+        }
     }
 
     fun derivative(expression:String, at:Double):Double {
