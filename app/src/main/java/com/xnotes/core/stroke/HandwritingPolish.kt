@@ -105,7 +105,7 @@ object HandwritingPolish {
         val ordered = bounds.map { it.copy(centerY = -it.centerX * sinAngle + it.centerY * cosAngle) }.sortedBy { it.centerY }
         val heights = ordered.map { it.height }.filter { it > 1.0 }.sorted()
         val typicalHeight = heights.getOrNull((heights.size * 3 / 4).coerceAtMost(heights.lastIndex)) ?: 20.0
-        val lineTolerance = (typicalHeight * 0.85).coerceIn(6.0, 48.0)
+        val lineTolerance = (typicalHeight * 1.6).coerceIn(10.0, 40.0)
         val clusters = mutableListOf<MutableList<Bounds>>()
         val centers = mutableListOf<Double>()
         for (entry in ordered) {
