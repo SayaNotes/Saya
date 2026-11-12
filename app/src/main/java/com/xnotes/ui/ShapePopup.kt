@@ -1,12 +1,6 @@
 package com.xnotes.ui
 
 import androidx.annotation.StringRes
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.background
@@ -123,12 +117,6 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
         modifier = Modifier.clip(RoundedCornerShape(26.dp)),
         frameless = true,
     ) {
-        AnimatedVisibility(
-            visible = true,
-            enter = fadeIn(tween(145, easing = FastOutSlowInEasing)) +
-                scaleIn(initialScale = 0.94f, animationSpec = tween(175, easing = FastOutSlowInEasing)) +
-                slideInVertically(initialOffsetY = { it / 18 }, animationSpec = tween(160, easing = FastOutSlowInEasing)),
-        ) {
         Column(
             Modifier.widthIn(max = 560.dp).fillMaxWidth()
                 .liquidGlassSurface(
@@ -444,7 +432,6 @@ fun ShapeConfigPopup(editor: ToolPopupHost, onDismiss: () -> Unit) {
                     }
                 }
             }
-        }
         }
     }
 }

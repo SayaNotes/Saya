@@ -236,12 +236,6 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
         modifier = Modifier.clip(RoundedCornerShape(26.dp)),
         frameless = true,
     ) {
-        AnimatedVisibility(
-            visible = true,
-            enter = fadeIn(tween(135, easing = FastOutSlowInEasing)) +
-                scaleIn(initialScale = 0.94f, animationSpec = tween(170, easing = FastOutSlowInEasing)) +
-                slideInVertically(initialOffsetY = { it / 16 }, animationSpec = tween(155, easing = FastOutSlowInEasing)),
-        ) {
         Column(
             Modifier.widthIn(max = 680.dp).fillMaxWidth()
                 .liquidGlassSurface(
@@ -484,7 +478,6 @@ private fun ToolConfigPopupContent(editor: ToolPopupHost, tool: Tool, onSelectTo
                     if (glow) SliderRow(stringResource(R.string.caption_glow_intensity), glowIntensity, 0f..100f) { glowIntensity = it; emit() }
                 }
             }
-        }
         }
     }
 }
@@ -2127,8 +2120,22 @@ internal fun DropdownMenu(
         shadowElevation = if (frameless) 0.dp else 6.dp,
         border = if (frameless) null else BorderStroke(1.dp, palette.border.toComposeColor()),
     ) {
-        // A menu or tip opened from inside this one hangs off its own row, not beside the rail.
-        CompositionLocalProvider(LocalMenuOffset provides DpOffset.Zero, LocalTipSide provides TipSide.BELOW) { content() }
+        // Keep every floating tool panel on one motion curve. A short fade, restrained scale,
+        // and small upward settle makes the panels feel immediate without a heavy spring bounce.
+        CompositionLocalProvider(LocalMenuOffset provides DpOffset.Zero, LocalTipSide provides TipSide.BELOW) {
+            if (frameless) {
+                AnimatedVisibility(
+                    visible = true,
+                    enter = fadeIn(tween(120, easing = FastOutSlowInEasing)) +
+                        scaleIn(initialScale = 0.965f, animationSpec = tween(155, easing = FastOutSlowInEasing)) +
+                        slideInVertically(initialOffsetY = { it / 24 }, animationSpec = tween(145, easing = FastOutSlowInEasing)),
+                ) {
+                    Column { content() }
+                }
+            } else {
+                content()
+            }
+        }
     }
 }
 
