@@ -80,25 +80,35 @@ object HandwritingPolish {
         strokes: List<Stroke>,
         mapPoint: (Stroke, Pt) -> Pt,
     ): List<HandwritingLine> {
-        data class Bounds(val stroke: Stroke, val centerY: Double, val height: Double)
+        data class Bounds(val stroke: Stroke, val centerY: Double, val centerX: Double, val height: Double)
         val bounds = strokes.mapNotNull { stroke ->
             if (stroke.sampleCount < 2) return@mapNotNull null
+            var minX = Double.POSITIVE_INFINITY
+            var maxX = Double.NEGATIVE_INFINITY
             var minY = Double.POSITIVE_INFINITY
             var maxY = Double.NEGATIVE_INFINITY
             for (i in 0 until stroke.sampleCount) {
                 val point = mapPoint(stroke, Pt(stroke.xAt(i), stroke.yAt(i)))
+                minX = minOf(minX, point.x)
+                maxX = maxOf(maxX, point.x)
                 minY = minOf(minY, point.y)
                 maxY = maxOf(maxY, point.y)
             }
-            Bounds(stroke, (minY + maxY) / 2.0, maxY - minY)
-        }.sortedBy { it.centerY }
+            Bounds(stroke, (minY + maxY) / 2.0, (minX + maxX) / 2.0, maxY - minY)
+        }
         if (bounds.isEmpty()) return emptyList()
-        val heights = bounds.map { it.height }.filter { it > 1.0 }.sorted()
+        // Project stroke centres onto the normal of the overall writing direction. This keeps
+        // long, slightly sloped lines together even when their strokes begin at different x positions.
+        val overallAngle = principalAxis(strokes, mapPoint)?.angle ?: 0.0
+        val sinAngle = kotlin.math.sin(overallAngle)
+        val cosAngle = kotlin.math.cos(overallAngle)
+        val ordered = bounds.map { it.copy(centerY = -it.centerX * sinAngle + it.centerY * cosAngle) }.sortedBy { it.centerY }
+        val heights = ordered.map { it.height }.filter { it > 1.0 }.sorted()
         val typicalHeight = heights.getOrNull((heights.size * 3 / 4).coerceAtMost(heights.lastIndex)) ?: 20.0
         val lineTolerance = (typicalHeight * 0.85).coerceIn(6.0, 48.0)
         val clusters = mutableListOf<MutableList<Bounds>>()
         val centers = mutableListOf<Double>()
-        for (entry in bounds) {
+        for (entry in ordered) {
             val nearest = centers.indices.minByOrNull { kotlin.math.abs(centers[it] - entry.centerY) }
             if (nearest != null && kotlin.math.abs(centers[nearest] - entry.centerY) <= lineTolerance) {
                 val cluster = clusters[nearest]
