@@ -38,6 +38,7 @@ import com.xnotes.core.stroke.Sample
 import com.xnotes.core.stroke.ShapeRecognizer
 import com.xnotes.core.stroke.Scribble
 import com.xnotes.core.stroke.StrokeSimplify
+import com.xnotes.core.stroke.StrokeStabilizer
 import com.xnotes.core.tape.TapeGeometry
 import com.xnotes.core.tools.EraseMode
 import com.xnotes.core.tools.InkPalette
@@ -304,10 +305,17 @@ class InfiniteInteraction(
         private set
 
     // The stroke being drawn, live until the pen lifts.
-    private var liveStroke: Stroke? = null
+    private var liveStrokeField: Stroke? = null
+    private var liveStroke: Stroke?
+        get() = liveStrokeField
+        set(value) {
+            liveStrokeField = value
+            if (value == null) strokeStabilizer = null
+        }
     private var drawingPointerId = -1
     private var drawingIsStylus = false
     private var strokeStartTimeMs = 0L
+    private var strokeStabilizer: StrokeStabilizer? = null
     private var dwellRunnable: Runnable? = null
     private var dwellAnchor = Pt.ZERO
     private var dwellEligible = false
@@ -946,6 +954,7 @@ class InfiniteInteraction(
             )
         }
         val straight = drawTool == Tool.HIGHLIGHTER && config.straightLine
+        strokeStabilizer = StrokeStabilizer(config.stabilization)
         val stroke = Stroke(
             drawTool, config,
             speedScale = z / devicePxPerDp().coerceAtLeast(1e-9),
@@ -958,7 +967,8 @@ class InfiniteInteraction(
         // left running keeps the buffer queue full and puts a frame of lag under the pen.
         setInteractive(false, false)
         strokeStartTimeMs = e.eventTime
-        val p = viewport.viewportToContent(Pt(vx, vy))
+        val stableDown = strokeStabilizer?.filter(Pt(vx, vy), e.eventTime) ?: Pt(vx, vy)
+        val p = viewport.viewportToContent(stableDown)
         stroke.addSample(Sample(p.x, p.y, pressureOf(e, 0)))
         liveStroke = stroke
         mode = CanvasPointerMode.DRAW
@@ -995,7 +1005,9 @@ class InfiniteInteraction(
 
     private fun addStrokePoint(vx: Double, vy: Double, pressure: Double, timeMs: Long, force: Boolean) {
         val stroke = liveStroke ?: return
-        val p = viewport.viewportToContent(Pt(vx, vy))
+        val rawViewport = Pt(vx, vy)
+        val stableViewport = strokeStabilizer?.filter(rawViewport, timeMs) ?: rawViewport
+        val p = viewport.viewportToContent(stableViewport)
         val t = (timeMs - strokeStartTimeMs).toDouble()
         if (stroke.straight) {
             stroke.setStraightEnd(Sample(p.x, p.y, pressure.coerceIn(0.0, 1.0), t))

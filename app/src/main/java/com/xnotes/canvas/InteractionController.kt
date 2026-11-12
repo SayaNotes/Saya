@@ -306,7 +306,10 @@ class InteractionController(
         get() = liveStrokeField
         set(value) {
             liveStrokeField = value
-            if (value == null) frontInk?.abandon()
+            if (value == null) {
+                strokeStabilizer = null
+                frontInk?.abandon()
+            }
         }
     private var strokePageIndex: Int? = null
 

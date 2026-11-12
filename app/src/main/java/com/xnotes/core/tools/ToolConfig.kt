@@ -61,8 +61,6 @@ data class ToolConfig(
     /** `ds` — calligraphic direction effect (0 = none). */
     val directionStrength: Double = 0.0,
     val rgba: Rgba = InkPalette.DEFAULT,
-    /** Per-stroke hand stabilization, 0 = off and 100 = strongest smoothing. */
-    val stabilization: Double = 0.0,
     // New fields go *after* `rgba` so the positional constructor stays stable.
     /** Velocity thinning (the speed pen): 0 = none; up the line thins as it moves faster. */
     val speedStrength: Double = 0.0,
@@ -126,6 +124,8 @@ data class ToolConfig(
     val stampSpacing: Double = 55.0,
     /** Laser trail's fully visible time after pen-up, before its fade begins. */
     val laserDurationMs: Long = DEFAULT_LASER_DURATION_MS,
+    /** Per-stroke hand stabilization, 0 = off and 100 = strongest smoothing. */
+    val stabilization: Double = 0.0,
 ) {
     companion object {
         const val DEFAULT_MARKUP_INTENSITY = 0.9
