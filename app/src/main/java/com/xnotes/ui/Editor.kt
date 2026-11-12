@@ -814,6 +814,11 @@ class Editor(context: Context, val pane: Pane = Pane.PRIMARY) : ToolPopupHost, S
 
     override val canConvertToMath: Boolean get() = com.xnotes.platform.MathOcr.isInstalled(appContext)
 
+    override fun canBeautifyHandwriting(): Boolean = controller.canBeautifySelectedHandwriting()
+    override fun beautifyHandwriting() = controller.beautifySelectedHandwriting()
+    override fun canMakeHandwritingStraighter(): Boolean = controller.canStraightenSelectedHandwriting()
+    override fun makeHandwritingStraighter() = controller.straightenSelectedHandwriting()
+
     override fun convertSelectionToMath() {
         val sel = controller.inkSelection() ?: return
         android.widget.Toast.makeText(appContext, "Recognizing math...", android.widget.Toast.LENGTH_SHORT).show()

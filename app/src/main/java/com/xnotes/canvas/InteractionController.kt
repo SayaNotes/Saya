@@ -85,6 +85,7 @@ import com.xnotes.core.stroke.RecognizedShape
 import com.xnotes.core.stroke.Sample
 import com.xnotes.core.stroke.StrokeSimplify
 import com.xnotes.core.stroke.StrokeStabilizer
+import com.xnotes.core.stroke.HandwritingPolish
 import com.xnotes.core.tools.EraseMode
 import com.xnotes.core.tools.InkPalette
 import com.xnotes.core.tools.ShapeConfig
@@ -4026,6 +4027,72 @@ class InteractionController(
         val cmds = listOfNotNull(TransformItems(listOf(c), listOf(before), listOf(c.snapshotGeometry())), followCommand())
         history.push(cmds.singleOrNull() ?: CompositeCommand(cmds))
         endFollow()
+        state.document.dirty = true
+        selObb = selectionBox()
+        onContentChanged()
+        refreshSelectionMenu()
+        requestRender()
+    }
+
+    /** Only a selection made entirely of sampled ink can be polished without changing other objects. */
+    fun canBeautifySelectedHandwriting(): Boolean =
+        selection.isNotEmpty() && selection.all { (it.item as? Stroke)?.sampleCount?.let { n -> n >= 5 } == true }
+
+    fun beautifySelectedHandwriting() {
+        if (!canBeautifySelectedHandwriting()) return
+        val items: List<CanvasItem> = selection.map { it.item }
+        val strokes = items.filterIsInstance<Stroke>()
+        val before = items.map { it.snapshotGeometry() }
+        var changed = false
+        for (stroke in strokes) {
+            val polished = HandwritingPolish.beautify(stroke.samples)
+            if (polished.indices.any { i ->
+                    val a = stroke.samples[i]
+                    val b = polished[i]
+                    kotlin.math.abs(a.x - b.x) > 1e-5 || kotlin.math.abs(a.y - b.y) > 1e-5
+                }
+            ) {
+                stroke.setSamples(polished)
+                changed = true
+            }
+        }
+        if (!changed) return
+        history.push(TransformItems(items, before, items.map { it.snapshotGeometry() }))
+        state.document.dirty = true
+        selObb = selectionBox()
+        onContentChanged()
+        refreshSelectionMenu()
+        requestRender()
+    }
+
+    fun canStraightenSelectedHandwriting(): Boolean {
+        if (selection.isEmpty() || selection.any { it.item !is Stroke }) return false
+        val members = selection.toList()
+        val strokes = members.map { it.item as Stroke }
+        val pageByStroke = members.associate { (it.item as Stroke) to it.pageIndex }
+        val axis = HandwritingPolish.principalAxis(strokes) { stroke, point ->
+            state.fromPageSpace(pageByStroke.getValue(stroke), point)
+        } ?: return false
+        return kotlin.math.abs(axis.angle) > Math.toRadians(0.35)
+    }
+
+    /** Rotate only the selected handwriting by its dominant baseline tilt; all ink remains vector strokes. */
+    fun straightenSelectedHandwriting() {
+        if (selection.isEmpty() || selection.any { it.item !is Stroke }) return
+        val members = selection.toList()
+        val strokes = members.map { it.item as Stroke }
+        val pageByStroke = members.associate { (it.item as Stroke) to it.pageIndex }
+        val axis = HandwritingPolish.principalAxis(strokes) { stroke, point ->
+            state.fromPageSpace(pageByStroke.getValue(stroke), point)
+        } ?: return
+        if (kotlin.math.abs(axis.angle) <= Math.toRadians(0.35)) return
+        val world = Affine.rotationAbout(axis.center, -axis.angle)
+        val items: List<CanvasItem> = members.map { it.item }
+        val before = items.map { it.snapshotGeometry() }
+        for (member in members) {
+            member.item.applyTransform(state.affineToPageSpace(member.pageIndex, world))
+        }
+        history.push(TransformItems(items, before, items.map { it.snapshotGeometry() }))
         state.document.dirty = true
         selObb = selectionBox()
         onContentChanged()

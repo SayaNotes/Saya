@@ -628,6 +628,59 @@ class InfiniteEditor(context: Context) : ToolPopupHost, SelectionMenuHost, LongP
     override fun setSelectionMath(latex: String): Boolean = false
     override fun convertSelectionToMath() {}
 
+    override fun canBeautifyHandwriting(): Boolean =
+        !selection.isEmpty && selection.items.all { it is com.xnotes.core.model.Stroke && it.sampleCount >= 5 }
+
+    override fun beautifyHandwriting() {
+        if (!canBeautifyHandwriting()) return
+        val strokes = selection.items.filterIsInstance<com.xnotes.core.model.Stroke>()
+        val before = strokes.map { it.snapshotGeometry() }
+        var changed = false
+        for (stroke in strokes) {
+            val polished = com.xnotes.core.stroke.HandwritingPolish.beautify(stroke.samples)
+            if (polished.indices.any { i ->
+                    val a = stroke.samples[i]
+                    val b = polished[i]
+                    kotlin.math.abs(a.x - b.x) > 1e-5 || kotlin.math.abs(a.y - b.y) > 1e-5
+                }
+            ) {
+                stroke.setSamples(polished)
+                changed = true
+            }
+        }
+        if (!changed) return
+        val after = strokes.map { it.snapshotGeometry() }
+        history.push(OnCanvas(document, com.xnotes.core.history.TransformItems(strokes, before, after), strokes))
+        markDirty()
+        refresh()
+        selection.refreshBox()
+        publishOverlay()
+        refreshSelectionMenu()
+    }
+
+    override fun canMakeHandwritingStraighter(): Boolean {
+        if (selection.isEmpty || selection.items.any { it !is com.xnotes.core.model.Stroke }) return false
+        val strokes = selection.items.filterIsInstance<com.xnotes.core.model.Stroke>()
+        val axis = com.xnotes.core.stroke.HandwritingPolish.principalAxis(strokes) { _, p -> p } ?: return false
+        return kotlin.math.abs(axis.angle) > Math.toRadians(0.35)
+    }
+
+    override fun makeHandwritingStraighter() {
+        if (!canMakeHandwritingStraighter()) return
+        val strokes = selection.items.filterIsInstance<com.xnotes.core.model.Stroke>()
+        val axis = com.xnotes.core.stroke.HandwritingPolish.principalAxis(strokes) { _, p -> p } ?: return
+        val transform = com.xnotes.core.geometry.Affine.rotationAbout(axis.center, -axis.angle)
+        val before = strokes.map { it.snapshotGeometry() }
+        for (stroke in strokes) stroke.applyTransform(transform)
+        val after = strokes.map { it.snapshotGeometry() }
+        history.push(OnCanvas(document, com.xnotes.core.history.TransformItems(strokes, before, after), strokes))
+        markDirty()
+        refresh()
+        selection.refreshBox()
+        publishOverlay()
+        refreshSelectionMenu()
+    }
+
     override fun unlockItem(item: CanvasItem) {
         if (!item.locked) return
         item.locked = false
