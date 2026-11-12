@@ -49,7 +49,7 @@ import kotlin.math.abs
 import kotlin.math.exp
 
 /** What the current gesture is doing. */
-enum class CanvasPointerMode { IDLE, PAN, PINCH, DRAW, ERASE, SHAPE, BAND, LASSO, MOVE, RESIZE, ROTATE, VERTEX, POLYGON, CONNECT, JOINT, SLIDE, TAPE }
+enum class CanvasPointerMode { IDLE, PAN, PINCH, MULTI_TRANSFORM, DRAW, ERASE, SHAPE, BAND, LASSO, MOVE, RESIZE, ROTATE, VERTEX, POLYGON, CONNECT, JOINT, SLIDE, TAPE }
 
 /**
  * Gestures on the infinite canvas.
@@ -334,6 +334,9 @@ class InfiniteInteraction(
     private var pinchInitDist = 1.0
     private var pinchInitZoom = 1.0
     private var pinchAnchorContent = Pt.ZERO
+    private var multiStartCentroid = Pt.ZERO
+    private var multiStartDistance = 1.0
+    private var multiStartAngle = 0.0
 
     // The view as this touch went down, put back if Android takes the touch back (see takeBackTouch).
     private var downScroll = Pt.ZERO
@@ -677,6 +680,14 @@ class InfiniteInteraction(
         if (mode == CanvasPointerMode.ERASE && drawingIsStylus) return
         if (mode == CanvasPointerMode.LASSO && lassoErasing && drawingIsStylus) return
         if (mode == CanvasPointerMode.TAPE && drawingIsStylus) return
+        if (e.pointerCount >= 2 && selection()?.isEmpty == false &&
+            e.getToolType(0) == MotionEvent.TOOL_TYPE_FINGER &&
+            e.getToolType(1) == MotionEvent.TOOL_TYPE_FINGER &&
+            mode in setOf(CanvasPointerMode.IDLE, CanvasPointerMode.PAN, CanvasPointerMode.MOVE, CanvasPointerMode.ROTATE, CanvasPointerMode.RESIZE)
+        ) {
+            beginMultiTransform(e)
+            return
+        }
         if (e.pointerCount >= 2) {
             if (mode == CanvasPointerMode.DRAW) abandonStroke()
             if (mode == CanvasPointerMode.TAPE) abandonTape()
@@ -698,6 +709,7 @@ class InfiniteInteraction(
         when (mode) {
             CanvasPointerMode.PAN -> extendPan(e.getX(0).toDouble(), e.getY(0).toDouble())
             CanvasPointerMode.PINCH -> updatePinch(e)
+            CanvasPointerMode.MULTI_TRANSFORM -> extendMultiTransform(e)
             CanvasPointerMode.DRAW -> extendDraw(e)
             CanvasPointerMode.ERASE -> extendErase(e)
             CanvasPointerMode.SHAPE -> extendShape(e.getX(0).toDouble(), e.getY(0).toDouble())
@@ -717,6 +729,10 @@ class InfiniteInteraction(
     }
 
     private fun handlePointerUp(e: MotionEvent) {
+        if (mode == CanvasPointerMode.MULTI_TRANSFORM) {
+            if (e.pointerCount <= 2) endMultiTransform()
+            return
+        }
         if (mode != CanvasPointerMode.PINCH) return
         // Dropping to one finger continues as a pan from wherever that finger is, so a pinch that
         // relaxes into a drag does not jump.
@@ -801,6 +817,11 @@ class InfiniteInteraction(
             selection()?.previewMove(0.0, 0.0)
             selection()?.unfollow()
             onLiftSelection(emptyList(), LiftTransform.NONE)
+            onSelectionChanged()
+        }
+        if (mode == CanvasPointerMode.MULTI_TRANSFORM) {
+            selection()?.restoreStart()
+            selection()?.unfollow()
             onSelectionChanged()
         }
         if (mode == CanvasPointerMode.VERTEX) abandonVertex()
@@ -2102,6 +2123,59 @@ class InfiniteInteraction(
     private fun singleFingerPanAllowed(): Boolean = !(zoomLocked && zoomLockPan != "single")
 
     private fun pinchPanAllowed(): Boolean = !(zoomLocked && zoomLockPan == "none")
+
+    // --- selection multi-touch transform ---
+
+    private fun beginMultiTransform(e: MotionEvent) {
+        val sel = selection() ?: return
+        if (sel.isEmpty || e.pointerCount < 2) return
+        when (mode) {
+            CanvasPointerMode.MOVE -> endMove()
+            CanvasPointerMode.ROTATE, CanvasPointerMode.RESIZE -> endTransform()
+            CanvasPointerMode.PAN -> mode = CanvasPointerMode.IDLE
+            else -> Unit
+        }
+        val a = Pt(e.getX(0).toDouble(), e.getY(0).toDouble())
+        val b = Pt(e.getX(1).toDouble(), e.getY(1).toDouble())
+        val midpoint = (a + b) * 0.5
+        multiStartCentroid = viewport.viewportToContent(midpoint)
+        multiStartDistance = a.distanceTo(b).coerceAtLeast(1.0)
+        multiStartAngle = kotlin.math.atan2(b.y - a.y, b.x - a.x)
+        sel.beginTransform(rigid = true)
+        mode = CanvasPointerMode.MULTI_TRANSFORM
+        tapCandidate = false
+        setInteractive(true, true)
+        onLiftSelection(emptyList(), LiftTransform.NONE)
+        onSelectionChanged()
+    }
+
+    private fun extendMultiTransform(e: MotionEvent) {
+        val sel = selection() ?: return
+        if (sel.isEmpty || e.pointerCount < 2) return
+        val a = Pt(e.getX(0).toDouble(), e.getY(0).toDouble())
+        val b = Pt(e.getX(1).toDouble(), e.getY(1).toDouble())
+        val distance = a.distanceTo(b)
+        if (distance < 1.0) return
+        val midpoint = viewport.viewportToContent((a + b) * 0.5)
+        val scale = (distance / multiStartDistance).coerceIn(0.05, 20.0)
+        val turn = kotlin.math.atan2(b.y - a.y, b.x - a.x) - multiStartAngle
+        val pivot = multiStartCentroid
+        val transform = Affine.translateBy(midpoint.x - pivot.x, midpoint.y - pivot.y).compose(
+            Affine.rotateAbout(pivot, turn).compose(Affine.scaleAbout(pivot, scale, scale)),
+        )
+        sel.transformLive(transform)
+        onSelectionChanged()
+        requestRender()
+    }
+
+    private fun endMultiTransform() {
+        val sel = selection()
+        if (sel != null && !sel.isEmpty) onCommitSelection(sel.buildCommand(movedOnly = false))
+        mode = CanvasPointerMode.IDLE
+        setInteractive(false, true)
+        onSelectionChanged()
+        requestRender()
+    }
 
     // --- pinch ---
 

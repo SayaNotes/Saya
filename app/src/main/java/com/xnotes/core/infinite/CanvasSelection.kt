@@ -195,6 +195,21 @@ class CanvasSelection(private val doc: InfiniteDocument) {
         doc.itemsChanged(follow.items)
     }
 
+    /** Apply a uniform two-finger scale/turn/translation from the gesture-start snapshot. */
+    fun transformLive(transform: Affine) {
+        val from = startBox
+        if (from != null) {
+            val scale = transform.linearScale
+            box = from.copy(
+                center = transform.apply(from.center),
+                halfW = from.halfW * scale,
+                halfH = from.halfH * scale,
+                angle = from.angle + transform.rotationAngle,
+            )
+        }
+        applyLive(transform)
+    }
+
     /** [applyLive] for [only] some of the items, the ones a renderer-driven drag cannot carry. */
     fun applyLiveTo(only: Set<CanvasItem>, transform: Affine) {
         val changed = ArrayList<CanvasItem>(only.size)
