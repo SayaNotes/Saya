@@ -341,7 +341,27 @@ object ItemMesher {
     }
 
     private fun meshShape(shape: ShapeItem, tolerance: Double): MeshedItem? {
-        val parts = ShapeTessellator.tessellate(shape, tolerance) + listOfNotNull(ShapeTessellator.labelPart(shape))
+        val parts = ArrayList<MeshPart>()
+        parts.addAll(ShapeTessellator.tessellate(shape, tolerance))
+        ShapeTessellator.labelPart(shape)?.let(parts::add)
+        // Centre/radius are persistent shape content, not a selection overlay. Mesh them with the
+        // shape so they remain visible after deselection and on the infinite GL canvas.
+        if (shape.showCenter || shape.showRadius) {
+            val guide = shape.centerRadiusGuide()
+            if (guide != null) {
+                val (center, rim) = guide
+                if (shape.showRadius) {
+                    val line = MeshBuilder()
+                    line.polylineRibbon(listOf(center, rim), 0.575, false, tolerance)
+                    if (!line.isEmpty) parts.add(MeshPart(line.build(), shape.strokeRgba, InkPass.OPAQUE))
+                }
+                if (shape.showCenter) {
+                    val marker = MeshBuilder()
+                    marker.circle(center.x, center.y, 2.2, tolerance)
+                    if (!marker.isEmpty) parts.add(MeshPart(marker.build(), shape.strokeRgba, InkPass.OPAQUE))
+                }
+            }
+        }
         if (parts.isEmpty()) return null
         // Drawn text has no line to fade when it thins out on screen.
         val half = if (shape.shape == com.xnotes.core.shapes.ShapeKind.GLYPHS) 0.0 else shape.strokeWidth / 2.0
