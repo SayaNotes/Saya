@@ -5711,17 +5711,6 @@ class InteractionController(
         textDragRect = null
         // Cancel an in-progress capture drag; a frozen capture (mode IDLE) survives.
         if (mode == PointerMode.SHOT) { screenshotRect = null; onScreenshotMenu(null) }
-        if (mode == PointerMode.TWO_FINGER_ROTATE) {
-            twoFingerRotateDraft?.let { d -> twoFingerRotateDraftBefore?.let(d::restoreGeometry) }
-            twoFingerRotateDraft = null
-            twoFingerRotateDraftBefore = null
-            if (txItems.isNotEmpty()) {
-                txItems.forEachIndexed { index, selected -> selected.item.restoreGeometry(txSnaps[index]) }
-                for ((_, follow) in follows) follow.restore()
-                txItems = emptyList(); txSnaps = emptyList(); txStartObb = null; txHandle = null
-                endFollow(); selObb = selectionBox()
-            }
-        }
         if (mode == PointerMode.PINCH && state.zoomingInProgress) {
             state.zoomingInProgress = false
             state.invalidateCachesForZoom()
