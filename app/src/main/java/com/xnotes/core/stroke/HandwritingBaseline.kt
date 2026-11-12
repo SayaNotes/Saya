@@ -11,7 +11,7 @@ import kotlin.math.max
 data class HandwritingAxis(val center: Pt, val angle: Double)
 data class HandwritingLine(val strokes: List<Stroke>, val axis: HandwritingAxis)
 
-object HandwritingPolish {
+object HandwritingBaseline {
     private const val MAX_AXIS_POINTS = 4096
 
     /**

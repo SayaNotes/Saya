@@ -85,7 +85,7 @@ import com.xnotes.core.stroke.RecognizedShape
 import com.xnotes.core.stroke.Sample
 import com.xnotes.core.stroke.StrokeSimplify
 import com.xnotes.core.stroke.StrokeStabilizer
-import com.xnotes.core.stroke.HandwritingPolish
+import com.xnotes.core.stroke.HandwritingBaseline
 import com.xnotes.core.stroke.HandwritingLine
 import com.xnotes.core.tools.EraseMode
 import com.xnotes.core.tools.InkPalette
@@ -4109,7 +4109,7 @@ class InteractionController(
         val members = selection.toList()
         val pageByStroke = members.associate { (it.item as Stroke) to it.pageIndex }
         return members.groupBy { it.pageIndex }.values.flatMap { pageMembers ->
-            HandwritingPolish.lineAxes(pageMembers.map { it.item as Stroke }) { stroke, point ->
+            HandwritingBaseline.lineAxes(pageMembers.map { it.item as Stroke }) { stroke, point ->
                 state.fromPageSpace(pageByStroke.getValue(stroke), point)
             }
         }
