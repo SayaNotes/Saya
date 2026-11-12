@@ -647,7 +647,6 @@ class InteractionController(
                     // Keep angle guides visible while a polygon is selected, including during
                     // move/resize/vertex editing; they remain transient overlay feedback.
                     (sel.item as? ShapeItem)?.paintAngleMeasurements(r)
-                    (sel.item as? ShapeItem)?.paintCenterRadiusMeasurements(r)
                 }
             }
         }
@@ -5824,7 +5823,6 @@ class InteractionController(
                     // Draw angle readouts in the normal selected-item overlay as well as the
                     // under-text overlay, so a simple tap selection and live resize both show them.
                     (sel.item as? ShapeItem)?.paintAngleMeasurements(r)
-                    (sel.item as? ShapeItem)?.paintCenterRadiusMeasurements(r)
                 }
             }
 
