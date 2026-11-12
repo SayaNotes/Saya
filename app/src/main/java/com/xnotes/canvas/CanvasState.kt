@@ -521,6 +521,20 @@ class CanvasState(
     private val hlCaches = HashMap<Stroke, HighlighterCacheEntry>()
 
     /**
+     * The visible-frame highlighter traversal must not scan every page item on every frame.
+     * Cache only the highlighter identities and their original item indices; content mutation
+     * paths below invalidate this small index before the next draw.
+     */
+    private val highlighterItemsByPage = HashMap<Page, List<Pair<Int, Stroke>>>()
+
+    fun highlightersFor(page: Page): List<Pair<Int, Stroke>> =
+        highlighterItemsByPage.getOrPut(page) {
+            page.items.mapIndexedNotNull { index, item ->
+                (item as? Stroke)?.takeIf { it.tool == Tool.HIGHLIGHTER }?.let { index to it }
+            }
+        }
+
+    /**
      * Pages whose strokes have built ribbon geometry ([Stroke.geometry]), so eviction can walk only
      * the pages that leave the band instead of the whole document every frame.
      *
@@ -1518,6 +1532,7 @@ class CanvasState(
 
     /** Append a single just-committed stroke into an existing cache (cheap), else rebuild. */
     fun appendToCache(page: Page, item: CanvasItem) {
+        highlighterItemsByPage.remove(page)
         if (item.isHighlighterInk()) return // composited live over the page, never cached
         appendToSharpInk(page, item) // keep the sharp viewport crisp without a full re-render
         if (pendingSharp) pendingSharpEdits.add(page to item.paintBounds().outset(SHARP_EDIT_PAD))
@@ -1545,6 +1560,7 @@ class CanvasState(
      * [invalidatePage] for a full rebuild.
      */
     fun repairRegion(page: Page, dirtyRect: Rect): Boolean {
+        highlighterItemsByPage.remove(page)
         repairSharpInk(page, dirtyRect) // erase from the sharp ink layer in place, no re-render
         if (pendingSharp) pendingSharpEdits.add(page to dirtyRect)
         val entry = caches[page] ?: return false
@@ -1603,6 +1619,7 @@ class CanvasState(
     var paintLiftedUnderText: ((page: Page, r: Renderer) -> Unit)? = null
 
     fun invalidatePage(page: Page) {
+        highlighterItemsByPage.remove(page)
         caches.remove(page)
         staleInk.remove(page)
         if (roomView?.page === page && roomView?.live == false) roomView = null
@@ -1649,6 +1666,7 @@ class CanvasState(
 
     fun invalidateAllCaches() {
         roomView = null
+        highlighterItemsByPage.clear()
         caches.clear()
         staleInk.clear()
         bgCaches.clear()
@@ -1771,6 +1789,7 @@ class CanvasState(
     }
 
     fun dropCachesExcept(visible: Set<Page>) {
+        highlighterItemsByPage.keys.retainAll(visible)
         caches.keys.retainAll(visible)
         staleInk.retainAll(visible)
         bgCaches.keys.retainAll(visible)

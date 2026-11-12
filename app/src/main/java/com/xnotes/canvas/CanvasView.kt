@@ -542,10 +542,8 @@ class CanvasView @JvmOverloads constructor(
                     r.clipRect(pr)
                     r.translate(pr.left, pr.top)
                     st.applyPageTransform(r, page)
-                    for ((k, item) in page.items.withIndex()) {
-                        if (item is Stroke && item.isHighlighterInk() && !st.isLiftedItem(item) &&
-                            item.bounds().intersects(visLocal)
-                        ) {
+                    for ((k, item) in st.highlightersFor(page)) {
+                        if (!st.isLiftedItem(item) && item.bounds().intersects(visLocal)) {
                             // Blit the pre-rendered opaque ribbon at the ink's alpha and blend,
                             // instead of re-tessellating the ribbon every frame.
                             val hc = st.highlighterCacheFor(item, page)
@@ -663,8 +661,8 @@ class CanvasView @JvmOverloads constructor(
             r.clipRect(pr)
             r.translate(pr.left, pr.top)
             st.applyPageTransform(r, page)
-            for (item in page.items) {
-                if (item !is Stroke || !item.isHighlighterInk() || st.isLiftedItem(item)) continue
+            for ((_, item) in st.highlightersFor(page)) {
+                if (st.isLiftedItem(item)) continue
                 val hc = st.highlighterCacheFor(item, page)
                 val faint = if (st.fade?.fades(item) == true) com.xnotes.core.audio.InkFade.ALPHA else 1.0
                 val alpha = item.renderColor.a / 255.0 * faint
