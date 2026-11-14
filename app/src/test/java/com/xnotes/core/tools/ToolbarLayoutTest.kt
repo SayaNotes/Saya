@@ -44,6 +44,14 @@ class ToolbarLayoutTest {
         assertEquals(ToolbarLayout.DEFAULT, ToolbarLayout.fromRaw(ToolbarLayout.DEFAULT.toRaw()))
     }
 
+    @Test fun legacySidebarEntryIsDroppedBecauseOverviewLivesInPageNavigation() {
+        val legacy = ToolbarLayout.DEFAULT.toRaw().toMutableList()
+        legacy[0] = listOf("home" to true, "title" to false, "sidebar" to true)
+        val migrated = ToolbarLayout.fromRaw(legacy)
+        assertFalse(ToolbarItem.SIDEBAR in migrated.items())
+        assertTrue(migrated.sections.last().entries.any { it.item == ToolbarItem.PAGE_NAV && it.visible })
+    }
+
     @Test fun emptyRawYieldsDefault() {
         assertEquals(ToolbarLayout.DEFAULT, ToolbarLayout.fromRaw(emptyList()))
         assertEquals(ToolbarLayout.DEFAULT, ToolbarLayout.fromRaw(listOf(emptyList(), emptyList())))
