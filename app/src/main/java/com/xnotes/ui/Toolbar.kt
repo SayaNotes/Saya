@@ -248,7 +248,7 @@ private fun ToolbarSectionSurface(content: @Composable () -> Unit) {
         Modifier
             .padding(horizontal = 4.dp)
             .liquidGlassSurface(
-                shape = RoundedCornerShape(19.dp),
+                shape = RoundedCornerShape(22.dp),
                 fill = palette.panel.toComposeColor(),
                 edge = palette.border.toComposeColor().copy(alpha = 0.9f),
                 elevation = 13.dp,
