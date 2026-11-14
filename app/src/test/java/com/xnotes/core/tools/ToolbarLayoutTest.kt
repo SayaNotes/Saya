@@ -16,11 +16,11 @@ class ToolbarLayoutTest {
         val d = ToolbarLayout.DEFAULT
         assertEquals(3, d.sections.size)
         assertEquals(
-            listOf(ToolbarItem.HOME, ToolbarItem.TITLE, ToolbarItem.SIDEBAR),
+            listOf(ToolbarItem.HOME, ToolbarItem.TITLE),
             d.sections[0].entries.map { it.item },
         )
         assertEquals(
-            listOf(ToolbarItem.HOME, ToolbarItem.SIDEBAR),
+            listOf(ToolbarItem.HOME),
             d.sections[0].visibleEntries.map { it.item },
         )
         assertEquals(
