@@ -245,8 +245,17 @@ fun Toolbar(
 /** A transparent layout group: the controls remain, without a separate island behind them. */
 @Composable
 private fun ToolbarSectionSurface(content: @Composable () -> Unit) {
+    val palette = LocalPalette.current
     Row(
-        Modifier.padding(horizontal = 4.dp),
+        Modifier
+            .padding(horizontal = 4.dp)
+            .liquidGlassSurface(
+                shape = RoundedCornerShape(19.dp),
+                fill = palette.panel.toComposeColor(),
+                edge = palette.border.toComposeColor().copy(alpha = 0.9f),
+                elevation = 13.dp,
+            )
+            .padding(horizontal = 3.dp, vertical = 1.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(0.dp),
     ) {
