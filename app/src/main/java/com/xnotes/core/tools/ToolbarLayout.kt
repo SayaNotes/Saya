@@ -201,7 +201,13 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
 
         /** Everything the paged bar can hold: the whole enum bar the two canvas-only additions. Insert space is the note bar's alone. */
         val NOTE_ITEMS: Set<ToolbarItem> =
-            ToolbarItem.entries.toSet() - setOf(ToolbarItem.WAYPOINTS, ToolbarItem.MINIMAP, ToolbarItem.SPEED)
+            ToolbarItem.entries.toSet() - setOf(
+                ToolbarItem.WAYPOINTS,
+                ToolbarItem.MINIMAP,
+                ToolbarItem.SPEED,
+                // Page overview is now a dedicated control inside PAGE_NAV, not a movable item.
+                ToolbarItem.SIDEBAR,
+            )
 
         /**
          * Three deliberate zones: document/page overview on the left, the seven everyday tools
