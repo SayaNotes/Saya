@@ -342,6 +342,19 @@ private fun ToolbarItemView(
 
         ToolbarItem.PAGE_NAV -> {
             ToolbarIcon(XnotesIcons.prev, stringResource(R.string.previous_page), shortcut = Keys.PREV_PAGE) { editor.prevPage() }
+            ToolbarIcon(
+                XnotesIcons.sidebar,
+                stringResource(R.string.side_panel),
+                active = editor.sidebarVisible && editor.sidePanelTab == SidePanelTab.PAGES,
+                shortcut = Keys.SIDEBAR,
+            ) {
+                if (editor.sidebarVisible && editor.sidePanelTab == SidePanelTab.PAGES) {
+                    editor.sidebarVisible = false
+                } else {
+                    editor.sidePanelTab = SidePanelTab.PAGES
+                    editor.sidebarVisible = true
+                }
+            }
             var jumpOpen by remember { mutableStateOf(false) }
             Box {
                 Tooltip(stringResource(R.string.title_go_to_page)) {
