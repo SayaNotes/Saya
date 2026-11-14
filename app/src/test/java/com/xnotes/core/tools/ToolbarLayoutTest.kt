@@ -35,6 +35,9 @@ class ToolbarLayoutTest {
 
     @Test fun defaultContainsEveryItemOnce() {
         assertFalse(ToolbarItem.SPEED in ToolbarLayout.NOTE_ITEMS)
+        // Page Overview is embedded in PAGE_NAV and must not reappear as a customizer slot.
+        assertFalse(ToolbarItem.SIDEBAR in ToolbarLayout.NOTE_ITEMS)
+        assertTrue(ToolbarItem.PAGE_NAV in ToolbarLayout.NOTE_ITEMS)
         val items = ToolbarLayout.DEFAULT.items()
         assertEquals(ToolbarLayout.NOTE_ITEMS, items.toSet())
         assertEquals(ToolbarLayout.NOTE_ITEMS.size, items.size)
