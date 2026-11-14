@@ -1785,31 +1785,6 @@ private fun EditorPane(
                 }
                 ToolbarAround(bar, onCover = editor::setToolbarCover, allowCanvasUnderFloatingBar = true) { floatingBar ->
                     Row(modifier = Modifier.fillMaxSize()) {
-                        AnimatedVisibility(
-                            visible = editor.sidebarVisible,
-                            // Slide/fade without animating the Row's width: resizing the canvas on
-                            // every animation frame would repeatedly relayout its page viewport.
-                            enter = fadeIn(tween(145, easing = FastOutSlowInEasing)) +
-                                slideInHorizontally(
-                                    initialOffsetX = { -it / 10 },
-                                    animationSpec = tween(155, easing = FastOutSlowInEasing),
-                                ),
-                            exit = fadeOut(tween(110, easing = FastOutSlowInEasing)) +
-                                slideOutHorizontally(
-                                    targetOffsetX = { -it / 12 },
-                                    animationSpec = tween(135, easing = FastOutSlowInEasing),
-                                ),
-                        ) {
-                            com.xnotes.ui.SidePanel(
-                                editor,
-                                onSharePages = { pages, asPdf -> actions.onSharePages(editor, pages, asPdf) },
-                                onSavePagesAsPdf = { pages -> actions.onSavePagesAsPdf(editor, pages) },
-                                onSavePagesAsImages = { pages -> actions.onSavePagesAsImages(editor, pages) },
-                                onInsertPages = { kind, at -> actions.onInsertPages(editor, kind, at) },
-                                onImportTemplate = actions.onImportTemplate,
-                                onTemplateFromImage = actions.onTemplateFromImage,
-                            )
-                        }
                         Box(modifier = Modifier.weight(1f).fillMaxHeight().clipToBounds().endsPageSelection(editor)) {
                             AndroidView(
                                 factory = { detached(editor.surfaces) },
@@ -1842,6 +1817,31 @@ private fun EditorPane(
                             ZoomLockHint(editor)
                             LinkBackPill(editor)
                             CanvasToastPill(editor)
+                        }
+                        AnimatedVisibility(
+                            visible = editor.sidebarVisible,
+                            // Keep the canvas as the first/weighted pane; reveal page previews from the right.
+                            // The panel's width is added only when visibility changes, not during the slide.
+                            enter = fadeIn(tween(145, easing = FastOutSlowInEasing)) +
+                                slideInHorizontally(
+                                    initialOffsetX = { it / 10 },
+                                    animationSpec = tween(155, easing = FastOutSlowInEasing),
+                                ),
+                            exit = fadeOut(tween(110, easing = FastOutSlowInEasing)) +
+                                slideOutHorizontally(
+                                    targetOffsetX = { it / 12 },
+                                    animationSpec = tween(135, easing = FastOutSlowInEasing),
+                                ),
+                        ) {
+                            com.xnotes.ui.SidePanel(
+                                editor,
+                                onSharePages = { pages, asPdf -> actions.onSharePages(editor, pages, asPdf) },
+                                onSavePagesAsPdf = { pages -> actions.onSavePagesAsPdf(editor, pages) },
+                                onSavePagesAsImages = { pages -> actions.onSavePagesAsImages(editor, pages) },
+                                onInsertPages = { kind, at -> actions.onInsertPages(editor, kind, at) },
+                                onImportTemplate = actions.onImportTemplate,
+                                onTemplateFromImage = actions.onTemplateFromImage,
+                            )
                         }
                     }
                 }
