@@ -181,8 +181,6 @@ fun Toolbar(
             Item(ToolbarItem.HOME)
             Item(ToolbarItem.TITLE)
             Separator()
-            Item(ToolbarItem.SIDEBAR)
-            Separator()
             Icon(XnotesIcons.lock, null, tint = LocalPalette.current.textDim.toComposeColor(), modifier = Modifier.padding(4.dp).size(16.dp))
             if (!LocalBar.current.vertical) Label(stringResource(R.string.reader_read_only))
             Separator()
@@ -218,10 +216,10 @@ fun Toolbar(
                     }
                     ToolbarSectionSurface {
                         section.visibleEntries.forEach { entry ->
+                            Item(entry.item)
                             if (entry.item == ToolbarItem.PAGE_NAV) {
                                 ToolbarIcon(XnotesIcons.plus, stringResource(R.string.add_page)) { editor.addPage() }
                             }
-                            Item(entry.item)
                         }
                     }
                 }
