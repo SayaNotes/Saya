@@ -211,8 +211,8 @@ data class ToolbarLayout(val sections: List<ToolbarSection>) {
         val DEFAULT: ToolbarLayout = ToolbarLayout(
             listOf(
                 ToolbarSection(
-                    listOf(ToolbarItem.HOME, ToolbarItem.TITLE, ToolbarItem.SIDEBAR)
-                        .map { ToolbarEntry(it, it == ToolbarItem.HOME || it == ToolbarItem.SIDEBAR) },
+                    listOf(ToolbarItem.HOME, ToolbarItem.TITLE)
+                        .map { ToolbarEntry(it, it == ToolbarItem.HOME) },
                 ),
                 ToolbarSection(
                     listOf(
